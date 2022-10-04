@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref } from 'vue';
 
 // import { useQuasar } from "quasar";
 
@@ -87,12 +87,12 @@ import { defineComponent, ref } from "vue";
 // $q.dark.set(true);
 // console.log(4);
 export default defineComponent({
-  name: "PageIndex",
+  name: 'PageIndex',
   setup() {
     return {
-      tab: ref("info"),
+      tab: ref('info'),
       goToRsvp() {
-        this.tab = "rsvp";
+        this.tab = 'rsvp';
       },
     };
   },
