@@ -8,6 +8,7 @@
   "scripts": {
     "start": "quasar dev",
     "post-update": "yarn upgrade",
+    "build": "quasar build",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
