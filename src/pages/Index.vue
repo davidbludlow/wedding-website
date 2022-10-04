@@ -78,19 +78,19 @@
 <script>
 import { defineComponent, ref } from "vue";
 
-import { useQuasar } from "quasar";
+// import { useQuasar } from "quasar";
 
-const $q = useQuasar();
+// const $q = useQuasar();
 
-console.log(3);
-console.log($q);
+// console.log(3);
+// console.log($q);
 // $q.dark.set(true);
-console.log(4);
+// console.log(4);
 export default defineComponent({
   name: "PageIndex",
   setup() {
     return {
-      tab: ref("rsvp"),
+      tab: ref("info"),
       goToRsvp() {
         this.tab = "rsvp";
       },
