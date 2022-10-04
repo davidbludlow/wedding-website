@@ -57,7 +57,7 @@
         <p>
           We registered gifts on
           <a
-            href="https://www.amazon.com/wedding/david-ludlow-geneise-morrision--november-2022/registry/3IG58DZU4AD9R"
+            href="https://www.amazon.com/wedding/share/GeneiseDavidLudlow"
             target="_blank"
             >Amazon</a
           >. We have been single for a long time, however, so we already have a
