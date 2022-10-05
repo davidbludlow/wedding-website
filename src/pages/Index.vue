@@ -7,9 +7,18 @@
       <q-tab name="registry" label="Gift Registry"></q-tab>
     </q-tabs>
     <q-separator />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Waterfall"
+      rel="stylesheet"
+    />
     <q-tab-panels v-model="tab" animated style="flex-grow: 1">
       <q-tab-panel name="info" class="flex flex-center column">
-        <p>Geneise Morrison and David Ludlow are getting married!</p>
+        <p
+          style="font-size: 60px; font-family: 'Waterfall'; text-align: center"
+        >
+          Geneise Morrison & David Ludlow are getting married!
+        </p>
         <img src="/pictures/IMG_2722.JPG" />
         <div class="text-h6">Reception Information</div>
         <p>Nov 5, 2022 at 5:00 PM</p>
@@ -54,21 +63,27 @@
       </q-tab-panel>
       <q-tab-panel name="registry" class="flex flex-center column">
         <div class="text-h6">Gift Registry Information</div>
+        <p></p>
         <p>
-          We registered gifts on
+          Should you wish to bing a gift we registered on
           <a
             href="https://www.amazon.com/wedding/share/GeneiseDavidLudlow"
             target="_blank"
-            >Amazon</a
-          >. We have been single for a long time, however, so we already have a
-          lot of stuff. Gifting money, therefore, is a better-than-usual option.
-          Obviously there are many good ways to gift money, but here is a
+            >Amazon Gift Registry</a
+          >.
+        </p>
+
+        <p>
+          If you are not sure what to shop for here is another option. We have
+          been single for a
+          <strong style="text-decoration: underline">long time</strong> and have
+          have collected many household items over the years. So something for
+          our Date Night/Honeymoon Fund would be much appreciated as well.
           <a
             href="https://www.paypal.com/paypalme/physicsprogrammer?country.x=US&locale.x=en_US"
             target="_blank"
-            >PayPal link</a
+            >Date Night/Honeymoon Fund (PayPal link)</a
           >
-          that might be the easiest, for you.
         </p>
       </q-tab-panel>
     </q-tab-panels>
