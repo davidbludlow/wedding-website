@@ -106,12 +106,18 @@ function goToRsvp() {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 img {
   max-width: 100%;
   max-height: calc(100vh - 90px);
 }
 .pictures-tab img {
   margin: 4px;
+}
+a:link {
+  color: $blue-3;
+}
+a:visited {
+  color: $blue-8;
 }
 </style>
