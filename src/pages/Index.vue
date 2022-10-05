@@ -82,8 +82,13 @@
           <a
             href="https://www.paypal.com/paypalme/physicsprogrammer?country.x=US&locale.x=en_US"
             target="_blank"
-            >Date Night/Honeymoon Fund (PayPal link)</a
+            >PayPal Link</a
           >
+          <br/>
+            <a
+            href="https://l.facebook.com/l.php?u=https%3A%2F%2Fvenmo.com%2Fcode%3Fuser_id%3D2229154296627200936%26created%3D1664956291%26fbclid%3DIwAR0cZElYYt1PPrweKD2Ncxlf9OOGPy32sD2Ak83Qy56Ho7c4Yd-l4tKA130&h=AT144PDAxIU2PY77juzO3PExTUBG0puUSUzR_bwWXIk4Xh1vXySIZqCL9f5X6EUjTbbwWPr0fO8YwbwJDcOFaqQr8l-2YCQj9V8ZvXtKkzG17i6TeJzeEfxW7Anl8cGxnag"
+            target="_blank"
+            >VENMO Link</a>
         </p>
       </q-tab-panel>
     </q-tab-panels>
