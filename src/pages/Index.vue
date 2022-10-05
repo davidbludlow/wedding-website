@@ -20,7 +20,7 @@
       </q-tab-panel>
       <q-tab-panel name="pictures" class="flex flex-center pictures-tab">
         <img src="/pictures/IMG_2714.JPG" />
-        <img src="/pictures/IMG_2714.JPG" />
+        <img src="/pictures/IMG_2714.JPG" />HI i AM HERE
         <img src="/pictures/IMG_2753.JPG" />
         <img src="/pictures/IMG_2789.JPG" />
         <img src="/pictures/IMG_2854.JPG" />
