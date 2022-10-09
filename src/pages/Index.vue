@@ -89,7 +89,9 @@
           If you are not sure what to shop for here is another option. We have
           both been single for a
           <strong style="text-decoration: underline">long time</strong> and have
-          collected many household items over the years. So something for our
+          collected many household items over the years. 
+          <br />
+          So something for our
           Date Night/Honeymoon Fund would be much appreciated as well.
           <br />
           <a
