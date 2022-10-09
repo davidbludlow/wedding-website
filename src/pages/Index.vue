@@ -65,12 +65,19 @@
         <div class="text-h6">Gift Registry Information</div>
         <p></p>
         <p>
-          Should you wish to bing a gift we registered on
+          We're looking forward to having you celebrate with us. That is the
+          best gift of all. However, should you wish to bing a gift we
+          registered with
           <a
             href="https://www.amazon.com/wedding/share/GeneiseDavidLudlow"
             target="_blank"
             >Amazon Gift Registry</a
-          >.
+            <p>Gifts shipped to 
+              <p>David and Geneise 
+                <p>1462 Cinnamon Ridge Way
+                  <p>Provo UT, 84606
+          
+          
         </p>
 
         <p>
