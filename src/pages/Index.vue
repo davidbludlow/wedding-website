@@ -72,10 +72,10 @@
             href="https://www.amazon.com/wedding/share/GeneiseDavidLudlow"
             target="_blank"
             >Amazon Gift Registry</a
-            <p>Gifts shipped to 
-              <p>David and Geneise 
-                <p>1462 Cinnamon Ridge Way
-                  <p>Provo UT, 84606
+            <br />Gifts shipped to 
+              <br />David and Geneise 
+                <br />1462 Cinnamon Ridge Way
+                  <br />Provo UT, 84606
           
           
         </p>
