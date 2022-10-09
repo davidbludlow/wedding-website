@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css?family=Waterfall"
       rel="stylesheet"
     />
-    <q-tab-panels v-model="tab" animated style="flex-grow: 1">
-      <q-tab-panel name="info" class="flex flex-center column">
+    <q-tab-panels v-model="tab" animated style="height: calc(100vh - 50px)">
+      <q-tab-panel name="info" class="flex flex-center column no-wrap">
         <p
           style="font-size: 60px; font-family: 'Waterfall'; text-align: center"
         >
@@ -48,7 +48,7 @@
       <q-tab-panel
         name="rsvp"
         class="flex flex-center column"
-        style="height: calc(100vh - 50px); padding-bottom: 0"
+        style="height: calc(100vh - 50px); padding-bottom: 0; padding-top: 0"
       >
         <iframe
           src="https://docs.google.com/forms/d/e/1FAIpQLSfX1b5wNfhh2dN002PBUqSL2hvA1MvOjLwAA1KYU_MsaFMQlQ/viewform?embedded=true"
