@@ -66,8 +66,10 @@
         <p></p>
         <p>
           We're looking forward to having you celebrate with us. That is the
-          best gift of all. However, should you wish to bing a gift we
-          registered with
+          best gift of all.
+        </p>
+        <p>
+          However, should you wish to bing a gift we registered with
           <a
             href="https://www.amazon.com/wedding/share/GeneiseDavidLudlow"
             target="_blank"
@@ -85,7 +87,7 @@
         <p>
           If you are not sure what to shop for, here is another option. We have
           both been single for a
-          <strong style="text-decoration: underline">long time</strong> and have
+          <strong style="text-decoration: underline">LONG TIME</strong> and have
           collected many household items over the years.
           <br />
           So something for our Date Night/Honeymoon Fund would be much
