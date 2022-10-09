@@ -86,13 +86,13 @@
         </p>
 
         <p>
-          If you are not sure what to shop for here is another option. We have
+          If you are not sure what to shop for, here is another option. We have
           both been single for a
           <strong style="text-decoration: underline">long time</strong> and have
-          collected many household items over the years. 
+          collected many household items over the years.
           <br />
-          So something for our
-          Date Night/Honeymoon Fund would be much appreciated as well.
+          So something for our Date Night/Honeymoon Fund would be much
+          appreciated as well.
           <br />
           <a
             href="https://www.paypal.com/paypalme/physicsprogrammer?country.x=US&locale.x=en_US"
