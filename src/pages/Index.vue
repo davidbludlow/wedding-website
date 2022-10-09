@@ -73,18 +73,15 @@
             target="_blank"
             >Amazon Gift Registry</a
           >
-        </p>
-
-        <p>
           Gifts shipped to
-          <br />
+        </p>
+        <p>
           David and Geneise
           <br />
           1462 Cinnamon Ridge Way
           <br />
-          Provo UT, 84606
+          Provo, UT 84606
         </p>
-
         <p>
           If you are not sure what to shop for, here is another option. We have
           both been single for a
