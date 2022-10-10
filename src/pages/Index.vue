@@ -19,7 +19,7 @@
         >
           Geneise Morrison & David Ludlow are getting married!
         </p>
-        <img src="/pictures/IMG_2722-1.jpg" />
+        <img src="/pictures/website_banner.png" />
         <div class="text-h6">Reception Information</div>
         <p>Nov 5, 2022 at 5:00 PM</p>
         <p>Location is TBD</p>
