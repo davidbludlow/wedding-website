@@ -79,7 +79,7 @@
             target="_blank"
             >Amazon Gift Registry</a
           >
-          Gifts shipped to
+          Gifts and cards can be mailed to
         </p>
         <p>
           David and Geneise
