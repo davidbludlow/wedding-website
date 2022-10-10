@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex column">
+  <q-page class="flex column no-wrap" style="height: 100vh">
     <q-tabs v-model="tab">
       <q-tab name="info" label="Info"></q-tab>
       <q-tab name="pictures" label="Pictures"></q-tab>
@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css?family=Waterfall"
       rel="stylesheet"
     />
-    <q-tab-panels v-model="tab" animated style="height: calc(100vh - 50px)">
-      <q-tab-panel name="info" class="flex flex-center column no-wrap">
+    <q-tab-panels v-model="tab" animated style="flex-grow: 1">
+      <q-tab-panel name="info" style="text-align: center">
         <p
           style="font-size: 60px; font-family: 'Waterfall'; text-align: center"
         >
