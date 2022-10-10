@@ -26,6 +26,12 @@
         <p>
           Please <a href="javascript:void(0)" v-on:click="goToRsvp()">RSVP</a>
         </p>
+        <q-banner style="text-align: right; font-style: italic">
+          <span style="font-size: xx-small">
+            Photography credit: Sweet Rose Photograph, @kmcentirephotos/Kaitlyn
+            McEntire Photography/www.kaitlynmcentire.com, and others
+          </span>
+        </q-banner>
       </q-tab-panel>
       <q-tab-panel name="pictures" class="flex flex-center pictures-tab">
         <img src="/pictures/IMG_2714-1.jpg" />
@@ -56,10 +62,7 @@
           >Loading…</iframe
         >
       </q-tab-panel>
-      <q-tab-panel
-        name="registry"
-        style="text-align: center"
-      >
+      <q-tab-panel name="registry" style="text-align: center">
         <div class="text-h6">Gift Registry Information</div>
         <p></p>
         <p>
