@@ -56,7 +56,11 @@
           >Loading…</iframe
         >
       </q-tab-panel>
-      <q-tab-panel name="registry" class="flex flex-center column">
+      <q-tab-panel
+        name="registry"
+        class="flex flex-center column"
+        style="text-align: center"
+      >
         <div class="text-h6">Gift Registry Information</div>
         <p></p>
         <p>
