@@ -1,10 +1,11 @@
 <template>
   <q-page class="flex column no-wrap" style="height: 100vh">
     <q-tabs v-model="tab">
-      <q-tab name="info" label="Info"></q-tab>
+      <q-tab name="home" label="Home"></q-tab>
       <q-tab name="pictures" label="Pictures"></q-tab>
       <q-tab name="rsvp" label="RSVP"></q-tab>
       <q-tab name="registry" label="Gift Registry"></q-tab>
+      <q-tab name="details" label="Details"></q-tab>
     </q-tabs>
     <q-separator />
 
@@ -13,7 +14,7 @@
       rel="stylesheet"
     />
     <q-tab-panels v-model="tab" animated style="flex-grow: 1">
-      <q-tab-panel name="info" style="text-align: center">
+      <q-tab-panel name="home" style="text-align: center">
         <p
           style="font-size: 60px; font-family: 'Waterfall'; text-align: center"
         >
@@ -107,6 +108,14 @@
           >
         </p>
       </q-tab-panel>
+      <q-tab-panel name="details" style="text-align: center">
+        <div class="text-h6">Reception Information</div>
+        <p>Nov 5, 2022 at 5:00 PM</p>
+        <p>Location is TBD</p>
+        <p>
+          Please <a href="javascript:void(0)" v-on:click="goToRsvp()">RSVP</a>
+        </p>
+      </q-tab-panel>
     </q-tab-panels>
   </q-page>
 </template>
@@ -114,7 +123,7 @@
 <script setup>
 import { ref } from 'vue';
 
-const tab = ref('info');
+const tab = ref('home');
 function goToRsvp() {
   tab.value = 'rsvp';
 }
