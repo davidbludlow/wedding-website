@@ -58,7 +58,6 @@
       </q-tab-panel>
       <q-tab-panel
         name="registry"
-        class="flex flex-center column"
         style="text-align: center"
       >
         <div class="text-h6">Gift Registry Information</div>
