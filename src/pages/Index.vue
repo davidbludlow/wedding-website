@@ -19,7 +19,7 @@
         >
           Geneise Morrison & David Ludlow are getting married!
         </p>
-        <img src="/pictures/IMG_2722.JPG" />
+        <img src="/pictures/IMG_2722-1.JPG" />
         <div class="text-h6">Reception Information</div>
         <p>Nov 5, 2022 at 5:00 PM</p>
         <p>Location is TBD</p>
@@ -28,22 +28,17 @@
         </p>
       </q-tab-panel>
       <q-tab-panel name="pictures" class="flex flex-center pictures-tab">
-        <img src="/pictures/IMG_2714.JPG" />
-        <img src="/pictures/IMG_2714.JPG" />
-        <img src="/pictures/IMG_2753.JPG" />
-        <img src="/pictures/IMG_2789.JPG" />
-        <img src="/pictures/IMG_2854.JPG" />
-        <img src="/pictures/IMG_2920.JPG" />
-        <img src="/pictures/IMG_2719.JPG" />
-        <img src="/pictures/IMG_2774.JPG" />
-        <img src="/pictures/IMG_2841.JPG" />
-        <img src="/pictures/IMG_2867.JPG" />
-        <img src="/pictures/IMG_2996.JPG" />
-        <img src="/pictures/IMG_2722.JPG" />
-        <img src="/pictures/IMG_2777.JPG" />
-        <img src="/pictures/IMG_2847.JPG" />
-        <img src="/pictures/IMG_2915.JPG" />
-        <img src="/pictures/IMG_3015.JPG" />
+        <img src="/pictures/493214 IMG_2714-1.jpg" />
+        <img src="/pictures/227798 IMG_2722-1.jpg" />
+        <img src="/pictures/582146 IMG_2753-1.jpg" />
+        <img src="/pictures/428451 IMG_2755-1.jpg" />
+        <img src="/pictures/256508 IMG_2789-Edit-3.jpg" />
+        <img src="/pictures/338795 IMG_2841-3.jpg" />
+        <img src="/pictures/438729 IMG_2847-1.jpg" />
+        <img src="/pictures/393687 IMG_2867-1.jpg" />
+        <img src="/pictures/395323 IMG_2920-1.jpg" />
+        <img src="/pictures/533451 IMG_2996-1.jpg" />
+        <img src="/pictures/599501 IMG_3015-1.jpg" />
       </q-tab-panel>
       <q-tab-panel
         name="rsvp"
