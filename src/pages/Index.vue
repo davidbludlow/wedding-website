@@ -64,7 +64,9 @@
         >
       </q-tab-panel>
       <q-tab-panel name="registry" style="text-align: center">
-        <div class="text-h6">Gift Registry Information</div>
+        <strong style="text-decoration: underline"
+          ><div class="text-h6">Gift Registry Information</div></strong
+        >
         <p></p>
         <p>
           We're looking forward to having you celebrate with us. That is the
@@ -87,8 +89,13 @@
           Provo, UT 84606
         </p>
         <p>
-          If you are not sure what to shop for, here is another option. We have
-          both been single for a
+          <strong style="text-decoration: underline"
+            ><div class="text-h6">Date Night/Honeymoon Fund</div></strong
+          >
+        </p>
+        <p>
+          If you are not sure what to shop for, here is another option.
+          <br />We have both been single for a
           <strong style="text-decoration: underline">LONG TIME</strong> and have
           collected many household items over the years.
           <br />
