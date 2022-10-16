@@ -23,7 +23,8 @@
         <img src="/pictures/website_banner.png" />
         <div class="text-h6">Reception Information</div>
         <p>Nov 5, 2022 at 5:00 PM</p>
-        <p>Location is TBD</p>
+        <p>1305 North 100 East
+        <br /> American Fork, UT 84003</p>
         <p>
           Please <a href="javascript:void(0)" v-on:click="goToRsvp()">RSVP</a>
         </p>
