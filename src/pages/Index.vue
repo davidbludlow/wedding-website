@@ -119,10 +119,16 @@
       <q-tab-panel name="details" style="text-align: center">
         <div class="text-h6">Reception Information</div>
         <p>Nov 5, 2022 at 5:00 PM</p>
-        <p>Location is TBD</p>
+          <p>1305 North 100 East</p>
         <p>
           Please <a href="javascript:void(0)" v-on:click="goToRsvp()">RSVP</a>
         </p>
+        
+        <img src="/pictures/Wedding Invitation7.png" />
+        <div class="text-h6">Reception Information</div>
+        <p>Nov 5, 2022 at 5:00 PM</p>
+        <p>1305 North 100 East
+        <br /> American Fork, UT 84003</p/
       </q-tab-panel>
     </q-tab-panels>
   </q-page>
