@@ -8,6 +8,7 @@
       <q-tab name="details" label="Details"></q-tab>
     </q-tabs>
     <q-separator />
+    ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 
     <link
       href="https://fonts.googleapis.com/css?family=Waterfall"
