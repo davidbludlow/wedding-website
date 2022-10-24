@@ -114,6 +114,7 @@
       <q-tab-panel name="details" style="text-align: center">
         <div class="text-h6">Reception Information</div>
         <ReceptionDetails />
+        <img src="/pictures/Wedding Invitation7.png" />
       </q-tab-panel>
     </q-tab-panels>
   </q-page>
