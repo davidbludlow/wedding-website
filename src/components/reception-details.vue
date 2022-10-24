@@ -2,7 +2,7 @@
   <p>Nov 5, 2022 at 5:00 PM</p>
   <address>
     <a href="https://goo.gl/maps/1WYdcoXTpj7sCzou7" target="_blank">
-      North 100 East<br />
+      1305 North 100 East<br />
       American Fork, UT
     </a>
   </address>
