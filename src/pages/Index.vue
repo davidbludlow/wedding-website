@@ -22,11 +22,7 @@
         </p>
         <img src="/pictures/website_banner.png" />
         <div class="text-h6">Reception Information</div>
-        <p>Nov 5, 2022 at 5:00 PM</p>
-        <p>Location is TBD</p>
-        <p>
-          Please <a href="javascript:void(0)" v-on:click="goToRsvp()">RSVP</a>
-        </p>
+        <ReceptionDetails />
         <q-banner style="text-align: right; font-style: italic">
           <span style="font-size: xx-small">
             Photography credit: Sweet Rose Photograph, @kmcentirephotos/Kaitlyn
@@ -117,11 +113,7 @@
       </q-tab-panel>
       <q-tab-panel name="details" style="text-align: center">
         <div class="text-h6">Reception Information</div>
-        <p>Nov 5, 2022 at 5:00 PM</p>
-        <p>Location is TBD</p>
-        <p>
-          Please <a href="javascript:void(0)" v-on:click="goToRsvp()">RSVP</a>
-        </p>
+        <ReceptionDetails />
       </q-tab-panel>
     </q-tab-panels>
   </q-page>
@@ -129,6 +121,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import ReceptionDetails from '../components/reception-details.vue';
 
 const tab = ref('home');
 function goToRsvp() {
@@ -144,6 +137,15 @@ img {
 .pictures-tab img {
   margin: 4px;
 }
+a:link {
+  color: $blue-3;
+}
+a:visited {
+  color: $blue-8;
+}
+</style>
+
+<style lang="scss">
 a:link {
   color: $blue-3;
 }
