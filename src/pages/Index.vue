@@ -128,10 +128,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import ReceptionDetails from '../components/reception-details.vue';
+import { useRoute, useRouter } from 'vue-router';
 
-const tab = ref('home');
+const route = useRoute();
+const router = useRouter();
+
+const tab = ref(route.query.tab ?? 'home');
+watch(tab, (tabValue) => {
+  router.replace({
+    query: { ...route.query, tab: tabValue },
+  });
+});
 function goToRsvp() {
   tab.value = 'rsvp';
 }
