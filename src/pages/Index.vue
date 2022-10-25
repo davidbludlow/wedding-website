@@ -154,19 +154,10 @@ img {
 .pictures-tab img {
   margin: 4px;
 }
-a:link {
+:deep(a:link) {
   color: $blue-3;
 }
-a:visited {
-  color: $blue-8;
-}
-</style>
-
-<style lang="scss">
-a:link {
-  color: $blue-3;
-}
-a:visited {
+:deep(a:visited) {
   color: $blue-8;
 }
 </style>
