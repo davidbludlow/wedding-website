@@ -11,9 +11,10 @@
 </template>
 
 <script setup lang="ts">
+import { miscellaneousStore } from 'src/store/miscellaneous-store';
+
 function goToRsvp() {
-  throw new Error();
-  // tab.value = 'rsvp';
+  miscellaneousStore.tab = 'rsvp';
 }
 </script>
 

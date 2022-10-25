@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex column no-wrap" style="height: 100vh">
-    <q-tabs v-model="tab">
+    <q-tabs v-model="miscellaneousStore.tab">
       <q-tab name="home" label="Home"></q-tab>
       <q-tab name="pictures" label="Pictures"></q-tab>
       <q-tab name="rsvp" label="RSVP"></q-tab>
@@ -13,7 +13,11 @@
       href="https://fonts.googleapis.com/css?family=Waterfall"
       rel="stylesheet"
     />
-    <q-tab-panels v-model="tab" animated style="flex-grow: 1">
+    <q-tab-panels
+      v-model="miscellaneousStore.tab"
+      animated
+      style="flex-grow: 1"
+    >
       <q-tab-panel name="home" style="text-align: center">
         <p
           style="font-size: 60px; font-family: 'Waterfall'; text-align: center"
@@ -128,19 +132,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { watch, onUnmounted } from 'vue';
 import ReceptionDetails from '../components/reception-details.vue';
 import { useRoute, useRouter } from 'vue-router';
+import { miscellaneousStore, tabNames } from '../store/miscellaneous-store';
 
 const route = useRoute();
 const router = useRouter();
 
-const tab = ref(route.query.tab ?? 'home');
-watch(tab, (tabValue) => {
-  router.replace({
-    query: { ...route.query, tab: tabValue },
-  });
-});
+miscellaneousStore.tab = coerceIntoValidTabName(route.query.tab);
+const disposeWatcher = watch(
+  () => miscellaneousStore.tab,
+  (tabValue) => {
+    router.replace({
+      query: { ...route.query, tab: tabValue },
+    });
+  }
+);
+onUnmounted(() => disposeWatcher());
+
+function coerceIntoValidTabName(value: any) {
+  return tabNames[tabNames.indexOf(value)] ?? 'home';
+}
 </script>
 
 <style lang="scss" scoped>
