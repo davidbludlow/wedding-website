@@ -11,4 +11,13 @@
     "editor.defaultFormatter": "vscode.json-language-features",
   },
   "editor.formatOnSave": true,
+  "cSpell.ignoreWords": [
+    "esbenp",
+    "kaitlynmcentire",
+    "kmcentirephotos"
+  ],
+  "cSpell.words": [
+    "Geneise",
+    "Kaitlyn"
+  ],
 }
