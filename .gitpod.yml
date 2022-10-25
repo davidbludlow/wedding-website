@@ -8,3 +8,7 @@ tasks:
 ports:
   - port: 8080
     visibility: private
+vscode:
+  extensions:
+    - esbenp.prettier-vscode
+    - vue.volar
