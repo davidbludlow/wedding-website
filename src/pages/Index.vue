@@ -115,6 +115,13 @@
         <div class="text-h6">Reception Information</div>
         <ReceptionDetails />
         <img src="/pictures/Wedding Invitation7.png" />
+        <q-banner style="text-align: right; font-style: italic">
+          <span style="font-size: xx-small">
+            Photography credit: Sweet Rose Photograph and
+            @kmcentirephotos/Kaitlyn McEntire
+            Photography/www.kaitlynmcentire.com
+          </span>
+        </q-banner>
       </q-tab-panel>
     </q-tab-panels>
   </q-page>
