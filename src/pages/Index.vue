@@ -127,7 +127,7 @@
   </q-page>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue';
 import ReceptionDetails from '../components/reception-details.vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -141,9 +141,6 @@ watch(tab, (tabValue) => {
     query: { ...route.query, tab: tabValue },
   });
 });
-function goToRsvp() {
-  tab.value = 'rsvp';
-}
 </script>
 
 <style lang="scss" scoped>
