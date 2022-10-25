@@ -24,18 +24,18 @@
         >
           Geneise Morrison & David Ludlow are getting married!
         </p>
-        <!-- <q-img
-          src="/pictures/website_banner_resized_5_percent.png"
-        >
-          <img
-            src="/pictures/website_banner.png"
-          />
-        </q-img> -->
         <q-img
+          src="/pictures/website_banner_resized_5_percent.png"
+          :initial-ratio="5649 / 2183"
+          spinner-size="0"
+        >
+          <img src="/pictures/website_banner.png" />
+        </q-img>
+        <!-- <q-img
           src="/pictures/website_banner.png"
           placeholder-src="/pictures/website_banner_resized_5_percent.png"
-          :ratio="5649 / 2183"
-        />
+          :initial-ratio="5649 / 2183"
+        /> -->
         <div class="text-h6">Reception Information</div>
         <ReceptionDetails />
         <q-banner style="text-align: right; font-style: italic">
