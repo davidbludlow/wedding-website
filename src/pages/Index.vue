@@ -24,18 +24,41 @@
         >
           Geneise Morrison & David Ludlow are getting married!
         </p>
-        <q-img
+
+        <!-- David was trying out different options for big-picture-loading
+        strategies. Here are several options. The first option involves several
+        elements -->
+
+        <div style="height: 0; overflow: visible">
+          <q-img
+            src="/pictures/website_banner_resized_5_percent.png"
+            :ratio="5649 / 2183"
+            no-spinner
+          />
+        </div>
+        <div
+          style="position: relative; height: 0; overflow: visible; z-index: 2"
+        >
+          <q-img src="/pictures/website_banner.png" :ratio="5649 / 2183" />
+        </div>
+        <img src="/pictures/website_banner.png" style="position: relative" />
+
+        <!-- <q-img
           src="/pictures/website_banner_resized_5_percent.png"
           :initial-ratio="5649 / 2183"
-          spinner-size="0"
+          no-spinner
         >
           <img src="/pictures/website_banner.png" />
-        </q-img>
+        </q-img> -->
+
         <!-- <q-img
           src="/pictures/website_banner.png"
           placeholder-src="/pictures/website_banner_resized_5_percent.png"
           :initial-ratio="5649 / 2183"
         /> -->
+
+        <!-- <img src="/pictures/website_banner.png" /> -->
+
         <div class="text-h6">Reception Information</div>
         <ReceptionDetails />
         <q-banner style="text-align: right; font-style: italic">
