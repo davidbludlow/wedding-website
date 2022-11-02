@@ -95,6 +95,16 @@
         <img src="/pictures/13.jpg" />
         <img src="/pictures/14.jpg" />
         <img src="/pictures/15.jpg" />
+        <img src="/pictures/144.jpg" />
+        <img src="/pictures/166.jpg" />
+        <img src="/pictures/167.jpg" />
+        <img src="/pictures/173.jpg" />
+        <img src="/pictures/175.jpg" />
+        <img src="/pictures/Cars.jpg" />
+        <img src="/pictures/Disney.jpg" />
+        <img src="/pictures/imagejpeg_0(4).jpg" />
+        <img src="/pictures/20221001_173209.jpg" />
+        <img src="/pictures/15.jpg" />
       </q-tab-panel>
       <q-tab-panel
         name="rsvp"
