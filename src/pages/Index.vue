@@ -75,6 +75,7 @@
             McEntire Photography/www.kaitlynmcentire.com, and others
           </span>
         </p>
+        <p></p>
         <img src="/pictures/IMG_2714-1.jpg" />
         <img src="/pictures/IMG_2722-1.jpg" />
         <img src="/pictures/IMG_2753-1.jpg" />
