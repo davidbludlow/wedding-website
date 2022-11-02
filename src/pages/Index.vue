@@ -76,10 +76,21 @@
         <img src="/pictures/IMG_2789-Edit-3.jpg" />
         <img src="/pictures/IMG_2841-3.jpg" />
         <img src="/pictures/IMG_2847-1.jpg" />
-        <img src="/pictures/IMG_2867-1.jpg" />
-        <img src="/pictures/IMG_2920-1.jpg" />
-        <img src="/pictures/IMG_2996-1.jpg" />
-        <img src="/pictures/IMG_3015-1.jpg" />
+        <img src="/pictures/1.jpg" />
+        <img src="/pictures/2.jpg" />
+        <img src="/pictures/3.jpg" />
+        <img src="/pictures/4.jpg" />
+        <img src="/pictures/5.jpg" />
+        <img src="/pictures/6.jpg" />
+        <img src="/pictures/7.jpg" />
+        <img src="/pictures/8.jpg" />
+        <img src="/pictures/9.jpg" />
+        <img src="/pictures/10.jpg" />
+        <img src="/pictures/11.jpg" />
+        <img src="/pictures/12.jpg" />
+        <img src="/pictures/13.jpg" />
+        <img src="/pictures/14.jpg" />
+        <img src="/pictures/15.jpg" />
       </q-tab-panel>
       <q-tab-panel
         name="rsvp"
