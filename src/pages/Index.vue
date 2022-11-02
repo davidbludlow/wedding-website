@@ -69,13 +69,6 @@
         </q-banner>
       </q-tab-panel>
       <q-tab-panel name="pictures" class="flex flex-center pictures-tab">
-        <p>
-          <span style="font-size: xx-small">
-            Photography credit: Sweet Rose Photograph, @kmcentirephotos/Kaitlyn
-            McEntire Photography/www.kaitlynmcentire.com, and others
-          </span>
-        </p>
-        <p></p>
         <img src="/pictures/IMG_2714-1.jpg" />
         <img src="/pictures/IMG_2722-1.jpg" />
         <img src="/pictures/IMG_2753-1.jpg" />
@@ -108,6 +101,14 @@
         <img src="/pictures/imagejpeg_0(4).jpg" />
         <img src="/pictures/20221001_173209.jpg" />
         <img src="/pictures/15.jpg" />
+
+        <p>
+          <span style="font-size: xx-small">
+            Photography credit: Sweet Rose Photograph, @kmcentirephotos/Kaitlyn
+            McEntire Photography/www.kaitlynmcentire.com, and others
+          </span>
+        </p>
+        <p></p>
       </q-tab-panel>
       <q-tab-panel
         name="rsvp"
