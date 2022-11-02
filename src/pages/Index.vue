@@ -63,7 +63,7 @@
         <ReceptionDetails />
         <q-banner style="text-align: right; font-style: italic">
           <span style="font-size: xx-small">
-            Photography credit: Sweet Rose Photograph, @kmcentirephotos/Kaitlyn
+            Photography credit: Sweet Rose Photography, @kmcentirephotos/Kaitlyn
             McEntire Photography/www.kaitlynmcentire.com, and others
           </span>
         </q-banner>
@@ -103,8 +103,8 @@
         <img src="/pictures/15.jpg" />
 
         <p>
-          <span style="font-size: xx-small">
-            Photography credit: Sweet Rose Photograph, @kmcentirephotos/Kaitlyn
+          <span style="font-size: medium">
+            Photography credit: Sweet Rose Photography, @kmcentirephotos/Kaitlyn
             McEntire Photography/www.kaitlynmcentire.com, and others
           </span>
         </p>
