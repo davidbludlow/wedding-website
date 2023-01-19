@@ -1,0 +1,7 @@
+# We ignore configuration .json files, so we can have trailing commas in them.
+
+/.vscode/extensions.json
+/.vscode/launch.json
+/.vscode/settings.json
+/.vscode/tasks.json
+tsconfig.json
