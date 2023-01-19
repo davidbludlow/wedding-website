@@ -57,13 +57,32 @@
     "editor.formatOnSaveMode": "file",
     "editor.tabSize": 2,
   },
+  // cSpell settings go with the vscode extension that has the ID
+  // streetsidesoftware.code-spell-checker
+  "cSpell.words": [
+    "Geneise",
+    "Kaitlyn"
+  ],
+  // "cSpell.ignoreWords" is like "cSpell.words", except that words in
+  // "cSpell.words" may appear in the spelling suggestions list, unlike the
+  // words in "cSpell.ignoreWords"
   "cSpell.ignoreWords": [
     "esbenp",
     "kaitlynmcentire",
     "kmcentirephotos"
   ],
-  "cSpell.words": [
-    "Geneise",
-    "Kaitlyn"
+  "cSpell.enableFiletypes": [
+    "vue",
+  ],
+  "cSpell.languageSettings": [
+    {
+      "languageId": "vue",
+      "dictionaries": [
+        "html",
+        "fonts",
+        "typescript",
+        "css",
+      ],
+    },
   ],
 }
