@@ -4,7 +4,6 @@ about: Create a report to help us improve Quasar
 title: ''
 labels: bug
 assignees: ''
-
 ---
 
 **Describe the bug**
@@ -15,6 +14,7 @@ Fork a Codesandbox (https://codesandbox.quasar.dev) and copy-paste link here.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'

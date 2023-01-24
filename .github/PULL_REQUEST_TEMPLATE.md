@@ -21,6 +21,7 @@ https://github.com/quasarframework/quasar/blob/dev/.github/CONTRIBUTING.md#pull-
 - [ ] When resolving a specific issue, it's referenced in the PR's title (e.g. `fix: #xxx[,#xxx]`, where "xxx" is the issue number)
 
 If adding a **new feature**, the PR's description includes:
+
 - [ ] A convincing reason for adding this feature (to avoid wasting your time, it's best to open a suggestion issue first and wait for approval before working on it)
 
 **Other information:**

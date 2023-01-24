@@ -1,8 +1,7 @@
 import { reactive } from 'vue';
 
-
 export const miscellaneousStore = reactive({
-  tab: null as null | TabName
+  tab: null as null | TabName,
 });
 
 export const tabNames = [
@@ -12,4 +11,4 @@ export const tabNames = [
   'registry',
   'details',
 ] as const;
-type TabName = typeof tabNames[number];
+type TabName = (typeof tabNames)[number];
