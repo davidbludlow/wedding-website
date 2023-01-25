@@ -76,6 +76,10 @@
         <img src="/pictures/IMG_2789-Edit-3.jpg" />
         <img src="/pictures/IMG_2841-3.jpg" />
         <img src="/pictures/IMG_2847-1.jpg" />
+        <img src="/pictures/IMG_2867-1.jpg" />
+        <img src="/pictures/IMG_2920-1.jpg" />
+        <img src="/pictures/IMG_2996-1.jpg" />
+        <img src="/pictures/IMG_3015-1.jpg" />
         <img src="/pictures/1.jpg" />
         <img src="/pictures/2.jpg" />
         <img src="/pictures/3.jpg" />
