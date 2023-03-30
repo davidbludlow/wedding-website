@@ -12,32 +12,21 @@
       "!**/jsconfig.json"
     ]
   },
-  "markdown": {
-  },
-  "toml": {
-  },
+  "markdown": {},
+  "toml": {},
   "prettier": {
+    "associations": [
+      "!**/.vscode/extensions.json",
+      "!**/.vscode/launch.json",
+      "!**/.vscode/settings.json",
+      "!**/tsconfig*.json",
+      "!**/jsconfig.json"
+    ],
     "singleQuote": true,
-    "overrides": [
-      {
-        "files": [
-          "**/.vscode/extensions.json",
-          "**/.vscode/launch.json",
-          "**/.vscode/settings.json",
-          "**/tsconfig*.json",
-          "**/jsconfig.json"
-        ],
-        "options": {
-          "parser": "json5",
-          "quoteProps": "preserve",
-          "singleQuote": false,
-          "trailingComma": "all"
-        }
-      }
-    ]
+    "trailingComma": "all"
   },
   "includes": [
-    "**/*.{ts,tsx,js,jsx,cjs,mjs,json,yaml,md,mdx,toml,vue,html,css,scss,sass,less,hbs,prettierrc,prettierignore,gitignore}"
+    "**/*.{ts,tsx,js,jsx,cjs,mjs,json,yaml,yml,md,mdx,toml,vue,html,css,scss,sass,less,hbs,prettierrc,prettierignore,gitignore,graphql,gql}"
   ],
   "excludes": [
     "**/node_modules",

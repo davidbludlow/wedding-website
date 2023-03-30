@@ -40,7 +40,9 @@
     "editor.tabSize": 2,
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "dprint.dprint",
+    // We use a different formatter here so that we can use trailing commas in
+    // files like tsconfig.json and settings.json
+    "editor.defaultFormatter": "vscode.json-language-features",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
