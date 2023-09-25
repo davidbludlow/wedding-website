@@ -218,6 +218,7 @@ const disposeWatcher = watch(
 );
 onUnmounted(() => disposeWatcher());
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function coerceIntoValidTabName(value: any) {
   return tabNames[tabNames.indexOf(value)] ?? 'home';
 }
