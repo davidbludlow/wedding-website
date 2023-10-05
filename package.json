@@ -9,7 +9,7 @@
     "start": "quasar dev",
     "build": "quasar build",
     "lint": "eslint --ext .js,.ts,.vue ./",
-    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "format": "prettier --write .",
     "test": "echo \"No test specified\" && exit 0",
     "post-update": "yarn upgrade"
   },
