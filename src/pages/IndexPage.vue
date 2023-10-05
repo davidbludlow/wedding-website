@@ -214,7 +214,7 @@ const disposeWatcher = watch(
     router.replace({
       query: { ...route.query, tab: tabValue },
     });
-  }
+  },
 );
 onUnmounted(() => disposeWatcher());
 
