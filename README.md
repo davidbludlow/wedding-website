@@ -33,19 +33,15 @@ If you would like to work with the PWA or SSR versions of Quasar, please make th
 #### PWA
 
 ```json
-
- "scripts": {
-    "start": "quasar dev -m pwa",
-
+"scripts": {
+   "start": "quasar dev -m pwa",
 ```
 
 #### SSR
 
 ```json
-
- "scripts": {
-    "start": "quasar dev -m ssr",
-
+"scripts": {
+   "start": "quasar dev -m ssr",
 ```
 
 Once you've changed the the `start` entry of `scripts` in the `package.json` file accordingly, you simply need to restart the container's server.

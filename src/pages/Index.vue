@@ -127,13 +127,12 @@
           frameborder="0"
           marginheight="0"
           marginwidth="0"
-          >Loading…</iframe
-        >
+        >Loading…</iframe>
       </q-tab-panel>
       <q-tab-panel name="registry" style="text-align: center">
-        <strong style="text-decoration: underline"
-          ><div class="text-h6">Gift Registry Information</div></strong
-        >
+        <strong style="text-decoration: underline"><div class="text-h6">
+            Gift Registry Information
+          </div></strong>
         <p></p>
         <p>
           We're looking forward to having you celebrate with us. That is the
@@ -144,8 +143,7 @@
           <a
             href="https://www.amazon.com/wedding/share/GeneiseDavidLudlow"
             target="_blank"
-            >Amazon Gift Registry</a
-          >
+          >Amazon Gift Registry</a>
           Gifts and cards can be mailed to
         </p>
         <p>
@@ -156,9 +154,9 @@
           Provo, UT 84606
         </p>
         <p>
-          <strong style="text-decoration: underline"
-            ><div class="text-h6">Date Night/Honeymoon Fund</div></strong
-          >
+          <strong style="text-decoration: underline"><div class="text-h6">
+              Date Night/Honeymoon Fund
+            </div></strong>
         </p>
         <p>
           If you are not sure what to shop for, here is another option.
@@ -172,14 +170,12 @@
           <a
             href="https://www.paypal.com/paypalme/physicsprogrammer?country.x=US&locale.x=en_US"
             target="_blank"
-            >PayPal Link</a
-          >
+          >PayPal Link</a>
           <br />
           <a
             href="https://l.facebook.com/l.php?u=https%3A%2F%2Fvenmo.com%2Fcode%3Fuser_id%3D2229154296627200936%26created%3D1664956291%26fbclid%3DIwAR0cZElYYt1PPrweKD2Ncxlf9OOGPy32sD2Ak83Qy56Ho7c4Yd-l4tKA130&h=AT144PDAxIU2PY77juzO3PExTUBG0puUSUzR_bwWXIk4Xh1vXySIZqCL9f5X6EUjTbbwWPr0fO8YwbwJDcOFaqQr8l-2YCQj9V8ZvXtKkzG17i6TeJzeEfxW7Anl8cGxnag"
             target="_blank"
-            >VENMO @LG-Morrison</a
-          >
+          >VENMO @LG-Morrison</a>
         </p>
       </q-tab-panel>
       <q-tab-panel name="details" style="text-align: center">
@@ -199,9 +195,9 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onUnmounted } from 'vue';
-import ReceptionDetails from '../components/reception-details.vue';
+import { onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import ReceptionDetails from '../components/reception-details.vue';
 import { miscellaneousStore, tabNames } from '../store/miscellaneous-store';
 
 const route = useRoute();
@@ -214,7 +210,7 @@ const disposeWatcher = watch(
     router.replace({
       query: { ...route.query, tab: tabValue },
     });
-  }
+  },
 );
 onUnmounted(() => disposeWatcher());
 

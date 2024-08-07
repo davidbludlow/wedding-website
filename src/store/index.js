@@ -12,7 +12,7 @@ import { createStore } from 'vuex';
  * with the Store instance.
  */
 
-export default store(function (/* { ssrContext } */) {
+export default store(function(/* { ssrContext } */) {
   const Store = createStore({
     modules: {
       // example
