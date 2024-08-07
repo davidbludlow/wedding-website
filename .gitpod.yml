@@ -10,6 +10,6 @@ ports:
     visibility: private
 vscode:
   extensions:
-    - esbenp.prettier-vscode
+    - dprint.dprint
     - streetsidesoftware.code-spell-checker
     - vue.volar

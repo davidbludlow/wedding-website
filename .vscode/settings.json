@@ -1,67 +1,78 @@
 {
   "files.autoSave": "afterDelay",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "dprint.dprint",
   "editor.formatOnSave": true,
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[handlebars]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
+  // This is to get rid of the yellow squigglies in dprint.jsonc. We can get rid
+  // of it when https://github.com/dprint/dprint-vscode/issues/94 is fixed.
+  "json.schemas": [
+    {
+      "fileMatch": ["dprint.jsonc"],
+      "schema": {
+        "$ref": "dprint://schemas/config.json",
+        "allowTrailingCommas": true,
+      },
+    },
+  ],
   "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
   },
   "[yaml]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "dprint.dprint",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "editor.insertSpaces": true,
@@ -69,11 +80,15 @@
   },
   // cSpell settings go with the vscode extension that has the ID
   // streetsidesoftware.code-spell-checker
-  "cSpell.words": ["Geneise", "Kaitlyn"],
+  "cSpell.words": [
+    "dprint",
+    "Geneise",
+    "Kaitlyn",
+  ],
   // "cSpell.ignoreWords" is like "cSpell.words", except that words in
   // "cSpell.words" may appear in the spelling suggestions list, unlike the
   // words in "cSpell.ignoreWords"
-  "cSpell.ignoreWords": ["esbenp", "kaitlynmcentire", "kmcentirephotos"],
+  "cSpell.ignoreWords": ["kaitlynmcentire", "kmcentirephotos"],
   "cSpell.enableFiletypes": ["vue"],
   "cSpell.languageSettings": [
     {

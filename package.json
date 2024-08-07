@@ -9,6 +9,7 @@
     "start": "quasar dev",
     "post-update": "yarn upgrade",
     "build": "quasar build",
+    "fmt": "dprint fmt",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
@@ -22,7 +23,7 @@
   },
   "devDependencies": {
     "@quasar/app": "^3.1.0",
-    "prettier": "^2.8.3"
+    "dprint": "^0.47.2"
   },
   "browserslist": [
     "last 10 Chrome versions",

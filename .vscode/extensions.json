@@ -1,6 +1,6 @@
 {
   "recommendations": [
-    "esbenp.prettier-vscode",
+    "dprint.dprint",
     "streetsidesoftware.code-spell-checker",
     "vue.volar",
   ],
