@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibe Coding Competition Archives</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 3rem;
+        font-size: 1.1rem;
+      }
+
+      .competition {
+        margin-bottom: 3rem;
+      }
+
+      .competition:last-child {
+        margin-bottom: 0;
+      }
+
+      h2 {
+        color: #444;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #667eea;
+        font-size: 1.8rem;
+      }
+
+      .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+
+      .game-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-decoration: none;
+        color: white;
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .game-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        word-wrap: break-word;
+      }
+
+      .game-author {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: capitalize;
+      }
+
+      .game-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1.5rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .games-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎮 Vibe Coding Competition Archives</h1>
+      <p class="subtitle">
+        A collection of creative games from our coding competitions
+      </p>
+
+      <div class="competition">
+        <h2>🦃 Thanksgiving 2025 Competition</h2>
+        <p style="color: #666; margin-bottom: 1rem">November 2025</p>
+        <div class="games-grid">
+          <a href="2025-11/aj-game-shoveler.html" class="game-card">
+            <div class="game-title">Shoveler</div>
+            <div class="game-author">by AJ</div>
+          </a>
+
+          <a href="2025-11/becky-game-1.html" class="game-card">
+            <div class="game-title">Game 1</div>
+            <div class="game-author">by Becky</div>
+          </a>
+
+          <a href="2025-11/becky-game-2.html" class="game-card">
+            <div class="game-title">Game 2</div>
+            <div class="game-author">by Becky</div>
+          </a>
+
+          <a href="2025-11/jack-game-1-incomplete.html" class="game-card">
+            <div class="game-title">Game 1</div>
+            <div class="game-author">by Jack</div>
+            <span class="game-badge">Incomplete</span>
+          </a>
+
+          <a href="2025-11/jack-game-2.html" class="game-card">
+            <div class="game-title">Game 2</div>
+            <div class="game-author">by Jack</div>
+          </a>
+
+          <a href="2025-11/ray-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Ray</div>
+          </a>
+
+          <a href="2025-11/ryan-game-incomplete.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Ryan</div>
+            <span class="game-badge">Incomplete</span>
+          </a>
+
+          <a href="2025-11/thomas-game-1.html" class="game-card">
+            <div class="game-title">Game 1</div>
+            <div class="game-author">by Thomas</div>
+          </a>
+
+          <a href="2025-11/thomas-game-2.html" class="game-card">
+            <div class="game-title">Game 2</div>
+            <div class="game-author">by Thomas</div>
+          </a>
+        </div>
+
+        <h3 style="margin-top: 2rem; color: #666; font-size: 1.2rem">
+          Bonus Submissions
+        </h3>
+        <div class="games-grid" style="margin-top: 1rem">
+          <a
+            href="2025-11/david-slime-game-not-part-of-competiton-not-made-on-thanksgiving.html"
+            class="game-card"
+          >
+            <div class="game-title">Slime Game</div>
+            <div class="game-author">by David</div>
+            <span class="game-badge">Non-Competition</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="competition">
+        <h2>🎄 Christmas & Wedding 2025 Competition</h2>
+        <p style="color: #666; margin-bottom: 1rem">December 2025</p>
+        <div class="games-grid">
+          <a href="2025-12/becky-thanksgiving-game.html" class="game-card">
+            <div class="game-title">Thanksgiving Game</div>
+            <div class="game-author">by Becky</div>
+          </a>
+
+          <a href="2025-12/ben-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Ben</div>
+          </a>
+
+          <a href="2025-12/bethany-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Bethany</div>
+          </a>
+
+          <a href="2025-12/brian-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Brian</div>
+          </a>
+
+          <a href="2025-12/david-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by David</div>
+          </a>
+
+          <a href="2025-12/geneise-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Geneise</div>
+          </a>
+
+          <a href="2025-12/linda-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Linda</div>
+          </a>
+
+          <a href="2025-12/mary-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Mary</div>
+          </a>
+
+          <a href="2025-12/stangers-game.html" class="game-card">
+            <div class="game-title">Game</div>
+            <div class="game-author">by Stangers</div>
+          </a>
+
+          <a href="2025-12/worm-dance-party.html" class="game-card">
+            <div class="game-title">Worm Dance Party</div>
+            <div class="game-author">Special Entry</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

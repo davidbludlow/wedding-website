@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Snow Shoveler: Get the Present!</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #112;
+    color: #fff;
+    text-align: center;
+    user-select: none;
+    transition: none;
+  }
+  h1 { margin: 10px; font-size: 28px; }
+  #info {
+    font-size: 18px;
+    margin: 5px;
+  }
+  #grid {
+    display: inline-grid;
+    gap: 2px;
+    margin: 20px;
+    background: #334;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #000;
+  }
+  .cell {
+    width: 40px;
+    height: 40px;
+    background: #cce5ff;
+    position: relative;
+    cursor: pointer;
+  }
+  .snow { background: #fff; }
+  .clear { background: #88aacc; }
+  .player { background: #ff4444 !important; }
+  .present { background: linear-gradient(45deg, #ff0066, #ffcc00); animation: glow 2s infinite alternate; }
+  .obstacle { background: #555; }
+  .poop { background: #654321; }
+  .fence { 
+    background: repeating-linear-gradient(
+      0deg,
+      #8B4513 0px,
+      #8B4513 4px,
+      #D2691E 4px,
+      #D2691E 8px
+    );
+  }
+ 
+  .emoji {
+    position: absolute;
+    font-size: 28px;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+ 
+  @keyframes glow {
+    from { box-shadow: 0 0 10px #ff0066; }
+    to   { box-shadow: 0 0 30px #ffcc00; }
+  }
+ 
+  #celebration, #gameover {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    display: none;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10%;
+    z-index: 100;
+  }
+  #gameover {
+    justify-content: flex-start;
+    padding-left: 10%;
+    padding-right: 0;
+  }
+  #santa-container, #sad-santa-container {
+    display: flex;
+    align-items: center;
+  }
+  #sad-santa-container {
+    flex-direction: row-reverse;
+  }
+  .santa, .sad-santa {
+    font-size: 100px;
+    margin-right: 20px;
+  }
+  .sad-santa {
+    margin-left: 20px;
+    margin-right: 0;
+    transform: rotate(-15deg);
+  }
+  .bubble, .sad-bubble {
+    position: relative;
+    background: #fff;
+    color: #000;
+    padding: 20px;
+    border-radius: 20px;
+    font-size: 24px;
+    max-width: 400px;
+    text-align: left;
+    box-shadow: 0 0 20px rgba(255,255,255,0.5);
+  }
+  .sad-bubble {
+    background: #ddd;
+    color: #333;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+  .bubble:before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border: 20px solid transparent;
+    border-right-color: #fff;
+    border-left: 0;
+    margin-top: -20px;
+  }
+  .sad-bubble:before {
+    content: '';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border: 20px solid transparent;
+    border-left-color: #ddd;
+    border-right: 0;
+    margin-top: -20px;
+  }
+  .firework, .snowflake {
+    position: absolute;
+    pointer-events: none;
+  }
+  .snowflake {
+    font-size: 30px;
+    color: #fff;
+    opacity: 0.7;
+  }
+  body.shake {
+    animation: shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+  }
+</style>
+</head>
+<body>
+ 
+<h1>❄️ Snow Shoveler: Get the Present! ❄️</h1>
+<div id="info">Level <span id="level">1</span> • Shovels left: <span id="moves">0</span></div>
+ 
+<div id="grid"></div>
+ 
+<div id="celebration">
+  <div id="santa-container">
+    <span class="santa">🎅</span>
+    <div class="bubble">
+      <div id="wintext"></div>
+    </div>
+  </div>
+</div>
+ 
+<div id="gameover">
+  <div id="sad-santa-container">
+    <div class="sad-bubble">
+      <div id="losetext"></div>
+    </div>
+    <span class="sad-santa">🎅</span>
+  </div>
+</div>
+ 
+<script>
+const emojis = {
+  player: "🧑‍❄️",
+  snowman: "⛄",
+  sled: "🛷",
+  car: "🚗",
+  poop: "💩",
+  tree: "🎄",
+  igloo: "🧊",
+  reindeer: "🦌",
+  ice: "🧊",
+  fence: "🚧"
+};
+ 
+const sassyComments = {
+  snowman: "Hey, that's my carrot nose! ⛄",
+  sled: "Wheee! Sled jam! 🛷",
+  car: "Vroom! Can't shovel my car! 🚗",
+  poop: "Eww, doggy doo-doo! 💩",
+  tree: "Oof! Pine needles everywhere! 🎄",
+  igloo: "Brr! That's my house! 🧊",
+  reindeer: "Rudolph says no! 🦌",
+  ice: "Slippery! Whoops! 🧊",
+  fence: "Ouch! Splinter city! 🚧"
+};
+ 
+const dirs = [
+  [-1,-1], [-1,0], [-1,1],
+  [0,-1],          [0,1],
+  [1,-1],  [1,0],  [1,1]
+];
+ 
+let level = 1;
+let size = 8;
+let movesLeft = 0;
+let playerPos = {x:0, y:0};
+let finalPos = {x:0, y:0};
+let grid = [];
+let history = [];
+ 
+const gridEl = document.getElementById('grid');
+const levelEl = document.getElementById('level');
+const movesEl = document.getElementById('moves');
+const celebration = document.getElementById('celebration');
+const gameover = document.getElementById('gameover');
+const wintext = document.getElementById('wintext');
+const losetext = document.getElementById('losetext');
+ 
+function isAdjacent(p1, p2) {
+  const dx = Math.abs(p1.x - p2.x);
+  const dy = Math.abs(p1.y - p2.y);
+  return dx <= 1 && dy <= 1;
+}
+ 
+function getMinDistToGoal() {
+  const visited = Array(size).fill().map(() => Array(size).fill(false));
+  const queue = [];
+  queue.push({x: playerPos.x, y: playerPos.y, dist: 0});
+  visited[playerPos.y][playerPos.x] = true;
+ 
+  while (queue.length) {
+    const curr = queue.shift();
+    if (isAdjacent(curr, finalPos)) {
+      return curr.dist;
+    }
+    for (let [dx, dy] of dirs) {
+      const nx = curr.x + dx;
+      const ny = curr.y + dy;
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size &&
+          !visited[ny][nx] &&
+          (grid[ny][nx] === 'snow' || grid[ny][nx] === 'clear')) {
+        visited[ny][nx] = true;
+        queue.push({x: nx, y: ny, dist: curr.dist + 1});
+      }
+    }
+  }
+  return -1;
+}
+ 
+function initLevel() {
+  size = 7 + level;
+  playerPos = {x: 0, y: size - 1};
+  finalPos = {x: size - 1, y: 0};
+  grid = Array(size).fill().map(() => Array(size).fill('snow'));
+ 
+  grid[playerPos.y][playerPos.x] = 'clear';
+  grid[finalPos.y][finalPos.x] = 'final';
+ 
+  const others = Object.keys(emojis).filter(k => !['player'].includes(k) && k !== 'fence');
+  const obstacleTypes = ['fence', 'fence', 'fence', 'fence'].concat(others);
+ 
+  const obstacleCount = 5 + level * 2;
+ 
+  let attempts = 0;
+  let minDist;
+  do {
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (grid[y][x] !== 'clear' && grid[y][x] !== 'final') {
+          grid[y][x] = 'snow';
+        }
+      }
+    }
+    for (let i = 0; i < obstacleCount; i++) {
+      let x, y;
+      do {
+        x = Math.floor(Math.random() * size);
+        y = Math.floor(Math.random() * size);
+      } while (grid[y][x] !== 'snow');
+      const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+      grid[y][x] = type;
+    }
+    minDist = getMinDistToGoal();
+    attempts++;
+    if (attempts % 100 === 0) {
+      console.log(`Level ${level}: ${attempts} attempts to find solvable path...`);
+    }
+  } while (minDist === -1 && attempts < 1000);
+ 
+  if (minDist === -1) {
+    alert('Failed to generate a solvable level after many attempts. Please refresh the page.');
+    return;
+  }
+ 
+  movesLeft = minDist + Math.max(0, 5 - level);
+  history = [{x: playerPos.x, y: playerPos.y}];
+  render();
+  levelEl.textContent = level;
+  movesEl.textContent = movesLeft;
+}
+ 
+function render() {
+  gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+  gridEl.innerHTML = '';
+ 
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      
+      if (grid[y][x] === 'snow') cell.classList.add('snow');
+      else if (grid[y][x] === 'clear') cell.classList.add('clear');
+      else cell.classList.add('obstacle');
+      
+      if (grid[y][x] === 'poop') cell.classList.add('poop');
+      if (grid[y][x] === 'fence') cell.classList.add('fence');
+      
+      if (x === playerPos.x && y === playerPos.y) {
+        cell.classList.add('player');
+        cell.innerHTML = `<span class="emoji">${emojis.player}</span>`;
+      }
+      
+      if (grid[y][x] === 'final') {
+        cell.classList.add('present');
+        cell.innerHTML = `<span class="emoji">📪🎁</span>`;
+      } else if (grid[y][x] in emojis && !(x === playerPos.x && y === playerPos.y)) {
+        cell.innerHTML = `<span class="emoji">${emojis[grid[y][x]]}</span>`;
+      }
+      
+      cell.onclick = () => shovel(x, y);
+      gridEl.appendChild(cell);
+    }
+  }
+}
+ 
+function shovel(x, y) {
+  if (movesLeft <= 0 || grid[y][x] === 'clear') return;
+ 
+  const dx = Math.abs(x - playerPos.x);
+  const dy = Math.abs(y - playerPos.y);
+  if (dx > 1 || dy > 1) {
+    alert("You can only shovel adjacent snow!");
+    return;
+  }
+ 
+  const type = grid[y][x];
+  if (type !== 'snow') {
+    // Bump!
+    movesLeft--;
+    movesEl.textContent = movesLeft;
+    bump(type);
+    // Send back two squares
+    const stepsBack = 2;
+    const newLen = history.length - stepsBack;
+    if (newLen > 0) {
+      playerPos = {...history[newLen - 1]};
+      history.splice(newLen);
+    } else {
+      playerPos = {x: 0, y: size - 1};
+      history = [{...playerPos}];
+    }
+    render();
+    if (movesLeft === 0) {
+      showGameOver();
+    }
+    return;
+  }
+ 
+  // Success!
+  history.push({...playerPos});
+  grid[y][x] = 'clear';
+  movesLeft--;
+  movesEl.textContent = movesLeft;
+  playerPos = {x, y};
+  render();
+ 
+  if (isAdjacent(playerPos, finalPos)) {
+    celebrate();
+  } else if (movesLeft === 0) {
+    showGameOver();
+  }
+}
+ 
+function bump(type) {
+  document.body.classList.add('shake');
+  setTimeout(() => document.body.classList.remove('shake'), 500);
+ 
+  const emojiChar = emojis[type];
+  const comment = sassyComments[type] || "Ouch! Solid obstacle!";
+  
+  const bumpOverlay = document.createElement('div');
+  bumpOverlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    font-weight: bold;
+    opacity: 0;
+    transform: scale(0.5);
+    animation: bumpPop 1.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    pointer-events: none;
+  `;
+  bumpOverlay.innerHTML = `
+    <div style="font-size: 180px; margin-bottom: 20px; text-shadow: 0 0 20px #fff;">${emojiChar}</div>
+    <div style="font-size: 36px; background: rgba(255,255,255,0.95); color: #333; padding: 20px 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 600px; text-align: center; font-family: 'Comic Sans MS', cursive;">${comment}</div>
+  `;
+  document.body.appendChild(bumpOverlay);
+  setTimeout(() => bumpOverlay.remove(), 2000);
+}
+ 
+function celebrate() {
+  const presents = ["🎁","🎄","🛷","🎅","🤶","🦌","❄️","⛄","🎊","✨"];
+  const texts = [
+    "You got the present!<br>Merry Christmas! 🎉",
+    "Amazing! A Golden Present! 🌟",
+    "Incredible! Santa is proud! 🎅",
+    "Legendary shoveling skills!<br>You found the Magic Gift! ✨",
+    "Ultimate Shoveler!<br>Epic Present Unlocked! 🏆"
+  ];
+  const textIdx = Math.min(level - 1, texts.length - 1);
+  wintext.innerHTML = texts[textIdx] + "<br>" + 
+    presents.slice(0, 1 + level % 5).map(p => p.repeat(2)).join(' ');
+ 
+  celebration.style.display = 'flex';
+ 
+  const fireworkCount = 20 + level * 5;
+  for (let i = 0; i < fireworkCount; i++) {
+    setTimeout(() => createFirework(), i * 100);
+  }
+ 
+  setTimeout(() => {
+    celebration.style.display = 'none';
+    level++;
+    initLevel();
+  }, 6000);
+}
+ 
+function showGameOver() {
+  const sadTexts = [
+    "Oh no! Out of shovels...<br>Better luck next time! 😞",
+    "Ho ho... no! Snow won this round. ❄️😔",
+    "Stuck in the snowdrift!<br>Try again, shoveler! 🌨️🙁",
+    "The present eludes you...<br>Santa is sad! 🎁😢",
+    "Epic fail in the flurry!<br>Reload and retry! ⛄😞"
+  ];
+  const textIdx = Math.min(level - 1, sadTexts.length - 1);
+  losetext.innerHTML = sadTexts[textIdx];
+ 
+  gameover.style.display = 'flex';
+ 
+  const snowflakeCount = 30 + level * 5;
+  for (let i = 0; i < snowflakeCount; i++) {
+    setTimeout(() => createSnowflake(), i * 150);
+  }
+ 
+  setTimeout(() => {
+    gameover.style.display = 'none';
+    initLevel();
+  }, 6000);
+}
+ 
+function createFirework() {
+  const fw = document.createElement('div');
+  fw.className = 'firework';
+  fw.textContent = ['🎆','🎇','✨','💥','🌟','🎊'][Math.floor(Math.random()*6)];
+  fw.style.fontSize = '40px';
+  fw.style.left = Math.random() * 100 + 'vw';
+  fw.style.top = Math.random() * 100 + 'vh';
+  fw.style.animation = 'firework 1.5s forwards';
+  document.body.appendChild(fw);
+  setTimeout(() => fw.remove(), 2000);
+}
+ 
+function createSnowflake() {
+  const sf = document.createElement('div');
+  sf.className = 'snowflake';
+  sf.textContent = '❄️';
+  sf.style.left = Math.random() * 100 + 'vw';
+  sf.style.top = '-10vh';
+  sf.style.animation = 'snowfall 5s linear forwards';
+  document.body.appendChild(sf);
+  setTimeout(() => sf.remove(), 6000);
+}
+ 
+const style = document.createElement('style');
+style.textContent = `
+@keyframes firework {
+  0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+}
+@keyframes snowfall {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(120vh) rotate(360deg); opacity: 0; }
+}
+@keyframes bumpPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-20deg);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.4) rotate(10deg);
+  }
+  40% {
+    transform: scale(1.05) rotate(-5deg);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2) rotate(5deg);
+  }
+}
+`;
+document.head.appendChild(style);
+ 
+initLevel();
+</script>
+</body>
+</html>

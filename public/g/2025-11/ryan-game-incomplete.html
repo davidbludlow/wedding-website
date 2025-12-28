@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Evil Chicken Nugget Tower Defense</title>
+    <style>
+        body { margin: 0; display: flex; flex-direction: column; align-items: center; background-color: blue; }
+        canvas { border: 1px solid black; background-color: white; }
+        #info { font-size: 18px; margin-bottom: 10px; }
+        #buyTower { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            background-color: green; 
+            color: white; 
+            border: none; 
+            border-radius: 10px;
+        }
+        #upgradeTower { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            background-color: green; 
+            color: white; 
+            border: none; 
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">Gold: 0 | Level: 1 | Towers: 1</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <button id="buyTower">next tower: 100 gold</button>
+    <button id="upgradeTower">Upgrade Tower (100 gold)</button>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const infoDiv = document.getElementById('info');
+        const buyButton = document.getElementById('buyTower');
+        const upgradeButton = document.getElementById('upgradeTower');
+
+        let gold = 0;
+        let towerCost = 100;
+        let towers = [{x: 400, y: 200, lastFire: 0, upgrades: 0, range: 350}];
+        let enemies = [];
+        let level = 1;
+        let gameOver = false;
+        let buyingTower = false;
+        let upgradingTower = false;
+        let lastTime = 0;
+        let spawnTimer = 0;
+        let enemiesToSpawn = 0;
+        let spawnInterval = 2000; // Closer together
+        let mouseX = 0;
+        let mouseY = 0;
+
+        function updateInfo() {
+            infoDiv.textContent = `Gold: ${gold} | Level: ${level} | Towers: ${towers.length} | Nuggets left: ${enemiesToSpawn + enemies.length}`;
+        }
+
+        function spawnEnemy() {
+            enemies.push({x: 0, y: 300, speed: 1.5}); // Faster
+        }
+
+        function startLevel(timestamp) {
+            enemiesToSpawn = 10 * Math.pow(2, level - 1);
+            spawnTimer = 0;
+            towers.forEach(tower => {
+                tower.lastFire = timestamp;
+            });
+        }
+
+        function isClickOnTower(x, y) {
+            for (let i = 0; i < towers.length; i++) {
+                const tower = towers[i];
+                const dist = Math.hypot(x - tower.x, y - tower.y);
+                if (dist < 20) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function gameLoop(timestamp) {
+            if (gameOver) {
+                // Orange lose box
+                ctx.fillStyle = 'orange';
+                ctx.fillRect(250, 200, 300, 100);
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(250, 200, 300, 100);
+                ctx.lineWidth = 1;
+                ctx.fillStyle = 'black';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('you lose :)', 400, 250);
+                ctx.textAlign = 'start';
+                ctx.textBaseline = 'alphabetic';
+                return;
+            }
+
+            if (!lastTime) lastTime = timestamp;
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Preview range circle when buying
+            if (buyingTower) {
+                ctx.fillStyle = 'rgba(255, 182, 193, 0.3)'; // Light pink transparent
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, 350, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            // Draw red path
+            ctx.fillStyle = 'red';
+            ctx.fillRect(0, 275, 800, 50);
+
+            // Update and draw enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                enemy.x += enemy.speed * 60 * dt;
+
+                if (enemy.x > 800) {
+                    gameOver = true;
+                    return;
+                }
+
+                // Draw enemy
+                ctx.font = '30px Arial';
+                ctx.fillText('🍗', enemy.x, enemy.y + 15);
+            }
+
+            // Update towers
+            towers.forEach(tower => {
+                const fireInterval = 2000;
+                if (timestamp - tower.lastFire > fireInterval) {
+                    if (enemies.length === 0) return;
+
+                    // Find rightmost enemy in range
+                    let maxX = -Infinity;
+                    let targetIdx = -1;
+                    for (let j = 0; j < enemies.length; j++) {
+                        const enemy = enemies[j];
+                        const dist = Math.hypot(enemy.x - tower.x, enemy.y - tower.y);
+                        if (dist < tower.range && enemy.x > maxX) {
+                            maxX = enemy.x;
+                            targetIdx = j;
+                        }
+                    }
+
+                    if (targetIdx !== -1) {
+                        const target = enemies[targetIdx];
+
+                        // Draw kill line (only this frame)
+                        ctx.strokeStyle = 'red';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(tower.x, tower.y);
+                        ctx.lineTo(target.x, target.y + 15);
+                        ctx.stroke();
+                        ctx.lineWidth = 1;
+
+                        // Kill it
+                        gold += 5;
+                        enemies.splice(targetIdx, 1);
+                        tower.lastFire = timestamp;
+                    }
+                }
+
+                // Draw tower
+                ctx.fillStyle = (tower.upgrades === 3) ? 'green' : 'blue';
+                ctx.beginPath();
+                ctx.arc(tower.x, tower.y, 10, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Spawn logic
+            if (enemiesToSpawn > 0) {
+                spawnTimer += dt * 1000;
+                if (spawnTimer >= spawnInterval) {
+                    spawnEnemy();
+                    enemiesToSpawn--;
+                    spawnTimer = 0;
+                }
+            } else if (enemies.length === 0 && !gameOver) {
+                level++;
+                startLevel(timestamp);
+            }
+
+            updateInfo();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Mouse move for preview
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        // Initial start
+        startLevel(performance.now());
+        requestAnimationFrame(gameLoop);
+
+        // Buy tower
+        buyButton.addEventListener('click', () => {
+            if (gold >= towerCost && !buyingTower && !upgradingTower) {
+                buyingTower = true;
+                canvas.style.cursor = 'crosshair';
+            }
+        });
+
+        // Upgrade tower
+        upgradeButton.addEventListener('click', () => {
+            if (gold >= 100 && !upgradingTower && !buyingTower) {
+                upgradingTower = true;
+                canvas.style.cursor = 'pointer';
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (buyingTower) {
+                if (y < 275 || y > 325) {
+                    towers.push({x, y, lastFire: performance.now(), upgrades: 0, range: 350});
+                    gold -= towerCost;
+                    towerCost *= 2;
+                    buyButton.textContent = `next tower: ${towerCost} gold`;
+                    buyingTower = false;
+                    canvas.style.cursor = 'default';
+                }
+            } else if (upgradingTower) {
+                const towerIdx = isClickOnTower(x, y);
+                if (towerIdx !== -1) {
+                    const tower = towers[towerIdx];
+                    if (tower.upgrades < 3) {
+                        tower.upgrades++;
+                        tower.range += 50;
+                        gold -= 100;
+                    }
+                    upgradingTower = false;
+                    canvas.style.cursor = 'default';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

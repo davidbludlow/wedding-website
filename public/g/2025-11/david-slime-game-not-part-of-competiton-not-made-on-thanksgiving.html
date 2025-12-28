@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slime Eatery</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            display: block;
+        }
+        #game-over {
+            position: absolute;
+            top: 75%;
+            left: 50%;
+            transform: translate(-50%, -75%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            text-align: center;
+            display: none;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            display: block;
+        }
+        #win-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: gold;
+            font-family: Arial, sans-serif;
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-over">
+        <p>You were eaten!</p>
+        <button id="restart">Try Again</button>
+    </div>
+    <div id="instructions">
+        <p>Use arrow keys to move</p>
+        <p>Eat smaller slimes, avoid bigger ones</p>
+    </div>
+    <div id="win-message">
+        <p>You won!</p>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/party-js@latest/bundle/party.min.js"></script>
+    <script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+camera.position.set(0, 10, 0);
+camera.lookAt(0, 0, 0);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x404040, 0.7); // slightly brighter ambient
+scene.add(ambientLight);
+
+const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight1.position.set(10, 10, 5);
+scene.add(directionalLight1);
+
+const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+directionalLight2.position.set(-10, 8, -5);
+scene.add(directionalLight2);
+
+const directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.3);
+directionalLight3.position.set(0, 15, 10);
+scene.add(directionalLight3);
+
+// Add a subtle point light for extra softness
+const pointLight = new THREE.PointLight(0xffffff, 0.2, 50);
+pointLight.position.set(0, 5, 0);
+scene.add(pointLight);
+
+// Ground
+const groundGeometry = new THREE.PlaneGeometry(200, 200);
+const groundMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        time: { value: 0 }
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 worldPosition;
+        void main() {
+            vUv = uv;
+            worldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        varying vec2 vUv;
+        varying vec3 worldPosition;
+        uniform float time;
+
+        // Simple noise function
+        float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
+
+        float noise(vec2 st) {
+            vec2 i = floor(st);
+            vec2 f = fract(st);
+            float a = random(i);
+            float b = random(i + vec2(1.0, 0.0));
+            float c = random(i + vec2(0.0, 1.0));
+            float d = random(i + vec2(1.0, 1.0));
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+        }
+
+        vec3 biomeColor(int biome) {
+            if (biome == 0) return vec3(0.27, 0.27, 0.27); // cave
+            if (biome == 1) return vec3(0.13, 0.55, 0.13); // forest
+            if (biome == 2) return vec3(1.0, 1.0, 0.0); // desert
+            if (biome == 3) return vec3(0.0, 0.5, 1.0); // ocean
+            if (biome == 4) return vec3(0.5, 0.5, 0.5); // mountain
+            if (biome == 5) return vec3(1.0, 0.5, 0.0); // volcano
+            if (biome == 6) return vec3(0.5, 1.0, 0.5); // plains
+            if (biome == 7) return vec3(0.0, 1.0, 0.5); // swamp
+            if (biome == 8) return vec3(1.0, 0.0, 1.0); // mushroom
+            if (biome == 9) return vec3(0.5, 0.0, 0.5); // dark forest
+            if (biome == 10) return vec3(1.0, 1.0, 0.5); // savanna
+            if (biome == 11) return vec3(0.5, 0.5, 1.0); // tundra
+            return vec3(0.5, 0.5, 0.5);
+        }
+
+        void main() {
+            vec2 pos = worldPosition.xz;
+            float dist = length(pos);
+            float angle = atan(pos.y, pos.x);
+            float n = noise(pos * 0.01 + time * 0.001) * 20.0;
+            float biomeValue = (dist + n) / 50.0;
+            int biome1 = int(floor(biomeValue)) % 12;
+            int biome2 = int(floor(biomeValue + 1.0)) % 12;
+            float frac = fract(biomeValue);
+            vec3 color1 = biomeColor(biome1);
+            vec3 color2 = biomeColor(biome2);
+            vec3 color = mix(color1, color2, smoothstep(0.4, 0.6, frac));
+
+            // Add procedural texture
+            float texNoise = noise(pos * 0.1) * 0.1;
+            if (biome1 == 0 || biome2 == 0) { // cave
+                float rock = noise(pos * 0.05) > 0.6 ? 0.8 : 0.0;
+                color = mix(color, vec3(0.2), rock);
+            } else if (biome1 == 1 || biome2 == 1) { // forest
+                float grass = noise(pos * 0.2) * 0.2;
+                color = mix(color, vec3(0.1, 0.6, 0.1), grass);
+            } else if (biome1 == 2 || biome2 == 2) { // desert
+                float sand = noise(pos * 0.15) * 0.15;
+                color = mix(color, vec3(0.9, 0.9, 0.6), sand);
+            }
+            // Add general variation
+            color += texNoise;
+
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `,
+    side: THREE.DoubleSide
+});
+const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+ground.rotation.x = Math.PI / 2;
+scene.add(ground);
+
+function getBiome(pos) {
+    const dist = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+    if (dist < 50) return 'cave';
+    if (dist < 100) return 'forest';
+    return 'desert';
+}
+
+function updateGroundColor() {
+    // Not needed with shader
+}
+
+const player = {
+    mesh: new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshLambertMaterial({ color: 0x00ff00, transparent: true, opacity: 0.8 })),
+    size: 0.3,
+    velocity: new THREE.Vector3(),
+    position: new THREE.Vector3(),
+    baseScale: new THREE.Vector3(1, 1, 1)
+};
+scene.add(player.mesh);
+
+const slimes = [];
+const maxSlimes = 150;
+const baseSpawnRate = 0.06;
+
+for (let i = 0; i < maxSlimes; i++) {
+    spawnSlime();
+}
+
+// Handle window resizing
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener('resize', onWindowResize);
+
+function spawnSlime() {
+    const biome = getBiome(player.position);
+    let size, color, isReddish;
+    if (biome === 'cave') {
+        size = Math.pow(Math.random(), 2) * 1.8 + 0.2;
+        color = new THREE.Color(0.2 + Math.random() * 0.3, 0.2 + Math.random() * 0.3, 0.2 + Math.random() * 0.3);
+        isReddish = color.r > 0.4;
+    } else if (biome === 'forest') {
+        size = Math.random() * 4.5 + 0.3;
+        color = new THREE.Color(0, 0.5 + Math.random() * 0.5, 0);
+        isReddish = false;
+    } else {
+        size = Math.pow(Math.random(), 0.5) * 3.375 + 0.5;
+        color = new THREE.Color(0.8 + Math.random() * 0.2, 0.6 + Math.random() * 0.4, 0);
+        isReddish = color.r > 0.8;
+    }
+    
+    // Calculate polygon detail based on size (larger slimes get more polygons)
+    const baseSegments = 16;
+    const maxSegments = 48;
+    const segments = Math.min(maxSegments, Math.max(baseSegments, Math.floor(baseSegments + (size / 6) * (maxSegments - baseSegments))));
+    
+    const slime = {
+        mesh: new THREE.Mesh(new THREE.SphereGeometry(size, segments, segments), new THREE.MeshLambertMaterial({ color, transparent: true, opacity: 0.8 })),
+        size,
+        velocity: new THREE.Vector3(),
+        position: new THREE.Vector3(),
+        originalColor: color.getHex(),
+        direction: Math.random() * Math.PI * 2,
+        isReddish
+    };
+    // Spawn near player
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * 15 + 15; // 15-30 units
+    let spawnPos = new THREE.Vector3(player.position.x + Math.cos(angle) * dist, 0, player.position.z + Math.sin(angle) * dist);
+    // If moving, bias towards direction of movement
+    if (player.velocity.length() > 0.05) {
+        const dir = player.velocity.clone().normalize();
+        spawnPos.add(dir.multiplyScalar(5));
+    }
+    slime.position.copy(spawnPos);
+    slime.mesh.position.copy(slime.position);
+    scene.add(slime.mesh);
+    slimes.push(slime);
+}
+
+const keys = {};
+document.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+    // Hide instructions on first arrow key
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        document.getElementById('instructions').style.display = 'none';
+    }
+});
+document.addEventListener('keyup', (e) => keys[e.code] = false);
+
+let gameOver = false;
+let hasWon = false;
+const gameOverDiv = document.getElementById('game-over');
+const restartBtn = document.getElementById('restart');
+const winDiv = document.getElementById('win-message');
+
+restartBtn.addEventListener('click', () => {
+    window.location.reload();
+});
+
+function createConfetti() {
+    // Use party.js for better confetti with different settings
+    party.confetti(document.body, {
+        count: 150,
+        size: 1.5,
+        speed: 80,
+        spread: 90,
+        shapes: ["square", "circle", "roundedRectangle"],
+        colors: [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff]
+    });
+    
+    // Stop confetti after 5 seconds
+    setTimeout(() => {
+        party.stop();
+    }, 5000);
+}
+
+function update() {
+    if (gameOver) return;
+
+    // Player movement - Simple momentum system
+    const acceleration = 0.015;
+    const friction = 0.95;
+    const maxSpeed = 0.5;
+
+    // Calculate input direction
+    let inputX = 0;
+    let inputZ = 0;
+    
+    if (keys['ArrowUp']) inputZ -= 1;
+    if (keys['ArrowDown']) inputZ += 1;
+    if (keys['ArrowLeft']) inputX -= 1;
+    if (keys['ArrowRight']) inputX += 1;
+
+    // Normalize diagonal movement
+    if (inputX !== 0 && inputZ !== 0) {
+        const length = Math.sqrt(inputX * inputX + inputZ * inputZ);
+        inputX /= length;
+        inputZ /= length;
+    }
+
+    // Apply acceleration
+    player.velocity.x += inputX * acceleration;
+    player.velocity.z += inputZ * acceleration;
+
+    // Apply friction
+    player.velocity.multiplyScalar(friction);
+
+    // Limit maximum speed
+    const currentSpeed = player.velocity.length();
+    if (currentSpeed > maxSpeed) {
+        player.velocity.multiplyScalar(maxSpeed / currentSpeed);
+    }
+
+    // Update position
+    player.position.add(player.velocity);
+    player.mesh.position.copy(player.position);
+
+    // Deform and rotate player based on velocity
+    const velocityMagnitude = player.velocity.length();
+    if (velocityMagnitude > 0.01) {
+        const velocityDirection = player.velocity.clone().normalize();
+        
+        // Calculate rotation angle in XZ plane
+        const angle = Math.atan2(velocityDirection.x, velocityDirection.z);
+        
+        // Apply rotation around Y axis to face movement direction
+        player.mesh.rotation.y = angle;
+        
+        // Calculate deformation based on speed
+        const deformation = Math.min(velocityMagnitude * 1.0, 0.4);
+        const squash = Math.min(velocityMagnitude * 0.4, 0.2);
+        
+        // Scale: elongate forward (Z), squash sideways (X) and vertically (Y)
+        player.mesh.scale.set(
+            player.baseScale.x * (1 - squash), // Width (side-to-side)
+            player.baseScale.y * (1 - squash * 0.5), // Height (slightly squashed)
+            player.baseScale.z * (1 + deformation)  // Length (forward direction)
+        );
+        
+    } else {
+        // Return to normal shape and rotation when not moving
+        player.mesh.scale.lerp(player.baseScale, 0.1);
+        player.mesh.rotation.set(0, 0, 0);
+    }
+
+    // Slime movement (arching patterns)
+    slimes.forEach((slime, index) => {
+        // Update direction slowly for arching
+        slime.direction += (Math.random() - 0.5) * 0.05;
+        if (slime.isReddish) {
+            const distance = slime.position.distanceTo(player.position);
+            const radius = 10; // half average viewport
+            if (distance < radius) {
+                const targetDir = Math.atan2(player.position.z - slime.position.z, player.position.x - slime.position.x);
+                slime.direction += (targetDir - slime.direction) * 0.01; // pull towards
+            }
+        }
+        slime.velocity.x = Math.cos(slime.direction) * 0.02;
+        slime.velocity.z = Math.sin(slime.direction) * 0.02;
+        slime.position.add(slime.velocity);
+        slime.mesh.position.copy(slime.position);
+
+        // Despawn if far from player
+        if (slime.position.distanceTo(player.position) > 60) {
+            scene.remove(slime.mesh);
+            slimes.splice(index, 1);
+        }
+    });
+
+    // Spawn new slimes
+    const playerSpeed = player.velocity.length();
+    let spawnRate = baseSpawnRate;
+    if (playerSpeed > 0.05) {
+        spawnRate *= 6; // Faster spawn when moving
+    } else {
+        spawnRate *= 0.3; // Slower when stationary
+    }
+    if (Math.random() < spawnRate && slimes.length < maxSlimes) {
+        spawnSlime();
+    }
+
+    // Collisions
+    for (let i = slimes.length - 1; i >= 0; i--) {
+        const slime = slimes[i];
+        const distance = player.position.distanceTo(slime.position);
+        if (distance < player.size + slime.size) {
+            if (player.size > slime.size) {
+                // Eat
+                let growth = slime.size * 0.1;
+                if (player.size > slime.size * 2) {
+                    growth *= 0.1; // Hardly noticeable if much bigger
+                }
+                player.size += growth;
+                // Cap player size at 10
+                if (player.size > 10) {
+                    player.size = 10;
+                }
+                // Update geometry with more polygons for larger sizes
+                const baseSegments = 16;
+                const maxSegments = 48;
+                const segments = Math.min(maxSegments, Math.max(baseSegments, Math.floor(baseSegments + (player.size / 6) * (maxSegments - baseSegments))));
+                player.mesh.geometry = new THREE.SphereGeometry(player.size, segments, segments);
+                scene.remove(slime.mesh);
+                slimes.splice(i, 1);
+            } else if (player.size < slime.size) {
+                // Eaten
+                gameOver = true;
+                gameOverDiv.style.display = 'block';
+                restartBtn.focus();
+            } else {
+                // Draw - short fight animation
+                // Simple: flash red for a second
+                player.mesh.material.color.set(0xff0000);
+                slime.mesh.material.color.set(0xff0000);
+                setTimeout(() => {
+                    player.mesh.material.color.set(0x00ff00);
+                    slime.mesh.material.color.setHex(slime.originalColor);
+                }, 1000);
+                // Move them apart slightly
+                const dir = new THREE.Vector3().subVectors(player.position, slime.position).normalize();
+                player.position.add(dir.multiplyScalar(1));
+                slime.position.add(dir.multiplyScalar(-1));
+            }
+        }
+    }
+
+    // Check for win condition
+    if (player.size > 8.6 && !gameOver && !hasWon) {
+        hasWon = true;
+        winDiv.style.display = 'block';
+        createConfetti();
+        setTimeout(() => {
+            winDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // Update camera to follow player
+    camera.position.set(player.position.x, 10, player.position.z);
+    camera.lookAt(player.position.x, 0, player.position.z);
+
+    updateGroundColor();
+
+    // Update shader time
+    ground.material.uniforms.time.value += 0.01;
+
+    // Move ground to follow player
+    ground.position.set(player.position.x, 0, player.position.z);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(update);
+}
+
+update();
+    </script>
+</body>
+</html>

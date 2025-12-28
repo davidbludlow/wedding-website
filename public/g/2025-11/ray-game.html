@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surfing Game</title>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000; font-family: Arial, sans-serif; }
+        canvas { border: 1px solid #fff; background-color: #00f; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // Playable field narrowed vertically
+        const playableMinY = 120;
+        const playableMaxY = 440;
+
+        // Game variables
+        let player = { x: 120, y: 250, width: 30, height: 40, speed: 7 };
+        let obstacles = [];
+        let keys = {};
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let gameOver = false;
+        let roundOver = false;
+        let overMessage = '';
+        let speed = 4.5;
+        let obstacleFrequency = 70;
+        let frameCount = 0;
+        let waveOffset = 0;
+        let sharkProbability = 0.12;
+        let dodgedThisLevel = 0;
+
+        // Obstacle types
+        const obstacleTypes = ['jellyfish', 'turtle', 'rock', 'crab'];
+
+        // Key handlers
+        window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        // Draw obstacle cartoons
+        function drawObstacle(ctx, x, y, size, type, waveOffset) {
+            ctx.save();
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+
+            switch (type) {
+                case 'shark':
+                    drawShark(ctx, x, y, size, waveOffset);
+                    break;
+                case 'jellyfish':
+                    drawJellyfish(ctx, x, y, size, waveOffset);
+                    break;
+                case 'turtle':
+                    drawTurtle(ctx, x, y, size);
+                    break;
+                case 'rock':
+                    drawRock(ctx, x, y, size);
+                    break;
+                case 'crab':
+                    drawCrab(ctx, x, y, size, waveOffset);
+                    break;
+            }
+
+            ctx.restore();
+        }
+
+        function drawShark(ctx, x, y, size, waveOffset) {
+            // Intimidating body - sleeker, darker
+            const gradient = ctx.createRadialGradient(x + size * 0.4, y + size * 0.5, 0, x + size * 0.5, y + size * 0.5, size * 0.4);
+            gradient.addColorStop(0, '#555');
+            gradient.addColorStop(0.7, '#333');
+            gradient.addColorStop(1, '#111');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(x, y + size * 0.5);
+            ctx.quadraticCurveTo(x + size * 0.15, y + size * 0.35, x + size * 0.55, y + size * 0.3);
+            ctx.quadraticCurveTo(x + size * 0.85, y + size * 0.35, x + size * 0.95, y + size * 0.5);
+            ctx.quadraticCurveTo(x + size * 0.85, y + size * 0.65, x + size * 0.55, y + size * 0.7);
+            ctx.quadraticCurveTo(x + size * 0.15, y + size * 0.65, x, y + size * 0.5);
+            ctx.closePath();
+            ctx.fill();
+
+            // Larger dorsal fin
+            ctx.fillStyle = '#444';
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.5, y + size * 0.25);
+            ctx.lineTo(x + size * 0.75, y + size * 0.1);
+            ctx.lineTo(x + size * 0.9, y + size * 0.25);
+            ctx.lineTo(x + size * 0.7, y + size * 0.35);
+            ctx.fill();
+
+            // Pectoral fin
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.25, y + size * 0.5);
+            ctx.lineTo(x + size * 0.05, y + size * 0.65);
+            ctx.lineTo(x + size * 0.15, y + size * 0.8);
+            ctx.lineTo(x + size * 0.35, y + size * 0.65);
+            ctx.fill();
+
+            // Aggressive tail
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.95, y + size * 0.45);
+            ctx.lineTo(x + size * 1.05, y + size * 0.35);
+            ctx.lineTo(x + size * 1.05, y + size * 0.55);
+            ctx.lineTo(x + size * 0.95, y + size * 0.55);
+            ctx.fill();
+
+            // Wide open mouth
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.18, y + size * 0.5, size * 0.12, 0.2, Math.PI - 0.2, true);
+            ctx.fill();
+
+            // Multiple rows of sharp teeth
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            for (let i = 0; i < 7; i++) {
+                const tx = x + size * (0.08 + i * 0.035);
+                const ty = y + size * (0.48 + Math.sin(waveOffset * 5 + i) * 0.01);
+                ctx.moveTo(tx, ty);
+                ctx.lineTo(tx + size * 0.02, ty - size * 0.04);
+            }
+            ctx.fill();
+            // Lower teeth
+            ctx.beginPath();
+            for (let i = 0; i < 7; i++) {
+                const tx = x + size * (0.08 + i * 0.035);
+                const ty = y + size * (0.52 - Math.sin(waveOffset * 5 + i) * 0.01);
+                ctx.moveTo(tx, ty);
+                ctx.lineTo(tx + size * 0.02, ty + size * 0.04);
+            }
+            ctx.fill();
+
+            // Intimidating red eye
+            ctx.fillStyle = '#ff2200';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(x + size * 0.4, y + size * 0.38, size * 0.08, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.42, y + size * 0.36, size * 0.045, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.44, y + size * 0.35 + Math.sin(waveOffset * 3) * 0.01 * size, size * 0.03, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Scar
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.3, y + size * 0.55);
+            ctx.lineTo(x + size * 0.65, y + size * 0.75);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Outline
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#222';
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function drawJellyfish(ctx, x, y, size, waveOffset) {
+            // Bell
+            ctx.fillStyle = '#C0C0FF';
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.2, y + size * 0.4);
+            ctx.quadraticCurveTo(x + size * 0.1, y + size * 0.2, x + size * 0.5, y + size * 0.15);
+            ctx.quadraticCurveTo(x + size * 0.9, y + size * 0.2, x + size * 0.8, y + size * 0.4);
+            ctx.lineTo(x + size * 0.75, y + size * 0.75);
+            ctx.lineTo(x + size * 0.25, y + size * 0.75);
+            ctx.closePath();
+            ctx.fill();
+
+            // Tentacles (animated)
+            ctx.strokeStyle = '#A0A0FF';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for (let i = 0; i < 10; i++) {
+                const tentX = x + size * (0.15 + i * 0.07);
+                const midWiggle = Math.sin(waveOffset * 3 + i * 0.5) * 0.15;
+                const endWiggle = Math.sin(waveOffset * 5 + i * 0.8) * 0.2;
+                ctx.beginPath();
+                ctx.moveTo(tentX, y + size * 0.75);
+                ctx.quadraticCurveTo(tentX + midWiggle * size, y + size * 0.9, tentX + endWiggle * size, y + size);
+                ctx.stroke();
+            }
+
+            // Eyes
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.35, y + size * 0.35, size * 0.05, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.65, y + size * 0.35, size * 0.05, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.36, y + size * 0.34, size * 0.025, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.66, y + size * 0.34, size * 0.025, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Outline
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#333';
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function drawTurtle(ctx, x, y, size) {
+            // Shell
+            ctx.fillStyle = '#228B22';
+            ctx.beginPath();
+            ctx.ellipse(x + size * 0.5, y + size * 0.65, size * 0.3, size * 0.2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Shell pattern
+            ctx.fillStyle = '#006400';
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.rect(x + size * (0.2 + i * 0.08), y + size * 0.58, size * 0.06, size * 0.14);
+            }
+            ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#90EE90';
+            ctx.beginPath();
+            ctx.ellipse(x + size * 0.18, y + size * 0.6, size * 0.1, size * 0.08, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.15, y + size * 0.57, size * 0.03, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.22, y + size * 0.57, size * 0.03, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.16, y + size * 0.56, size * 0.015, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.23, y + size * 0.56, size * 0.015, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Flippers
+            ctx.fillStyle = '#90EE90';
+            ctx.beginPath();
+            ctx.ellipse(x + size * 0.35, y + size * 0.78, size * 0.08, size * 0.05, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + size * 0.65, y + size * 0.78, size * 0.08, size * 0.05, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + size * 0.28, y + size * 0.85, size * 0.06, size * 0.04, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + size * 0.72, y + size * 0.85, size * 0.06, size * 0.04, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Outline
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#333';
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function drawRock(ctx, x, y, size) {
+            // Main rock body
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            const rockPoints = [0.15,0.75, 0.25,0.25, 0.45,0.15, 0.75,0.25, 0.92,0.55, 0.82,0.88, 0.65,0.98, 0.35,0.92, 0.08,0.85];
+            ctx.moveTo(x + rockPoints[0] * size, y + rockPoints[1] * size);
+            for (let i = 2; i < rockPoints.length; i += 2) {
+                ctx.lineTo(x + rockPoints[i] * size, y + rockPoints[i + 1] * size);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            // Cracks
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.25, y + size * 0.35); ctx.lineTo(x + size * 0.45, y + size * 0.65);
+            ctx.moveTo(x + size * 0.55, y + size * 0.3); ctx.lineTo(x + size * 0.75, y + size * 0.55);
+            ctx.moveTo(x + size * 0.7, y + size * 0.75); ctx.lineTo(x + size * 0.85, y + size * 0.9);
+            ctx.stroke();
+
+            // Moss spots
+            ctx.fillStyle = '#556B2F';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.3, y + size * 0.8, size * 0.06, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.6, y + size * 0.45, size * 0.04, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Outline
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#444';
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function drawCrab(ctx, x, y, size, waveOffset) {
+            // Body
+            ctx.fillStyle = '#FF7F50';
+            ctx.beginPath();
+            ctx.ellipse(x + size * 0.5, y + size * 0.55, size * 0.22, size * 0.18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#FF4500';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Shell top
+            ctx.fillStyle = '#FF4500';
+            ctx.beginPath();
+            ctx.ellipse(x + size * 0.5, y + size * 0.45, size * 0.18, size * 0.12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Animated claws (snapping)
+            const clawSnap = Math.sin(waveOffset * 6) * 0.08;
+            ctx.fillStyle = '#FF6347';
+            ctx.strokeStyle = '#CC3700';
+            ctx.lineWidth = 2;
+
+            // Upper claw
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.28, y + size * 0.5);
+            ctx.quadraticCurveTo(x + size * (0.16 + clawSnap), y + size * 0.45, x + size * 0.04, y + size * 0.42);
+            ctx.lineTo(x + size * 0.07, y + size * 0.48);
+            ctx.quadraticCurveTo(x + size * (0.20 + clawSnap), y + size * 0.48, x + size * 0.28, y + size * 0.52);
+            ctx.fill();
+            ctx.stroke();
+
+            // Lower claw
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.28, y + size * 0.6);
+            ctx.quadraticCurveTo(x + size * (0.16 + clawSnap), y + size * 0.65, x + size * 0.04, y + size * 0.68);
+            ctx.lineTo(x + size * 0.07, y + size * 0.62);
+            ctx.quadraticCurveTo(x + size * (0.20 + clawSnap), y + size * 0.62, x + size * 0.28, y + size * 0.58);
+            ctx.fill();
+            ctx.stroke();
+
+            // Legs (waving)
+            ctx.strokeStyle = '#FF4500';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for (let pair = 0; pair < 3; pair++) {
+                const legBaseY = y + size * (0.42 + pair * 0.1);
+                const legWiggle = Math.sin(waveOffset * 2.5 + pair) * 0.04 * size;
+
+                // Rear leg
+                ctx.beginPath();
+                ctx.moveTo(x + size * 0.6, legBaseY);
+                ctx.quadraticCurveTo(x + size * 0.75 + legWiggle, legBaseY + size * 0.06, x + size * 0.85, legBaseY + size * 0.03);
+                ctx.stroke();
+
+                // Front leg
+                ctx.beginPath();
+                ctx.moveTo(x + size * 0.55, legBaseY + size * 0.08);
+                ctx.quadraticCurveTo(x + size * 0.7 + legWiggle, legBaseY + size * 0.14, x + size * 0.82, legBaseY + size * 0.12);
+                ctx.stroke();
+            }
+
+            // Eye stalks
+            ctx.fillStyle = '#90EE90';
+            const stalkBob = Math.sin(waveOffset * 3) * 0.015 * size;
+            ctx.beginPath();
+            ctx.ellipse(x + size * 0.38, y + size * 0.38 + stalkBob, size * 0.03, size * 0.06, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + size * 0.62, y + size * 0.38 + stalkBob, size * 0.03, size * 0.06, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#228B22';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Eyes
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.38, y + size * 0.36 + stalkBob, size * 0.028, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.62, y + size * 0.36 + stalkBob, size * 0.028, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x + size * 0.385, y + size * 0.355 + stalkBob, size * 0.014, 0, Math.PI * 2);
+            ctx.arc(x + size * 0.625, y + size * 0.355 + stalkBob, size * 0.014, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Update waves and game
+        function update() {
+            // Player movement - restricted to narrow field
+            if (keys['ArrowUp'] && player.y > playableMinY) player.y -= player.speed;
+            if (keys['ArrowDown'] && player.y < playableMaxY - player.height) player.y += player.speed;
+            if (keys['ArrowLeft'] && player.x > 10) player.x -= player.speed;
+            if (keys['ArrowRight'] && player.x + player.width < w - 10) player.x += player.speed;
+
+            frameCount++;
+            if (frameCount >= obstacleFrequency) {
+                generateObstacle();
+                frameCount = 0;
+            }
+
+            // Update obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.x -= speed;
+                obs.y = obs.baseY + Math.sin(obs.x * 0.01 + waveOffset) * 12;
+
+                // Remove off-screen left without dodge
+                if (obs.x + obs.width < 0) {
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+
+                // Dodged (passed left of player)
+                if (obs.x + obs.width < player.x) {
+                    score++;
+                    dodgedThisLevel++;
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+
+                // Collision
+                if (checkCollision(player, obs)) {
+                    handleCollision(obs);
+                    break;
+                }
+            }
+
+            // Level up check
+            if (dodgedThisLevel >= 10) {
+                levelUp();
+            }
+        }
+
+        function handleCollision(obs) {
+            if (obs.type === 'shark') {
+                overMessage = 'DEAD';
+                gameOver = true;
+            } else {
+                overMessage = `Hit by ${obs.type}! Round over.`;
+                lives--;
+                roundOver = true;
+                setTimeout(() => {
+                    if (lives > 0) {
+                        resetRound();
+                    } else {
+                        gameOver = true;
+                        overMessage = 'GAME OVER';
+                    }
+                }, 3000);
+            }
+        }
+
+        function levelUp() {
+            level++;
+            dodgedThisLevel = 0;
+            speed += 1;
+            obstacleFrequency = Math.max(25, obstacleFrequency - 20);
+            sharkProbability = Math.min(0.45, sharkProbability + 0.04);
+            obstacles = [];
+            frameCount = 0;
+        }
+
+        function resetRound() {
+            obstacles = [];
+            player.x = 120;
+            player.y = (playableMinY + playableMaxY - player.height) / 2;
+            dodgedThisLevel = 0;
+            frameCount = 0;
+            roundOver = false;
+        }
+
+        function generateObstacle() {
+            const isShark = Math.random() < sharkProbability;
+            const type = isShark ? 'shark' : obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            const obs = {
+                x: w,
+                baseY: playableMinY + 10 + Math.random() * (playableMaxY - playableMinY - 90),
+                y: 0, // Will be calculated
+                width: 50,
+                height: 50,
+                type: type
+            };
+            obstacles.push(obs);
+        }
+
+        function checkCollision(a, b) {
+            return a.x < b.x + b.width &&
+                   a.x + a.width > b.x &&
+                   a.y < b.y + b.height &&
+                   a.y + a.height > b.y;
+        }
+
+        // Draw everything
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+
+            // Ocean gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, h);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.3, '#4682B4');
+            gradient.addColorStop(0.7, '#1E90FF');
+            gradient.addColorStop(1, '#000080');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+
+            // Animated waves (focused more in playable area)
+            for (let layer = 0; layer < 5; layer++) {
+                const amp = 12 + layer * 4;
+                const freq = 0.012 - layer * 0.0015;
+                const phaseSpeed = 0.025 + layer * 0.008;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + 0.1 * layer})`;
+                ctx.lineWidth = 1.2 + layer * 0.6;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                for (let px = 0; px <= w; px += 2) {
+                    const py = h * 0.65 + Math.sin(px * freq - waveOffset * phaseSpeed) * amp + layer * 3;
+                    if (px === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+
+            // Player with bob
+            const playerBob = Math.sin((player.x * 0.01) + waveOffset * 1.2) * 5;
+            // Surfboard
+            ctx.fillStyle = '#FFD700';
+            ctx.shadowColor = '#FFA500';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(player.x, player.y + player.height - 12 + playerBob, player.width, 12);
+            ctx.shadowBlur = 0;
+            // Surfer
+            ctx.fillStyle = '#FF4500';
+            ctx.fillRect(player.x + 8, player.y + playerBob, 14, 25);
+            // Head
+            ctx.fillStyle = '#FFDAB9';
+            ctx.beginPath();
+            ctx.arc(player.x + 13, player.y + 4 + playerBob, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Obstacles - cartoonized!
+            obstacles.forEach(obs => {
+                drawObstacle(ctx, obs.x, obs.y, obs.width, obs.type, waveOffset);
+            });
+
+            // UI - Enhanced counters
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.font = 'bold 28px Arial';
+            ctx.fillText(`Level: ${level}`, 20, 40);
+            ctx.fillText(`Lives: ${lives}`, 20, 75);
+            ctx.font = 'bold 22px Arial';
+            ctx.fillText(`Progress: ${dodgedThisLevel}/10`, 20, 105);
+
+            ctx.textAlign = 'right';
+            ctx.font = 'bold 32px Arial';
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4;
+            ctx.fillText(`Total Score: ${score}`, w - 30, 45);
+            ctx.shadowBlur = 0;
+
+            ctx.textAlign = 'left';
+
+            // Overlay for game over or round over
+            if (gameOver || roundOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, w, h);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 10;
+                ctx.fillText(overMessage, w / 2, h / 2);
+                ctx.shadowBlur = 0;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+
+                if (gameOver && overMessage === 'DEAD') {
+                    // Red blood pool
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                    ctx.shadowColor = '#800';
+                    ctx.shadowBlur = 20;
+                    const playerBob = Math.sin(waveOffset * 1.2) * 5; // Update bob for death
+                    ctx.beginPath();
+                    ctx.arc(player.x + player.width / 2, player.y + player.height / 2 + playerBob, 60, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            waveOffset += 0.05;
+            if (!gameOver && !roundOver) {
+                update();
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        gameLoop();
+    </script>
+</body>
+</html>
