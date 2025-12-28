@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Robot Holiday Rumble</title>
+<style>
+  html,body{height:100%;margin:0;background:#111;color:#eee;font-family:system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+  .wrap{display:flex;flex-direction:column;align-items:center;padding:18px}
+  canvas{background:#222;border:6px solid #0b0b0b;box-shadow:0 6px 20px rgba(0,0,0,.7);image-rendering:pixelated}
+  h1{margin:8px 0 6px;color:#f5f1e3}
+  .hud{width:100%;max-width:960px;display:flex;justify-content:space-between;margin-top:12px}
+  .panel{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;min-width:260px}
+  .controls{font-size:13px;line-height:1.5}
+  .big{font-weight:700}
+  .note{opacity:.85;font-size:14px;margin-top:8px}
+  .footer{margin-top:12px;color:#bbb;font-size:13px}
+  .overlay{position:fixed;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center}
+  .modal{background:linear-gradient(180deg,#0d63a2,#062b57);padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.6);color:white;max-width:720px}
+  .btn{display:inline-block;background:#fff;color:#222;padding:8px 12px;border-radius:6px;margin-top:12px;cursor:pointer}
+  .credits{opacity:.9;font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🤖 Robot Holiday Rumble</h1>
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <div class="panel controls">
+      <div class="big">Player 1 — Wrapper 🤶</div>
+      <div>Move: <strong>W A S D</strong> • Attack: <strong>Left Shift</strong></div>
+      <div>Collect: <strong>Wrapping Paper</strong> to use the wrap</div>
+      <div id="p1stats" class="note"></div>
+    </div>
+    <div class="panel controls">
+      <div class="big">Player 2 — Wrapper 🎁</div>
+      <div>Move: <strong>Arrow Keys</strong> • Attack: <strong>L</strong></div>
+      <div>Collect: <strong>Wrapping Paper</strong> to use the wrap</div>
+      <div id="p2stats" class="note"></div>
+    </div>
+  </div>
+  <div class="footer">The maze contains wrapping paper (gifts) that respawn. Get close, hold attack for ~1s to apply one wrap. 3 successful hits = defeat. Press <strong>R</strong> to restart.</div>
+</div>
+
+<div id="modal-start" class="overlay" style="pointer-events:auto">
+  <div class="modal">
+    <h2>Welcome to Robot Holiday Rumble 🎄</h2>
+    <p>Two-player local game: both players wrap opponents into presents to immobilize them. Wrapping paper items respawn in the maze—each gives one charge and must be re-collected after every attempt (successful or not). Stay in close range and hold your attack key to apply a hit; 3 hits defeats the opponent.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+      <div class="btn" id="btn-play">Play</div>
+      <div class="btn" id="btn-instr">Controls & Tips</div>
+    </div>
+    <div class="credits">Made for you — single HTML file. Press <strong>R</strong> to restart at any time.</div>
+  </div>
+</div>
+
+<div id="modal-instr" class="overlay" style="display:none;pointer-events:auto">
+  <div class="modal">
+    <h3>Controls & Tips</h3>
+    <ul>
+      <li>Player 1 (Wrapper): <strong>W A S D</strong> to move, <strong>Left Shift</strong> to attack (needs wrapping paper)</li>
+      <li>Player 2 (Wrapper): <strong>Arrows</strong> to move, <strong>L</strong> to attack (needs wrapping paper)</li>
+      <li>You must be within close range (visible on-screen) and hold attack for ~1 second to score one successful hit. Repeat 3 times to defeat.</li>
+      <li>Pick up wrapping paper from the maze — each item gives exactly one wrapping charge.</li>
+      <li>Walls block movement—use corridors to flank the opponent.</li>
+    </ul>
+    <div class="btn" id="btn-back">Back</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Configuration
+  const CELL = 28;           // size of a grid cell in px
+  const COLS = 27;           // maze width (odd recommended)
+  const ROWS = 21;           // maze height (odd recommended)
+  const CANVAS_W = COLS * CELL;
+  const CANVAS_H = ROWS * CELL;
+
+  const ITEM_SPAWN_INTERVAL = 2200; // ms
+  const MAX_ITEMS = 14;
+  const ATTACK_HOLD_MS = 1000; // must hold attack for this long to register a "hit"
+  const ATTACK_COOLDOWN_MS = 400; // after a successful hit, attacker waits this long before next
+
+  const canvas = document.getElementById('c');
+  canvas.width = CANVAS_W; canvas.height = CANVAS_H;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  // --- Audio helpers (simple WebAudio effects) ---
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function ensureAudio(){ if(audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{}); }
+  function playBeep(freq=440, duration=0.08, type='sine', gain=0.09){ ensureAudio(); const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime); g.gain.setValueAtTime(gain, audioCtx.currentTime); o.connect(g); g.connect(audioCtx.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration); o.stop(audioCtx.currentTime + duration + 0.02); }
+  function playPickup(){ playBeep(900, 0.07, 'sine', 0.07); }
+  function playUsePaper(){ playBeep(620, 0.06, 'triangle', 0.06); setTimeout(()=>playBeep(760,0.05,'sine',0.05),60); }
+  function playHit(level=1){ playBeep(180 + level*40, 0.12, 'square', 0.12); setTimeout(()=>playBeep(420 + level*40, 0.06, 'sine', 0.08), 45); }
+  function playWin(){ playBeep(540, 0.22, 'sine', 0.16); setTimeout(()=>playBeep(720, 0.14, 'sine', 0.11), 120); }
+
+
+  // Maze generation: Recursive backtracker
+  const grid = Array.from({length:ROWS},()=>Array.from({length:COLS},()=>1)); // 1=wall,0=floor
+
+  function carveMaze(){
+    // Start at random odd cell
+    const startR = (Math.floor(Math.random()*((ROWS-1)/2))*2)+1;
+    const startC = (Math.floor(Math.random()*((COLS-1)/2))*2)+1;
+    const stack = [[startR,startC]];
+    grid[startR][startC]=0;
+    while(stack.length){
+      const [r,c] = stack[stack.length-1];
+      const neighbors = [];
+      const dirs = [[-2,0],[2,0],[0,-2],[0,2]];
+      for(const [dr,dc] of dirs){
+        const nr=r+dr, nc=c+dc;
+        if(nr>0 && nr<ROWS && nc>0 && nc<COLS && grid[nr][nc]===1) neighbors.push([nr,nc,dr,dc]);
+      }
+      if(neighbors.length===0){
+        stack.pop();
+      }else{
+        const pick = neighbors[Math.floor(Math.random()*neighbors.length)];
+        const [nr,nc,dr,dc]=pick;
+        grid[(r+nr)/2][(c+nc)/2]=0; // remove wall between
+        grid[nr][nc]=0;
+        stack.push([nr,nc]);
+      }
+    }
+  }
+  carveMaze();
+  // add a few random extra openings to make the maze more interconnected
+  function addExtraConnections(){
+    const attempts = Math.floor((ROWS * COLS) / 4);
+    for(let i=0;i<attempts;i++){
+      const r = Math.floor(Math.random()*ROWS);
+      const c = Math.floor(Math.random()*COLS);
+      if(grid[r][c]!==1) continue;
+      // if wall sits between two floor cells horizontally or vertically, remove it
+      if(r>0 && r<ROWS-1 && grid[r-1][c]===0 && grid[r+1][c]===0){ grid[r][c]=0; continue; }
+      if(c>0 && c<COLS-1 && grid[r][c-1]===0 && grid[r][c+1]===0){ grid[r][c]=0; continue; }
+      const floors = (r>0 && grid[r-1][c]===0?1:0) + (r<ROWS-1 && grid[r+1][c]===0?1:0) + (c>0 && grid[r][c-1]===0?1:0) + (c<COLS-1 && grid[r][c+1]===0?1:0);
+      if(floors>=2) grid[r][c]=0;
+    }
+  }
+  addExtraConnections();
+
+  // Helper functions
+  function cellToPx(c){ return c*CELL + CELL/2; }
+  function pxToCell(x){ return Math.floor(x / CELL); }
+
+  // Place players in two opposite corners on floor cells
+  function findOpenCellQuarter(qx,qy){
+    // qx,qy in 0..1 for left/right and top/bottom
+    const centerCol = Math.floor((qx? (COLS*0.75) : (COLS*0.25)));
+    const centerRow = Math.floor((qy? (ROWS*0.75) : (ROWS*0.25)));
+    // search nearby for a floor
+    for(let r=0;r<ROWS;r++){
+      for(let d=0;d<Math.max(ROWS,COLS);d++){
+        for(const sign of [1,-1]){
+          const rr = centerRow + d*sign;
+          if(rr<0||rr>=ROWS) continue;
+          for(let cc=0;cc<COLS;cc++){
+            const c = centerCol + ((cc%2===0? cc : -cc));
+            if(c<0||c>=COLS) continue;
+            if(grid[rr][c]===0) return [cellToPx(c), cellToPx(rr)];
+          }
+        }
+      }
+    }
+    return [cellToPx(centerCol), cellToPx(centerRow)];
+  }
+
+  // Entity definitions
+  class Player{
+    constructor(opts){
+      this.x = opts.x; this.y = opts.y; this.color = opts.color; this.keys = opts.keys;
+      this.radius = CELL*0.35; this.speed = 120; // px/s
+      this.attackKeyDown = false; this.attackTimer = 0; this.cooldown = 0; this.isAttempting = false;
+      this.resource = 0; this.resourceMax = 1; this.hitsReceived = 0; this.defeated = false;
+      this.type = opts.type; // 'wrapper' or 'flamer'
+      this.name = opts.name;
+    }
+    draw(){
+      // Draw body
+      ctx.save();
+      ctx.translate(this.x,this.y);
+      // body
+      ctx.fillStyle = this.color; ctx.beginPath();ctx.arc(0,0,this.radius,0,Math.PI*2);ctx.fill();
+      // face
+      ctx.fillStyle='#222';ctx.beginPath();ctx.arc(-this.radius*0.25,-this.radius*0.12,this.radius*0.18,0,Math.PI*2);ctx.fill();
+      // decoration depending on hitsReceived
+      if(this.type==='wrapper'){
+        // Add "gift wrap" overlay progressively
+        for(let i=0;i<this.hitsReceived;i++){
+          ctx.strokeStyle = i%2? '#d500f9':'#fff176'; ctx.lineWidth = 3+i;
+          ctx.beginPath(); ctx.moveTo(-this.radius-3,0); ctx.lineTo(this.radius+3,0); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0,-this.radius-3); ctx.lineTo(0,this.radius+3); ctx.stroke();
+        }
+        // little bow
+        if(this.hitsReceived>0){ ctx.fillStyle='#ff1744'; ctx.fillRect(-6,-this.radius-6,12,6); }
+      }else{
+        // burnt levels - darken and add scorch marks
+        const soot = Math.min(1, this.hitsReceived/3);
+        ctx.globalCompositeOperation='multiply';
+        ctx.fillStyle = `rgba(0,0,0,${0.45*soot})`; ctx.beginPath();ctx.arc(0,0,this.radius,0,Math.PI*2);ctx.fill();
+        ctx.globalCompositeOperation='source-over';
+        if(this.hitsReceived>0){ ctx.strokeStyle='#000'; ctx.lineWidth=1+this.hitsReceived; ctx.beginPath(); ctx.moveTo(-this.radius/1.4,-this.radius/2); ctx.lineTo(this.radius/1.2,-this.radius/3); ctx.stroke(); }
+      }
+
+      // resource bar under player
+      ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(-this.radius, this.radius+6, this.radius*2,4);
+      ctx.fillStyle = '#fff'; ctx.fillRect(-this.radius, this.radius+6, (this.radius*2)*(this.resource/this.resourceMax),4);
+      ctx.restore();
+
+      if(this.defeated){
+        ctx.save(); ctx.globalAlpha=0.9; ctx.fillStyle='#0b0b0b'; ctx.font='bold 18px sans-serif'; ctx.fillText((this.type==='wrapper'?'Wrapped':'Burnt')+'!', this.x-22, this.y-40); ctx.restore();
+      }
+    }
+  }
+
+  // create players
+  const p1Start = findOpenCellQuarter(0,1);
+  const p2Start = findOpenCellQuarter(1,0);
+  const player1 = new Player({x:p1Start[0],y:p1Start[1],color:'#66bb6a',keys:{up:'w',left:'a',down:'s',right:'d',attack:'shift'},type:'wrapper',name:'Wrapper 1'});
+  const player2 = new Player({x:p2Start[0],y:p2Start[1],color:'#42a5f5',keys:{up:'arrowup',left:'arrowleft',down:'arrowdown',right:'arrowright',attack:'l'},type:'wrapper',name:'Wrapper 2'});
+
+  const players = [player1, player2];
+
+  // items
+  const items = []; // {x,y,type}
+
+  function spawnItem(){
+    // don't spawn above max
+    if(items.length >= MAX_ITEMS) return;
+    // find random empty floor cell
+    for(let tries=0;tries<80;tries++){
+      const r = Math.floor(Math.random()*ROWS);
+      const c = Math.floor(Math.random()*COLS);
+      if(grid[r][c]===0){
+        const px = cellToPx(c), py = cellToPx(r);
+        // ensure not inside players
+        const occupied = players.some(p=>dist(p.x,p.y,px,py) < CELL*0.9);
+        const occupiedItem = items.some(it=>Math.abs(it.x-px)<1 && Math.abs(it.y-py)<1);
+        if(!occupied && !occupiedItem){
+          // only wrapping paper items now
+          const t = 'paper';
+          items.push({x:px,y:py,type:t,blink:0});
+          break;
+        }
+      }
+    }
+  }
+
+  // spawn initial items
+  for(let i=0;i<10;i++) spawnItem();
+  // periodic spawn
+  setInterval(spawnItem, ITEM_SPAWN_INTERVAL);
+
+  // Input
+  const keysDown = {};
+  window.addEventListener('keydown', e=>{ 
+    const key = e.key.toLowerCase();
+    keysDown[key]=true; 
+    handleSpecialKeys(e); 
+  });
+  window.addEventListener('keyup', e=>{ 
+    const key = e.key.toLowerCase();
+    keysDown[key]=false; 
+  });
+
+  function handleSpecialKeys(e){
+    const key = e.key.toLowerCase();
+    if(key==='r'){ resetGame(); }
+  }
+
+  function dist(x1,y1,x2,y2){ const dx=x2-x1, dy=y2-y1; return Math.sqrt(dx*dx+dy*dy); }
+
+  // Movement & collision
+  function tryMove(p,dx,dy,dt){
+    if(p.defeated) return;
+    const stepX = p.x + dx*dt;
+    const stepY = p.y + dy*dt;
+    // circle collision check on four points around
+    if(!solidAt(stepX - p.radius, stepY - p.radius) && !solidAt(stepX + p.radius, stepY - p.radius) && !solidAt(stepX - p.radius, stepY + p.radius) && !solidAt(stepX + p.radius, stepY + p.radius)){
+      p.x = stepX; p.y = stepY;
+    } else {
+      // attempt axis-separated slides
+      if(!solidAt(stepX - p.radius, p.y - p.radius) && !solidAt(stepX + p.radius, p.y - p.radius) && !solidAt(stepX - p.radius, p.y + p.radius) && !solidAt(stepX + p.radius, p.y + p.radius)){
+        p.x = stepX;
+      } else if(!solidAt(p.x - p.radius, stepY - p.radius) && !solidAt(p.x + p.radius, stepY - p.radius) && !solidAt(p.x - p.radius, stepY + p.radius) && !solidAt(p.x + p.radius, stepY + p.radius)){
+        p.y = stepY;
+      }
+    }
+  }
+
+  function solidAt(px,py){
+    const c = pxToCell(px), r = pxToCell(py);
+    if(r<0||r>=ROWS||c<0||c>=COLS) return true;
+    return grid[r][c]===1;
+  }
+
+  // Map players to key checks
+  function getInputVector(p){
+    let vx=0, vy=0;
+    const k = p.keys;
+    if(keysDown[k.up]) vy -= 1;
+    if(keysDown[k.down]) vy += 1;
+    if(keysDown[k.left]) vx -= 1;
+    if(keysDown[k.right]) vx += 1;
+    const len = Math.hypot(vx,vy) || 1;
+    return {x: vx/len, y: vy/len};
+  }
+
+  // Attack logic
+  function updateAttack(p, dt, opponent){
+    // handle cooldown
+    if(p.cooldown>0) p.cooldown = Math.max(0, p.cooldown - dt*1000);
+
+    // check if attack key is pressed
+    const attackKey = p.keys.attack;
+    const attackPressed = !!keysDown[attackKey];
+
+    if(p.defeated) return;
+
+    if(attackPressed && p.cooldown<=0){
+      // start an attempt (consume one paper immediately, whether success or abort)
+      if(!p.isAttempting){
+        if(p.resource > 0){
+          p.resource = Math.max(0, p.resource - 1);
+          p.isAttempting = true;
+          p.attackTimer = 0;
+          playUsePaper();
+        } else {
+          // no paper to start an attempt
+          playBeep(240,0.08,'sine',0.05);
+        }
+      }
+
+      if(p.isAttempting){
+        const d = dist(p.x,p.y,opponent.x,opponent.y);
+        const inRange = d <= CELL * 0.9; // close range
+        if(inRange){
+          p.attackTimer += dt*1000;
+          // show progress indicator above player — handled in drawing
+          if(p.attackTimer >= ATTACK_HOLD_MS){
+            // register a successful hit
+            applyHit(p, opponent);
+            p.attackTimer = 0; p.cooldown = ATTACK_COOLDOWN_MS; p.isAttempting = false;
+          }
+        } else {
+          // out of range - slowly decay hold (attempt still consumes paper)
+          p.attackTimer = Math.max(0, p.attackTimer - dt*1000*4);
+        }
+      }
+    } else {
+      // key released or cannot attack; cancel attempt and require reload if it was started
+      if(p.isAttempting){ p.isAttempting = false; playBeep(260,0.06,'sawtooth',0.04); }
+      p.attackTimer = Math.max(0, p.attackTimer - dt*1000*5);
+    }
+  }
+
+  function applyHit(attacker, defender){
+    // attacker resource is consumed at attempt start; just register hit
+    defender.hitsReceived = Math.min(3, defender.hitsReceived + 1);
+    // small particle and effect + sound
+    spawnHitParticles(defender.x, defender.y, attacker.type);
+    playHit(defender.hitsReceived);
+    // if 3 hits -> defeat
+    if(defender.hitsReceived >= 3){
+      defender.defeated = true;
+      playWin();
+      // winner message will be shown in draw loop
+    }
+  }
+
+  // Particles
+  const particles = [];
+  function spawnHitParticles(x,y, type){
+    const count = 24;
+    for(let i=0;i<count;i++){
+      const a = Math.random()*Math.PI*2; const s = 20 + Math.random()*80;
+      const vx = Math.cos(a)*s, vy = Math.sin(a)*s;
+      particles.push({x,y,vx,vy,life:700+Math.random()*600,type,ttl:Math.random()*700});
+    }
+  }
+
+  // Game loop
+  let lastTime = performance.now();
+  function loop(now){
+    const dt = Math.min(0.033, (now-lastTime)/1000); lastTime = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function update(dt){
+    // movement
+    players.forEach(p=>{
+      const v = getInputVector(p);
+      tryMove(p, v.x * p.speed, v.y * p.speed, dt);
+    });
+
+    // pick up items
+    for(let i=items.length-1;i>=0;i--){
+      const it = items[i];
+      for(const p of players){
+        if(dist(p.x,p.y,it.x,it.y) < CELL*0.9){
+          // each item gives exactly one charge (regardless of type)
+          p.resource = Math.min(p.resourceMax, p.resource + 1);
+          playPickup();
+          items.splice(i,1);
+          break;
+        }
+      }
+    }
+
+    // update attack logic
+    updateAttack(player1, dt, player2);
+    updateAttack(player2, dt, player1);
+
+    // particles
+    for(let i=particles.length-1;i>=0;i--){
+      const c=particles[i]; c.x += c.vx*dt; c.y += c.vy*dt; c.vy += 120*dt; c.ttl -= dt*1000; if(c.ttl<=0) particles.splice(i,1);
+    }
+
+    // update item blink
+    items.forEach(it=>it.blink += dt*6);
+
+    // update HUD
+    document.getElementById('p1stats').innerHTML = `Paper: <strong>${player1.resource}</strong> · Hits: <strong>${player1.hitsReceived}</strong>`;
+    document.getElementById('p2stats').innerHTML = `Paper: <strong>${player2.resource}</strong> · Hits: <strong>${player2.hitsReceived}</strong>`; 
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // draw floor
+    ctx.fillStyle = '#182028'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // draw maze walls
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        if(grid[r][c]===1){
+          const x=c*CELL, y=r*CELL;
+          ctx.fillStyle='#0c3a3a'; ctx.fillRect(x,y,CELL,CELL);
+          // inner bevel
+          ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+        }
+      }
+    }
+
+    // draw items (only paper)
+    for(const it of items){
+      // paper gift box
+      ctx.save(); ctx.translate(it.x,it.y);
+      const s = 10 + Math.sin(it.blink)*2;
+      ctx.fillStyle='#4fc3f7'; ctx.fillRect(-s,-s,s*2,s*2);
+      ctx.fillStyle='#fff176'; ctx.fillRect(-s+3,-s+1,s*1.5,s*1.5);
+      // small sparkle
+      ctx.fillStyle='rgba(255,255,255,0.07)'; ctx.fillRect(-s+1,-s+1,2,2);
+      ctx.restore();
+    }
+
+    // draw connections and progress bars for attacks
+    players.forEach(p=>{
+      p.draw();
+      // draw attack progress above (shown while attempting)
+      if(p.attackTimer>0 && p.cooldown<=0 && p.isAttempting && !p.defeated){
+        const prog = Math.min(1, p.attackTimer / ATTACK_HOLD_MS);
+        ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(p.x - 22, p.y - p.radius - 18, 44, 8);
+        ctx.fillStyle = (p.type==='wrapper')? '#f48fb1' : '#ff7043'; ctx.fillRect(p.x - 22, p.y - p.radius - 18, 44*prog, 8);
+      }
+    });
+
+    // draw particles
+    for(const pt of particles){
+      ctx.beginPath(); ctx.fillStyle = (pt.type==='wrapper' ? 'rgba(255,230,120,0.95)' : 'rgba(255,255,255,0.9)');
+      ctx.arc(pt.x,pt.y,2.2,0,Math.PI*2); ctx.fill();
+    }
+
+    // draw 'close-range' hint for each player (circle when they can hit)
+    players.forEach(p=>{
+      ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1; ctx.arc(p.x,p.y,CELL*0.9,0,Math.PI*2); ctx.stroke();
+    });
+
+    // victory overlay
+    if(player1.defeated || player2.defeated){
+      ctx.save(); ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#fff'; ctx.font='bold 36px sans-serif'; ctx.textAlign='center';
+      const winner = player1.defeated? player2 : player1;
+      ctx.fillText(`${winner.name} wins!`, canvas.width/2, canvas.height/2 - 6);
+      ctx.font='16px sans-serif'; ctx.fillText('Press R to restart', canvas.width/2, canvas.height/2 + 26);
+      ctx.restore();
+    }
+  }
+
+  // reset
+  function resetGame(){
+    // re-generate maze and re-place players and items
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=1;
+    carveMaze(); addExtraConnections();
+    const s1 = findOpenCellQuarter(0,1); const s2 = findOpenCellQuarter(1,0);
+    player1.x = s1[0]; player1.y = s1[1]; player1.hitsReceived=0; player1.defeated=false; player1.resource=0; player1.attackTimer=0; player1.cooldown=0; player1.isAttempting=false;
+    player2.x = s2[0]; player2.y = s2[1]; player2.hitsReceived=0; player2.defeated=false; player2.resource=0; player2.attackTimer=0; player2.cooldown=0; player2.isAttempting=false;
+    items.length=0; for(let i=0;i<10;i++) spawnItem();
+  }
+
+  // menu buttons
+  document.getElementById('btn-play').addEventListener('click', ()=>{ document.getElementById('modal-start').style.display='none'; ensureAudio(); lastTime = performance.now(); requestAnimationFrame(loop); });
+  document.getElementById('btn-instr').addEventListener('click', ()=>{ document.getElementById('modal-start').style.display='none'; document.getElementById('modal-instr').style.display='flex'; });
+  document.getElementById('btn-back').addEventListener('click', ()=>{ document.getElementById('modal-instr').style.display='none'; document.getElementById('modal-start').style.display='flex'; });
+
+  // auto-start in case user clicks canvas
+  canvas.addEventListener('click', ()=>{ if(document.getElementById('modal-start').style.display!=='none') document.getElementById('btn-play').click(); });
+
+  // Start paused on menu
+  draw();
+
+  // small accessibility: show key help in console
+  console.log('Robot Holiday Rumble loaded. Controls: WASD + F (wrapper), Arrows + L (wrapper), R to restart — each paper is single-use per attempt.');
+})();
+</script>
+</body>
+</html>

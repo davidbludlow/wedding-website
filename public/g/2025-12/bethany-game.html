@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Forla Elenor's Fairy Wedding — Mini Game</title>
+  <style>
+    :root{
+      --tile: 56px; --cols: 12; --rows: 8;
+      --bg:#c7f0d9; --grass:#9be08b; --dirt:#c39a6b; --lamp:#fff7c2;
+      --accent:#ff9fd1; --text:#263238;
+    }
+    *{box-sizing:border-box; font-family:system-ui,Segoe UI,Arial}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#fff);color:var(--text);display:flex;flex-direction:column;align-items:center;padding:16px}
+    header{display:flex;align-items:center;gap:12px;width:100%;max-width:980px}
+    h1{font-size:20px;margin:0}
+    .game-wrap{display:flex;gap:12px;align-items:flex-start;margin-top:10px;width:100%;max-width:980px}
+
+    /* Map */
+    .map{display:grid;grid-template-columns:repeat(var(--cols),var(--tile));grid-auto-rows:var(--tile);gap:2px;background:#6fc27a;padding:8px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.12)}
+    .tile{background:linear-gradient(180deg, #bfeebb,#9fe08f);display:flex;align-items:center;justify-content:center;font-size:24px;position:relative;border-radius:8px}
+    .tile.dirt{background:radial-gradient(circle at 40% 60%, #be905f,#c68b56);}
+    .tile.lamp{background:linear-gradient(180deg,#fff7c2,#ffd37a)}
+    .tile.house{background:linear-gradient(180deg,#ffe8ff,#ffd9f6)}
+    .tile.path{background:linear-gradient(180deg,#f9f3e6,#efe6d2)}
+
+    /* characters */
+    .char{position:absolute;font-size:28px;transform:translate(-50%,-50%);left:50%;top:50%;pointer-events:none}
+    .princess{filter:drop-shadow(0 3px 0 rgba(0,0,0,0.15));}
+    .fairy-wings{position:absolute;left:34%;top:44%;font-size:14px;opacity:.9}
+
+    /* pets */
+    .pet-label{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:11px;background:rgba(255,255,255,0.85);padding:2px 6px;border-radius:8px}
+
+    /* UI */
+    .ui{width:300px;background:linear-gradient(180deg,#fff,#fff5fb);padding:10px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+    .inventory{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .inv-item{background:#f3f7ff;padding:6px 10px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:8px}
+    .controls{font-size:13px;margin-top:10px}
+
+    /* overlay wedding */
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);visibility:hidden;opacity:0;transition:opacity .3s}
+    .overlay.show{visibility:visible;opacity:1}
+    .dialog{background:white;padding:20px;border-radius:14px;text-align:center;max-width:420px;box-shadow:0 8px 30px rgba(0,0,0,0.25)}
+    .confetti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
+    .confetti span{position:absolute;animation:fall 3s linear infinite}
+    @keyframes fall{0%{transform:translateY(-30vh) rotate(0)}100%{transform:translateY(110vh) rotate(520deg)}}
+
+    /* small messages */
+    .message{position:fixed;left:50%;transform:translateX(-50%);bottom:34px;background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
+
+    footer{margin-top:18px;font-size:13px;color:#3a3a3a}
+
+    /* cute sparkle animation for fairy */
+    .sparkle{position:absolute;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#fffecf,#ffd1f0);box-shadow:0 0 10px #fff8b3;animation:spin 1.6s linear infinite}
+    @keyframes spin{0%{transform:translate(-50%,-50%) scale(.8)}50%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(.8)}}
+
+    /* responsive */
+    @media (max-width:760px){:root{--cols:10} .ui{width:220px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Forla Elenor's Fairy Wedding 🎀</h1>
+    <div style="margin-left:auto; font-size:13px;color:#2f4f3f">Play as: <b>Princess Forla Elenor</b> (a fairy)</div>
+  </header>
+
+  <div class="game-wrap">
+    <div id="map" class="map" aria-label="game map" role="application"></div>
+
+    <div class="ui">
+      <div><b>Goal:</b> Help Forla Elenor collect jewelry for the wedding: dig in dirt and open lamps to find jewels & diamonds. Call your pets for help!</div>
+      <div style="margin-top:8px"><b>Pets:</b> <span id="dogname">Flours Bloom</span> 🐶, <span id="catname">Star Moon Light</span> 🐱</div>
+
+      <div class="inventory" id="inventory">
+        <div class="inv-item">💍 Jewels: <span id="jcount">0</span></div>
+        <div class="inv-item">💎 Diamonds: <span id="dcount">0</span></div>
+        <div class="inv-item">🎀 Wedding Ready: <span id="ready">No</span></div>
+      </div>
+
+      <div class="controls">
+        <div><b>Controls</b></div>
+        <div>Arrow keys / WASD = move</div>
+        <div>Space = dig / open / interact</div>
+        <div>Click a pet to send them to search a nearby dirt patch</div>
+      </div>
+
+      <div style="margin-top:8px;color:#666;font-size:13px">Hints: You can find jewelry by <b>digging</b> dirt patches. Diamonds sometimes hide in lamps.</div>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="dialog" id="dialog">
+      <h2>💒 Wedding Time!</h2>
+      <p>Lovely Forla Elenor is ready for her wedding! Thank you for helping gather the magic jewelry!</p>
+      <button id="closeBtn">Yay!</button>
+    </div>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+  <div id="msg" class="message" style="display:none"></div>
+
+  <footer>Made with ✨ for story & play — Click pets to help search, or press Space while on dirt/lamp.</footer>
+
+<script>
+// ------------------ Game Settings ------------------
+const COLS = 12, ROWS = 8;
+const mapEl = document.getElementById('map');
+mapEl.style.setProperty('--cols', COLS);
+mapEl.style.setProperty('--rows', ROWS);
+
+let tiles = [];
+let dirtLocations = [];
+let lampLocations = [];
+
+// Inventory
+let jewels = 0, diamonds = 0;
+const J_GOAL = 6; // for wedding
+
+// Entities
+const player = {x:6,y:4,icon:'🧚‍♀️',name:'Forla Elenor'};
+const pets = [
+  {name:'Flours Bloom',icon:'🐶',x:5,y:4,role:'dog'},
+  {name:'Star Moon Light',icon:'🐱',x:7,y:4,role:'cat'}
+];
+
+// ------------------ Helpers ------------------
+function idx(x,y){return y*COLS + x}
+function tileAt(x,y){return tiles[idx(x,y)]}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function showMsg(text, time=1600){const m=document.getElementById('msg');m.textContent=text; m.style.display='block'; setTimeout(()=>m.style.display='none', time)}
+
+// ------------------ Build Map ------------------
+function buildMap(){
+  mapEl.innerHTML=''; tiles=[]; dirtLocations=[]; lampLocations=[];
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      const t = document.createElement('div');
+      t.className='tile'; t.dataset.x=x; t.dataset.y=y; t.tabIndex=-1;
+      // place paths and house
+      if(y===ROWS-1 && x>3 && x<8){ t.classList.add('path'); t.innerHTML=''; }
+      else if(y===0 && x===COLS-2){ t.classList.add('house'); t.innerHTML='🏰'; }
+      else t.textContent='';
+      mapEl.appendChild(t);
+      tiles.push(t);
+    }
+  }
+
+  // random dirt patches
+  const dirtCount = 10;
+  let chosen = new Set();
+  while(chosen.size < dirtCount){
+    const x=randInt(1,COLS-2), y=randInt(2,ROWS-2);
+    const key = x+','+y; if(chosen.has(key)) continue; chosen.add(key);
+    const t=tileAt(x,y); t.classList.add('dirt');
+    // hide jewelry with some probability
+    t.dataset.hasJewel = Math.random() < 0.6 ? '1' : '0';
+    t.dataset.dug = '0';
+    dirtLocations.push({x,y});
+  }
+
+  // place lamps
+  const lampCount = 6; chosen = new Set();
+  while(chosen.size < lampCount){
+    const x=randInt(1,COLS-2), y=randInt(1,ROWS-3);
+    const key = x+','+y; if(chosen.has(key)) continue; chosen.add(key);
+    const t=tileAt(x,y); t.classList.add('lamp'); t.innerHTML='🪔';
+    t.dataset.hasDiamond = Math.random() < 0.35 ? '1' : '0';
+    t.dataset.opened = '0';
+    lampLocations.push({x,y});
+  }
+
+  renderAll();
+}
+
+// ------------------ Render ------------------
+function clearChars(){document.querySelectorAll('.char, .pet-label, .fairy-wings, .sparkle').forEach(e=>e.remove())}
+function renderAll(){
+  clearChars();
+  // draw player
+  const pt = tileAt(player.x,player.y);
+  const p = document.createElement('div'); p.className='char princess'; p.innerHTML=player.icon;
+  pt.appendChild(p);
+  // fairy wings + sparkle
+  const wings = document.createElement('div'); wings.className='fairy-wings'; wings.innerHTML='✨'; pt.appendChild(wings);
+  const sp = document.createElement('div'); sp.className='sparkle'; sp.style.left='70%'; sp.style.top='18%'; pt.appendChild(sp);
+
+  // pets
+  pets.forEach(pet=>{
+    const t=tileAt(pet.x,pet.y);
+    const pe = document.createElement('div'); pe.className='char pet'; pe.innerHTML=pet.icon; pe.style.fontSize='26px'; t.appendChild(pe);
+    const lab = document.createElement('div'); lab.className='pet-label'; lab.textContent=pet.name; t.appendChild(lab);
+    // clickable pet
+    pe.parentElement.style.cursor='pointer';
+    pe.parentElement.onclick = (ev)=>{ // find clicked pet by comparing coords
+      const tx = parseInt(pe.parentElement.dataset.x), ty=parseInt(pe.parentElement.dataset.y);
+      if(tx===pet.x && ty===pet.y) sendPetToSearch(pet);
+    };
+  });
+
+  // update inventory UI
+  document.getElementById('jcount').textContent = jewels;
+  document.getElementById('dcount').textContent = diamonds;
+  document.getElementById('ready').textContent = (jewels+diamonds >= J_GOAL) ? 'Yes' : 'No';
+}
+
+// ------------------ Input & Interaction ------------------
+let keyState = {};
+document.addEventListener('keydown', (e)=>{ keyState[e.key]=true; e.preventDefault && e.preventDefault(); handleMoveKeys(e.key); });
+document.addEventListener('keyup', (e)=>{ keyState[e.key]=false });
+
+function handleMoveKeys(key){
+  const k = key.toLowerCase();
+  let nx=player.x, ny=player.y;
+  if(['arrowup','w','arrowup'].includes(k)) ny--;
+  if(['arrowdown','s'].includes(k)) ny++;
+  if(['arrowleft','a'].includes(k)) nx--;
+  if(['arrowright','d'].includes(k)) nx++;
+  if(key===' ' || k==='spacebar' || k==='space') return interact();
+  movePlayer(nx,ny);
+}
+
+function movePlayer(nx,ny){
+  if(nx<0||nx>=COLS||ny<0||ny>=ROWS) return;
+  // basic collision: house area blocked
+  const t = tileAt(nx,ny);
+  player.x=nx; player.y=ny; renderAll();
+}
+
+// space = interact
+function interact(){
+  const t = tileAt(player.x,player.y);
+  if(t.classList.contains('dirt')){
+    if(t.dataset.dug==='1'){ showMsg('Already dug here'); return; }
+    t.dataset.dug='1';
+    if(t.dataset.hasJewel==='1'){
+      // find random 1 or 2 jewels
+      const found = Math.random()<0.85 ? randInt(1,2) : 0;
+      if(found>0){ jewels += found; showMsg('You found '+found+' jewel(s)! 💍'); }
+      else showMsg('Oh! Empty this time. Try another spot!');
+    } else showMsg('No jewelry here.');
+  }
+  else if(t.classList.contains('lamp')){
+    if(t.dataset.opened==='1'){ showMsg('Lamp was empty'); return; }
+    t.dataset.opened='1';
+    if(t.dataset.hasDiamond==='1'){ diamonds+=1; showMsg('Sparkle! You found a diamond! 💎'); }
+    else showMsg('Nothing inside.');
+  } else {
+    showMsg('Walk to dirt or lamp and press Space to check');
+  }
+  renderAll(); checkWedding();
+}
+
+// ------------------ Pets: simple AI ------------------
+function sendPetToSearch(pet){
+  showMsg(pet.name + ' runs to search...');
+  // find nearest undug dirt
+  const targets = dirtLocations.filter(d=>{ const t=tileAt(d.x,d.y); return t.dataset.dug==='0' });
+  if(targets.length===0){ showMsg('No more dirt to search!'); return; }
+  let nearest = targets[0]; let best = distance(pet,targets[0]);
+  targets.forEach(t=>{const d=distance(pet,t); if(d<best){best=d; nearest=t}});
+  // move pet there over time
+  moveEntityTo(pet, nearest.x, nearest.y, ()=>{
+    // dig!
+    const t = tileAt(nearest.x,nearest.y);
+    if(t.dataset.dug==='1'){ showMsg(pet.name + ' found nothing (already dug)'); renderAll(); return; }
+    t.dataset.dug='1';
+    if(t.dataset.hasJewel==='1' && Math.random()<0.8){ const found = 1; jewels+=found; showMsg(pet.name + ' found '+found+' jewel!'); }
+    else showMsg(pet.name + ' found nothing'); renderAll(); checkWedding();
+  });
+}
+function moveEntityTo(ent, tx,ty,cb){
+  const steps = 12; const sx = ent.x, sy = ent.y; let step=0;
+  const id = setInterval(()=>{
+    step++; ent.x = Math.round(sx + (tx-sx)*(step/steps)); ent.y = Math.round(sy + (ty-sy)*(step/steps)); renderAll();
+    if(step>=steps){ clearInterval(id); if(cb) cb(); }
+  }, 80);
+}
+function distance(a,b){return Math.abs((a.x||0)-(b.x||0))+Math.abs((a.y||0)-(b.y||0))}
+
+// pets follow gently
+setInterval(()=>{
+  pets.forEach(p=>{
+    const dx = player.x - p.x; const dy = player.y - p.y;
+    if(Math.abs(dx)+Math.abs(dy) > 1){ p.x += Math.sign(dx); p.y += Math.sign(dy); }
+  }); renderAll();
+}, 700);
+
+// ------------------ Wedding check ------------------
+function checkWedding(){
+  if(jewels+diamonds >= J_GOAL){ triggerWedding(); }
+}
+
+function triggerWedding(){
+  const overlay = document.getElementById('overlay'); overlay.classList.add('show');
+  // confetti
+  const conf = document.getElementById('confetti'); conf.innerHTML='';
+  const colors = ['#ffcccb','#ffd700','#b3ffcc','#c7b3ff','#ffb3e6'];
+  for(let i=0;i<25;i++){ const s=document.createElement('span'); s.textContent = ['✨','💖','🎉','🌸'][randInt(0,3)]; s.style.left = (Math.random()*100)+'%'; s.style.top = (-10-Math.random()*10)+'vh'; s.style.color = colors[randInt(0,colors.length-1)]; s.style.fontSize = (12+Math.random()*22)+'px'; conf.appendChild(s); }
+}
+
+document.getElementById('closeBtn').onclick = ()=>{document.getElementById('overlay').classList.remove('show'); showMsg('Happily ever after! 🎉',2000)}
+
+// ------------------ Init ------------------
+buildMap(); renderAll();
+
+// accessibility: click handlers to interact at current tile
+mapEl.addEventListener('click', ()=>{ interact(); });
+
+// starting message
+showMsg('Welcome! Use arrows to move. Press Space to dig or open lamps.');
+
+</script>
+</body>
+</html>

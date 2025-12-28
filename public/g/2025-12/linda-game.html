@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Bonker - Keep the Students Quiet!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: #F5E6D3;
+            border: 8px solid #8B4513;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2C3E50;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: #FFE4B5;
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #DAA520;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2C3E50;
+        }
+
+        .classroom {
+            background: #FFF;
+            border: 4px solid #2C3E50;
+            border-radius: 10px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .desk {
+            background: #D2691E;
+            border: 3px solid #8B4513;
+            border-radius: 10px;
+            height: 120px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .desk::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 3px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset 0 0 0 2px #E8E8E8;
+        }
+
+        .desk::after {
+            content: '📖';
+            position: absolute;
+            font-size: 1.8em;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.7;
+        }
+
+        .desk.student-present::after {
+            opacity: 0;
+        }
+
+        .desk:hover {
+            transform: scale(1.05);
+        }
+
+        .student {
+            position: absolute;
+            bottom: -100%;
+            width: 80%;
+            height: 90%;
+            transition: bottom 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 10px;
+        }
+
+        .student.active {
+            bottom: 0;
+        }
+
+        .student.bonked {
+            animation: bonk 0.3s ease-out;
+        }
+
+        @keyframes bonk {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(0.8) rotate(-10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .student-head {
+            width: 50px;
+            height: 50px;
+            background: #FFD6A5;
+            border-radius: 50%;
+            border: 3px solid #333;
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .student-eyes {
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            width: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .eye {
+            width: 8px;
+            height: 8px;
+            background: #333;
+            border-radius: 50%;
+        }
+
+        .student-mouth {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 10px;
+            border: 2px solid #333;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .student-mouth.shouting {
+            animation: shout 0.3s infinite;
+        }
+
+        @keyframes shout {
+            0%, 100% { height: 10px; }
+            50% { height: 15px; }
+        }
+
+        .noise-indicator {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            animation: float 0.5s infinite alternate;
+        }
+
+        @keyframes float {
+            from { transform: translateX(-50%) translateY(0); }
+            to { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        .student-body {
+            width: 40px;
+            height: 30px;
+            background: #4A90E2;
+            border-radius: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #2E7D32;
+            transition: all 0.1s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #2E7D32;
+        }
+
+        button.reset {
+            background: #f44336;
+            box-shadow: 0 5px 0 #c62828;
+        }
+
+        button.reset:hover {
+            background: #da190b;
+        }
+
+        .game-over {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: popup 0.3s ease-out;
+        }
+
+        @keyframes popup {
+            from { transform: translate(-50%, -50%) scale(0); }
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .game-over h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ff4444;
+        }
+
+        .game-over p {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+
+        .instructions {
+            background: #FFE4B5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 3px solid #DAA520;
+        }
+
+        .instructions h3 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🎓 Classroom Bonker 🎓</h1>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Play:</h3>
+            <p>Help your students focus on their work! Students will get distracted and pop up to make noise. Click on them quickly to bonk them back to their studies. Keep the noise down so everyone can work! Don't let too many noisy students overwhelm the classroom!</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="time">60</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Work Done</div>
+                <div class="stat-value" id="workDone">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Noise Level</div>
+                <div class="stat-value" id="noise">0</div>
+            </div>
+        </div>
+
+        <div class="classroom" id="classroom">
+            <!-- Desks will be generated here -->
+        </div>
+
+        <div class="buttons">
+            <button onclick="startGame()">Start Game</button>
+            <button class="reset" onclick="resetGame()">Reset</button>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>Class Dismissed!</h2>
+        <p id="finalScore">Final Score: 0</p>
+        <button onclick="resetGame()">Try Again</button>
+    </div>
+
+    <script>
+        const TOTAL_DESKS = 12;
+        const MAX_NOISE = 10;
+        const GAME_TIME = 60;
+        const STUDENT_COLORS = ['#4A90E2', '#E74C3C', '#F39C12', '#9B59B6', '#1ABC9C'];
+
+        let score = 0;
+        let timeLeft = GAME_TIME;
+        let noiseLevel = 0;
+        let workDone = 0;
+        let gameActive = false;
+        let gameInterval;
+        let timerInterval;
+        let workInterval;
+        let students = [];
+
+        // Initialize the classroom
+        function initClassroom() {
+            const classroom = document.getElementById('classroom');
+            classroom.innerHTML = '';
+            students = [];
+
+            for (let i = 0; i < TOTAL_DESKS; i++) {
+                const desk = document.createElement('div');
+                desk.className = 'desk';
+                desk.id = `desk-${i}`;
+
+                const student = document.createElement('div');
+                student.className = 'student';
+                
+                const head = document.createElement('div');
+                head.className = 'student-head';
+                
+                const eyes = document.createElement('div');
+                eyes.className = 'student-eyes';
+                eyes.innerHTML = '<div class="eye"></div><div class="eye"></div>';
+                
+                const mouth = document.createElement('div');
+                mouth.className = 'student-mouth';
+                
+                head.appendChild(eyes);
+                head.appendChild(mouth);
+                
+                const body = document.createElement('div');
+                body.className = 'student-body';
+                body.style.background = STUDENT_COLORS[i % STUDENT_COLORS.length];
+                
+                student.appendChild(head);
+                student.appendChild(body);
+                desk.appendChild(student);
+
+                desk.addEventListener('click', () => bonkStudent(i));
+                
+                classroom.appendChild(desk);
+                students.push({
+                    element: student,
+                    desk: desk,
+                    active: false,
+                    noisy: false,
+                    timeout: null
+                });
+            }
+        }
+
+        function startGame() {
+            if (gameActive) return;
+            
+            gameActive = true;
+            score = 0;
+            timeLeft = GAME_TIME;
+            noiseLevel = 0;
+            workDone = 0;
+            updateDisplay();
+
+            // Start the timer
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            // Track work progress
+            workInterval = setInterval(() => {
+                // Students working (quiet ones) contribute to work completion
+                const workingStudents = students.filter(s => !s.active).length;
+                workDone += (workingStudents / TOTAL_DESKS) * 0.5;
+                updateDisplay();
+            }, 100);
+
+            // Start spawning students
+            gameInterval = setInterval(spawnStudent, 800);
+        }
+
+        function spawnStudent() {
+            if (!gameActive) return;
+
+            // Find inactive students
+            const inactiveStudents = students.filter(s => !s.active);
+            if (inactiveStudents.length === 0) return;
+
+            // Pick a random inactive student
+            const randomStudent = inactiveStudents[Math.floor(Math.random() * inactiveStudents.length)];
+            const index = students.indexOf(randomStudent);
+
+            // Pop up the student
+            randomStudent.active = true;
+            randomStudent.noisy = true;
+            randomStudent.element.classList.add('active');
+            randomStudent.desk.classList.add('student-present');
+            
+            // Add noise indicator
+            const noiseIndicator = document.createElement('div');
+            noiseIndicator.className = 'noise-indicator';
+            noiseIndicator.textContent = '💬';
+            randomStudent.element.appendChild(noiseIndicator);
+            
+            // Make mouth shout
+            const mouth = randomStudent.element.querySelector('.student-mouth');
+            mouth.classList.add('shouting');
+            
+            // Increase noise level
+            noiseLevel++;
+            updateDisplay();
+
+            // Auto-hide after a random time (1-3 seconds)
+            const hideTime = 1000 + Math.random() * 2000;
+            randomStudent.timeout = setTimeout(() => {
+                hideStudent(index);
+            }, hideTime);
+
+            // Check if noise level is too high
+            if (noiseLevel >= MAX_NOISE) {
+                endGame();
+            }
+        }
+
+        function bonkStudent(index) {
+            if (!gameActive) return;
+            
+            const student = students[index];
+            if (!student.active) return;
+
+            // Clear the timeout
+            if (student.timeout) {
+                clearTimeout(student.timeout);
+            }
+
+            // Bonk animation
+            student.element.classList.add('bonked');
+            setTimeout(() => {
+                student.element.classList.remove('bonked');
+            }, 300);
+
+            // Decrease noise if student was noisy
+            if (student.noisy) {
+                noiseLevel = Math.max(0, noiseLevel - 1);
+                score += 10;
+            }
+
+            // Hide the student
+            hideStudent(index);
+            updateDisplay();
+        }
+
+        function hideStudent(index) {
+            const student = students[index];
+            if (!student.active) return;
+
+            student.active = false;
+            student.noisy = false;
+            student.element.classList.remove('active');
+            student.desk.classList.remove('student-present');
+            
+            // Remove noise indicator
+            const noiseIndicator = student.element.querySelector('.noise-indicator');
+            if (noiseIndicator) {
+                noiseIndicator.remove();
+            }
+            
+            // Stop mouth shouting
+            const mouth = student.element.querySelector('.student-mouth');
+            mouth.classList.remove('shouting');
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('time').textContent = timeLeft;
+            document.getElementById('noise').textContent = noiseLevel;
+            document.getElementById('workDone').textContent = Math.min(100, Math.round(workDone)) + '%';
+            
+            // Change noise level color based on danger
+            const noiseElement = document.getElementById('noise');
+            if (noiseLevel >= MAX_NOISE * 0.8) {
+                noiseElement.style.color = '#E74C3C';
+            } else if (noiseLevel >= MAX_NOISE * 0.5) {
+                noiseElement.style.color = '#F39C12';
+            } else {
+                noiseElement.style.color = '#2C3E50';
+            }
+            
+            // Change work color based on progress
+            const workElement = document.getElementById('workDone');
+            if (workDone >= 80) {
+                workElement.style.color = '#4CAF50';
+            } else if (workDone >= 50) {
+                workElement.style.color = '#F39C12';
+            } else {
+                workElement.style.color = '#2C3E50';
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            clearInterval(workInterval);
+
+            // Hide all students
+            students.forEach((student, index) => {
+                if (student.timeout) {
+                    clearTimeout(student.timeout);
+                }
+                hideStudent(index);
+            });
+
+            // Calculate bonus for work completion
+            const workBonus = Math.round(workDone * 2);
+            const finalScore = score + workBonus;
+
+            // Show game over screen
+            document.getElementById('finalScore').textContent = `Final Score: ${finalScore}\nBonks: ${score} + Work Bonus: ${workBonus} (${Math.min(100, Math.round(workDone))}% completed)`;
+            document.getElementById('gameOver').classList.add('show');
+        }
+
+        function resetGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            clearInterval(workInterval);
+
+            students.forEach((student, index) => {
+                if (student.timeout) {
+                    clearTimeout(student.timeout);
+                }
+                hideStudent(index);
+            });
+
+            score = 0;
+            timeLeft = GAME_TIME;
+            noiseLevel = 0;
+            workDone = 0;
+            updateDisplay();
+
+            document.getElementById('gameOver').classList.remove('show');
+        }
+
+        // Initialize on load
+        initClassroom();
+        updateDisplay();
+    </script>
+</body>
+</html>

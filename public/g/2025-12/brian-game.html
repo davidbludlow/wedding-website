@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moving Target Archery (2-4 Players)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    
+    .content {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      padding: 30px;
+    }
+    
+    @media (max-width: 900px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: 600;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+      background: #5a6268;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: #c82333;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .scoreboard {
+      width: 100%;
+    }
+    
+    .scoreboard table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .scoreboard th,
+    .scoreboard td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .scoreboard th {
+      background: #f8f9fa;
+      color: #667eea;
+      font-weight: 600;
+    }
+    
+    .scoreboard tr.active {
+      background: #e7f0ff;
+    }
+    
+    .player-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .game-area {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    canvas {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      aspect-ratio: 1;
+      border: 3px solid #667eea;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto;
+      cursor: crosshair;
+    }
+    
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .info-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    
+    .status-message {
+      font-size: 1.1em;
+      font-weight: 600;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .hint {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 10px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 Moving Target Archery</h1>
+      <p>2-4 Players · 4 Ends · 3 Arrows per End</p>
+    </div>
+    
+    <div class="content">
+      <div class="sidebar">
+        <!-- Setup Panel -->
+        <div id="setupPanel" class="card">
+          <h3>Game Setup</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="playerCount">Players</label>
+              <select id="playerCount">
+                <option value="2" selected>2 Players</option>
+                <option value="3">3 Players</option>
+                <option value="4">4 Players</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="distance">Distance</label>
+              <select id="distance">
+                <option value="50" selected>50 feet</option>
+                <option value="100">100 feet</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="player1">Player 1 Name</label>
+            <input type="text" id="player1" placeholder="Player 1" maxlength="15">
+          </div>
+          
+          <div class="form-group">
+            <label for="player2">Player 2 Name</label>
+            <input type="text" id="player2" placeholder="Player 2" maxlength="15">
+          </div>
+          
+          <div id="extraPlayers"></div>
+          
+          <button class="btn-primary" onclick="startGame()">Start Game</button>
+          <button class="btn-secondary" onclick="quickFill()">Quick Fill Names</button>
+          
+          <p class="hint">Faster targets = more points! 100 ft = harder mode. (4 ends × 3 arrows)</p>
+        </div>
+        
+        <!-- Game Controls Panel -->
+        <div id="controlPanel" class="card hidden">
+          <h3>Game Controls</h3>
+          <div class="game-info">
+            <div class="info-badge" id="currentPlayer">—</div>
+            <div class="info-badge" id="turnInfo">—</div>
+          </div>
+          <div class="status-message status-info" id="turnStatus">Click any target to shoot!</div>
+          <div class="info-badge" id="shotsRemaining" style="margin: 10px 0; font-size: 1.1em;">—</div>
+          <button class="btn-primary" id="nextPlayerBtn" onclick="confirmNextPlayer()" style="display: none;">Next Player Ready</button>
+          <button class="btn-danger" onclick="resetGame()">Reset Game</button>
+        </div>
+        
+        <!-- Results Panel -->
+        <div id="resultsPanel" class="card hidden">
+          <h3>Game Over!</h3>
+          <div class="status-message status-success" id="winnerMessage"></div>
+          <button class="btn-primary" onclick="playAgain()">Play Again</button>
+          <button class="btn-secondary" onclick="newSetup()">New Setup</button>
+        </div>
+        
+        <!-- Scoreboard -->
+        <div class="card scoreboard">
+          <h3>Scoreboard</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Hits</th>
+                <th>Last</th>
+              </tr>
+            </thead>
+            <tbody id="scoreboardBody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: #999;">No game in progress</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="game-area">
+        <div class="canvas-container">
+          <canvas id="gameCanvas" width="600" height="600"></canvas>
+          <div class="game-info">
+            <div class="info-badge" id="distanceDisplay">Distance: —</div>
+            <div class="info-badge" id="roundDisplay">Round: —</div>
+            <div class="status-message status-info" id="shotResult" style="flex: 1;">Set up a game to begin!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MAX_ROUNDS = 4; // Called "ends" in archery
+    const TARGET_COUNT = 4;
+    const SHOTS_PER_TURN = 3; // Arrows per end
+    
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let gameState = {
+      phase: 'setup', // setup, playing, waiting, results
+      players: [],
+      currentPlayer: 0,
+      currentRound: 0,
+      distance: 50,
+      targets: [],
+      shotsThisTurn: 0,
+      animationId: null
+    };
+    
+    const playerColors = ['#667eea', '#f093fb', '#4facfe', '#43e97b'];
+    
+    // Initialize extra player inputs
+    document.getElementById('playerCount').addEventListener('change', function() {
+      const count = parseInt(this.value);
+      const container = document.getElementById('extraPlayers');
+      container.innerHTML = '';
+      
+      for (let i = 3; i <= count; i++) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.innerHTML = `
+          <label for="player${i}">Player ${i} Name</label>
+          <input type="text" id="player${i}" placeholder="Player ${i}" maxlength="15">
+        `;
+        container.appendChild(div);
+      }
+    });
+    
+    function quickFill() {
+      const names = ['Robin', 'Marian', 'Will', 'Tuck'];
+      const count = parseInt(document.getElementById('playerCount').value);
+      for (let i = 1; i <= count; i++) {
+        document.getElementById(`player${i}`).value = names[i - 1];
+      }
+    }
+    
+    function startGame() {
+      const count = parseInt(document.getElementById('playerCount').value);
+      gameState.distance = parseInt(document.getElementById('distance').value);
+      gameState.players = [];
+      
+      for (let i = 1; i <= count; i++) {
+        const input = document.getElementById(`player${i}`);
+        const name = input.value.trim() || `Player ${i}`;
+        gameState.players.push({
+          name: name,
+          score: 0,
+          hits: 0,
+          misses: 0,
+          shots: [],
+          color: playerColors[i - 1]
+        });
+      }
+      
+      gameState.currentPlayer = 0;
+      gameState.currentRound = 0;
+      gameState.phase = 'playing';
+      gameState.shotsThisTurn = 0;
+      
+      document.getElementById('setupPanel').classList.add('hidden');
+      document.getElementById('controlPanel').classList.remove('hidden');
+      document.getElementById('resultsPanel').classList.add('hidden');
+      
+      initTargets();
+      updateDisplay();
+      startAnimation();
+    }
+    
+    function initTargets() {
+      gameState.targets = [];
+      const speedMult = gameState.distance === 100 ? 1.6 : 1.0;
+      const sizeMult = gameState.distance === 100 ? 0.7 : 1.0;
+      
+      const targetTypes = [
+        { points: 1, color: '#f0f0f0', speed: 1.2, size: 1 },
+        { points: 2, color: '#4facfe', speed: 1.8, size: 0.85 },
+        { points: 3, color: '#f093fb', speed: 2.5, size: 0.7 },
+        { points: 5, color: '#feca57', speed: 3.5, size: 0.55 }
+      ];
+      
+      for (let i = 0; i < TARGET_COUNT; i++) {
+        const type = targetTypes[i];
+        const radius = 25 * type.size * sizeMult;
+        
+        gameState.targets.push({
+          x: Math.random() * (canvas.width - radius * 2) + radius,
+          y: Math.random() * (canvas.height - radius * 2) + radius,
+          vx: (Math.random() - 0.5) * type.speed * speedMult * 2,
+          vy: (Math.random() - 0.5) * type.speed * speedMult * 2,
+          radius: radius,
+          points: type.points,
+          color: type.color,
+          hit: false
+        });
+      }
+    }
+    
+    function updateTargets() {
+      for (const target of gameState.targets) {
+        target.x += target.vx;
+        target.y += target.vy;
+        
+        if (target.x - target.radius < 0 || target.x + target.radius > canvas.width) {
+          target.vx *= -1;
+          target.x = Math.max(target.radius, Math.min(canvas.width - target.radius, target.x));
+        }
+        
+        if (target.y - target.radius < 0 || target.y + target.radius > canvas.height) {
+          target.vy *= -1;
+          target.y = Math.max(target.radius, Math.min(canvas.height - target.radius, target.y));
+        }
+      }
+    }
+    
+    function drawGame() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Background
+      const gradient = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+      gradient.addColorStop(0, '#e3f2fd');
+      gradient.addColorStop(1, '#bbdefb');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      if (gameState.phase === 'waiting') {
+        // Show waiting overlay between players
+        ctx.fillStyle = 'rgba(102, 126, 234, 0.95)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        const nextPlayerIndex = (gameState.currentPlayer + 1) % gameState.players.length;
+        const nextPlayer = gameState.players[nextPlayerIndex];
+        const currentPlayer = gameState.players[gameState.currentPlayer];
+        
+        ctx.fillText(`${currentPlayer.name}'s end complete!`, canvas.width / 2, canvas.height / 2 - 40);
+        ctx.font = 'bold 28px Arial';
+        ctx.fillText(`${nextPlayer.name}, get ready!`, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.font = '20px Arial';
+        ctx.fillText('Click "Next Player Ready" to continue', canvas.width / 2, canvas.height / 2 + 60);
+        return;
+      }
+      
+      if (gameState.phase !== 'playing') {
+        // Show setup/results overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(gameState.phase === 'setup' ? 'Set up your game!' : 'Game Over!', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+      
+      // Draw targets
+      for (let i = 0; i < gameState.targets.length; i++) {
+        const target = gameState.targets[i];
+        
+        // Shadow
+        ctx.beginPath();
+        ctx.arc(target.x + 3, target.y + 3, target.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fill();
+        
+        // Target body
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+        ctx.fillStyle = target.color;
+        ctx.fill();
+        
+        // Border
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Hit effect
+        if (target.hit) {
+          ctx.strokeStyle = gameState.players[gameState.currentPlayer].color;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(target.x, target.y, target.radius + 5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        // Points text
+        ctx.fillStyle = '#333';
+        ctx.font = `bold ${target.radius * 0.7}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(target.points, target.x, target.y);
+      }
+    }
+    
+    function startAnimation() {
+      if (gameState.animationId) return; // Prevent duplicate animations
+      function animate() {
+        if (gameState.phase === 'playing') {
+          updateTargets();
+          drawGame();
+          gameState.animationId = requestAnimationFrame(animate);
+        } else {
+          gameState.animationId = null;
+        }
+      }
+      gameState.animationId = requestAnimationFrame(animate);
+    }
+    
+    function stopAnimation() {
+      if (gameState.animationId) {
+        cancelAnimationFrame(gameState.animationId);
+        gameState.animationId = null;
+      }
+    }
+    
+    canvas.addEventListener('click', function(e) {
+      if (gameState.phase !== 'playing') return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+      
+      let hitTarget = -1;
+      for (let i = 0; i < gameState.targets.length; i++) {
+        const target = gameState.targets[i];
+        const dist = Math.sqrt((clickX - target.x) ** 2 + (clickY - target.y) ** 2);
+        if (dist <= target.radius) {
+          hitTarget = i;
+          break;
+        }
+      }
+      
+      const player = gameState.players[gameState.currentPlayer];
+      
+      if (hitTarget >= 0) {
+        const target = gameState.targets[hitTarget];
+        player.score += target.points;
+        player.hits++;
+        player.shots.push(target.points);
+        
+        target.hit = true;
+        setTimeout(() => { target.hit = false; }, 500);
+        
+        // Respawn target
+        const radius = target.radius;
+        target.x = Math.random() * (canvas.width - radius * 2) + radius;
+        target.y = Math.random() * (canvas.height - radius * 2) + radius;
+        target.vx = (Math.random() - 0.5) * (target.points * 0.7) * (gameState.distance === 100 ? 1.6 : 1.0) * 2;
+        target.vy = (Math.random() - 0.5) * (target.points * 0.7) * (gameState.distance === 100 ? 1.6 : 1.0) * 2;
+        
+        document.getElementById('shotResult').textContent = `${player.name} hit a ${target.points}-point target!`;
+        document.getElementById('shotResult').className = 'status-message status-success';
+      } else {
+        player.misses++;
+        player.shots.push(0);
+        document.getElementById('shotResult').textContent = `${player.name} missed!`;
+        document.getElementById('shotResult').className = 'status-message status-danger';
+      }
+      
+      gameState.shotsThisTurn++;
+      updateDisplay();
+      
+      // Show waiting screen after completing 5 shots
+      if (gameState.shotsThisTurn >= SHOTS_PER_TURN) {
+        setTimeout(() => {
+          showWaitingScreen();
+        }, 800);
+      }
+    });
+    
+    function showWaitingScreen() {
+      gameState.phase = 'waiting';
+      stopAnimation();
+      drawGame();
+      document.getElementById('nextPlayerBtn').style.display = 'block';
+      document.getElementById('shotsRemaining').style.display = 'none';
+      document.getElementById('shotResult').textContent = 'End complete! Pass to next player.';
+      document.getElementById('shotResult').className = 'status-message status-info';
+    }
+    
+    function confirmNextPlayer() {
+      document.getElementById('nextPlayerBtn').style.display = 'none';
+      document.getElementById('shotsRemaining').style.display = 'block';
+      gameState.phase = 'playing';
+      nextTurn();
+      startAnimation();
+    }
+    
+    function nextTurn() {
+      gameState.shotsThisTurn = 0;
+      gameState.currentPlayer++;
+      
+      if (gameState.currentPlayer >= gameState.players.length) {
+        gameState.currentPlayer = 0;
+        gameState.currentRound++;
+        
+        if (gameState.currentRound >= MAX_ROUNDS) {
+          endGame();
+          return;
+        }
+      }
+      
+      document.getElementById('shotResult').textContent = 'Click any target to shoot!';
+      document.getElementById('shotResult').className = 'status-message status-info';
+      updateDisplay();
+    }
+    
+    function endGame() {
+      gameState.phase = 'results';
+      stopAnimation();
+      drawGame();
+      
+      const maxScore = Math.max(...gameState.players.map(p => p.score));
+      const winners = gameState.players.filter(p => p.score === maxScore);
+      
+      let message = '';
+      if (winners.length === 1) {
+        message = `🏆 ${winners[0].name} wins with ${maxScore} points!`;
+      } else {
+        message = `🏆 Tie! ${winners.map(w => w.name).join(', ')} with ${maxScore} points!`;
+      }
+      
+      document.getElementById('winnerMessage').textContent = message;
+      document.getElementById('controlPanel').classList.add('hidden');
+      document.getElementById('resultsPanel').classList.remove('hidden');
+      updateDisplay();
+    }
+    
+    function updateDisplay() {
+      // Update player info
+      if (gameState.phase === 'playing' || gameState.phase === 'waiting') {
+        const player = gameState.players[gameState.currentPlayer];
+        const shotsRemaining = SHOTS_PER_TURN - gameState.shotsThisTurn;
+        
+        document.getElementById('currentPlayer').textContent = `Current: ${player.name}`;
+        document.getElementById('turnInfo').textContent = `End ${gameState.currentRound + 1}/${MAX_ROUNDS}`;
+        document.getElementById('shotsRemaining').textContent = `Arrows Remaining: ${shotsRemaining}/${SHOTS_PER_TURN}`;
+        document.getElementById('distanceDisplay').textContent = `Distance: ${gameState.distance} ft`;
+        document.getElementById('roundDisplay').textContent = `End: ${gameState.currentRound + 1}/${MAX_ROUNDS}`;
+      }
+      
+      // Update scoreboard
+      const tbody = document.getElementById('scoreboardBody');
+      tbody.innerHTML = '';
+      
+      if (gameState.players.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No game in progress</td></tr>';
+        return;
+      }
+      
+      gameState.players.forEach((player, index) => {
+        const row = tbody.insertRow();
+        if (gameState.phase === 'playing' && index === gameState.currentPlayer) {
+          row.classList.add('active');
+        }
+        
+        const lastShot = player.shots.length > 0 ? player.shots[player.shots.length - 1] : '—';
+        const lastDisplay = lastShot === 0 ? 'Miss' : lastShot === '—' ? '—' : `+${lastShot}`;
+        
+        row.innerHTML = `
+          <td><span class="player-indicator" style="background: ${player.color}"></span>${player.name}</td>
+          <td><strong>${player.score}</strong></td>
+          <td>${player.hits}/${player.hits + player.misses}</td>
+          <td>${lastDisplay}</td>
+        `;
+      });
+    }
+    
+    function playAgain() {
+      gameState.players.forEach(p => {
+        p.score = 0;
+        p.hits = 0;
+        p.misses = 0;
+        p.shots = [];
+      });
+      
+      gameState.currentPlayer = 0;
+      gameState.currentRound = 0;
+      gameState.phase = 'playing';
+      gameState.shotsThisTurn = 0;
+      
+      document.getElementById('resultsPanel').classList.add('hidden');
+      document.getElementById('controlPanel').classList.remove('hidden');
+      
+      initTargets();
+      updateDisplay();
+      startAnimation();
+    }
+    
+    function newSetup() {
+      stopAnimation();
+      gameState = {
+        phase: 'setup',
+        players: [],
+        currentPlayer: 0,
+        currentRound: 0,
+        distance: 50,
+        targets: [],
+        shotsThisTurn: 0,
+        animationId: null
+      };
+      
+      document.getElementById('setupPanel').classList.remove('hidden');
+      document.getElementById('controlPanel').classList.add('hidden');
+      document.getElementById('resultsPanel').classList.add('hidden');
+      
+      document.getElementById('shotResult').textContent = 'Set up a game to begin!';
+      document.getElementById('shotResult').className = 'status-message status-info';
+      document.getElementById('distanceDisplay').textContent = 'Distance: —';
+      document.getElementById('roundDisplay').textContent = 'Round: —';
+      
+      updateDisplay();
+      drawGame();
+    }
+    
+    function resetGame() {
+      if (confirm('Are you sure you want to reset the game?')) {
+        newSetup();
+      }
+    }
+    
+    // Initialize
+    drawGame();
+  </script>
+</body>
+</html>

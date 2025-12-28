@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Very Hungry Caterpillar Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB, #90EE90);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #8B4513;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .game-title {
+            color: #2E8B57;
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #4B0082;
+            font-weight: bold;
+        }
+
+        .health-bar {
+            width: 150px;
+            height: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, #32CD32, #FFD700);
+            transition: width 0.3s, background 0.3s;
+            border-radius: 8px;
+        }
+
+        .health-fill.sick {
+            background: linear-gradient(to right, #8B4513, #654321);
+        }
+
+        #gameBoard {
+            width: 600px;
+            height: 400px;
+            border: 4px solid #8B4513;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #90EE90, #98FB98);
+            position: relative;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        .caterpillar-segment {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #2E8B57;
+            transition: all 0.2s;
+        }
+
+        .caterpillar-head {
+            background: radial-gradient(circle, #32CD32, #228B22);
+            z-index: 100;
+        }
+
+        .caterpillar-head::before,
+        .caterpillar-head::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #000;
+            border-radius: 50%;
+            top: 4px;
+            border: 1px solid #fff;
+        }
+
+        .caterpillar-head::before {
+            left: 4px;
+        }
+
+        .caterpillar-head::after {
+            right: 4px;
+        }
+        
+        .caterpillar-head {
+            position: relative;
+        }
+        
+        .caterpillar-head .mouth {
+            position: absolute;
+            width: 8px;
+            height: 4px;
+            border: 2px solid #000;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            top: 12px;
+            left: 6px;
+            background: #FF69B4;
+        }
+
+        .caterpillar-body {
+            background: radial-gradient(circle, #7CFC00, #32CD32);
+        }
+
+        .caterpillar-sick {
+            background: radial-gradient(circle, #8B4513, #654321) !important;
+            filter: brightness(0.7);
+        }
+
+        .food {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            line-height: 1;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #FF69B4, #FFB6C1, #FFA500, #FF69B4);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: flutter 1s infinite;
+        }
+
+        @keyframes flutter {
+            0%, 100% { transform: rotate(-5deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.1); }
+        }
+
+        .game-over, .victory {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #8B4513;
+            text-align: center;
+            font-size: 24px;
+            color: #4B0082;
+            z-index: 1000;
+        }
+
+        .victory {
+            color: #2E8B57;
+            border-color: #2E8B57;
+        }
+
+        .controls {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        button {
+            background: linear-gradient(45deg, #32CD32, #228B22);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #228B22, #32CD32);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🐛 The Very Hungry Caterpillar 🦋</h1>
+        <div class="game-stats">
+            <div>Size: <span id="sizeDisplay">1</span></div>
+            <div class="health-bar">
+                <div class="health-fill" id="healthFill"></div>
+            </div>
+            <div>Score: <span id="scoreDisplay">0</span></div>
+        </div>
+        <div id="gameBoard">
+            <!-- Game elements will be dynamically created here -->
+        </div>
+        <div class="controls">
+            Use arrow keys to move • Eat human foods (golden) to grow • Avoid yucky foods (brown)
+            <br>
+            <button onclick="resetGame()">New Game</button>
+        </div>
+    </div>
+
+    <script>
+        class CaterpillarGame {
+            constructor() {
+                this.gameBoard = document.getElementById('gameBoard');
+                this.sizeDisplay = document.getElementById('sizeDisplay');
+                this.scoreDisplay = document.getElementById('scoreDisplay');
+                this.healthFill = document.getElementById('healthFill');
+                
+                this.boardWidth = 600;
+                this.boardHeight = 400;
+                this.gridSize = 20;
+                
+                this.humanFoods = ['🍎', '🍌', '🍓', '🥕', '🥬', '🍇', '🍊', '🥝', '🍑', '🫐'];
+                this.nonHumanFoods = ['💩', '🦴', '🪨', '🧽', '🧼'];
+                
+                this.reset();
+                this.setupEventListeners();
+                this.gameLoop();
+            }
+
+            reset() {
+                this.caterpillar = [{x: 300, y: 200}]; // Start in center
+                this.direction = {x: 0, y: 0};
+                this.foods = [];
+                this.score = 0;
+                this.health = 100;
+                this.size = 1;
+                this.gameRunning = true;
+                this.isButterfly = false;
+                this.sickDuration = 0;
+                
+                this.clearBoard();
+                this.spawnFood();
+                this.updateDisplay();
+                this.render();
+            }
+
+            clearBoard() {
+                this.gameBoard.innerHTML = '';
+            }
+
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    if (!this.gameRunning) return;
+                    
+                    switch(e.key) {
+                        case 'ArrowUp':
+                            this.direction = {x: 0, y: -this.gridSize};
+                            e.preventDefault();
+                            break;
+                        case 'ArrowDown':
+                            this.direction = {x: 0, y: this.gridSize};
+                            e.preventDefault();
+                            break;
+                        case 'ArrowLeft':
+                            this.direction = {x: -this.gridSize, y: 0};
+                            e.preventDefault();
+                            break;
+                        case 'ArrowRight':
+                            this.direction = {x: this.gridSize, y: 0};
+                            e.preventDefault();
+                            break;
+                    }
+                });
+            }
+
+            spawnFood() {
+                // Ensure there are always 3-5 foods on the board
+                while (this.foods.length < 3 + Math.floor(Math.random() * 3)) {
+                    // Ensure at least one good food is always available
+                    const hasGoodFood = this.foods.some(food => food.type === 'human');
+                    const isHuman = hasGoodFood ? Math.random() > 0.3 : true; // Force human food if none exist
+                    
+                    const food = {
+                        x: Math.floor(Math.random() * (this.boardWidth - 40)) + 20,
+                        y: Math.floor(Math.random() * (this.boardHeight - 40)) + 20,
+                        type: isHuman ? 'human' : 'non-human',
+                        emoji: isHuman ? 
+                            this.humanFoods[Math.floor(Math.random() * this.humanFoods.length)] :
+                            this.nonHumanFoods[Math.floor(Math.random() * this.nonHumanFoods.length)]
+                    };
+                    
+                    // Make sure food doesn't spawn on caterpillar
+                    const tooClose = this.caterpillar.some(segment => 
+                        Math.abs(segment.x - food.x) < 30 && 
+                        Math.abs(segment.y - food.y) < 30
+                    );
+                    
+                    if (!tooClose) {
+                        this.foods.push(food);
+                    }
+                }
+                
+                // Final safety check - ensure at least one good food exists
+                const goodFoodsCount = this.foods.filter(food => food.type === 'human').length;
+                if (goodFoodsCount === 0 && this.foods.length > 0) {
+                    // Convert one bad food to good food
+                    const randomIndex = Math.floor(Math.random() * this.foods.length);
+                    this.foods[randomIndex].type = 'human';
+                    this.foods[randomIndex].emoji = this.humanFoods[Math.floor(Math.random() * this.humanFoods.length)];
+                }
+            }
+
+            moveCaterpillar() {
+                if (this.direction.x === 0 && this.direction.y === 0) return;
+                
+                const head = {...this.caterpillar[0]};
+                head.x += this.direction.x;
+                head.y += this.direction.y;
+
+                // Wrap around screen edges
+                if (head.x < 0) head.x = this.boardWidth - this.gridSize;
+                if (head.x >= this.boardWidth) head.x = 0;
+                if (head.y < 0) head.y = this.boardHeight - this.gridSize;
+                if (head.y >= this.boardHeight) head.y = 0;
+
+                this.caterpillar.unshift(head);
+
+                // Check for food collision
+                this.checkFoodCollision();
+
+                // Keep caterpillar at proper size
+                while (this.caterpillar.length > this.size) {
+                    this.caterpillar.pop();
+                }
+            }
+
+            checkFoodCollision() {
+                const head = this.caterpillar[0];
+                
+                for (let i = this.foods.length - 1; i >= 0; i--) {
+                    const food = this.foods[i];
+                    const distance = Math.sqrt(
+                        Math.pow(head.x - food.x, 2) + Math.pow(head.y - food.y, 2)
+                    );
+                    
+                    if (distance < 25) {
+                        this.foods.splice(i, 1);
+                        
+                        if (food.type === 'human') {
+                            this.eatHumanFood();
+                        } else {
+                            this.eatNonHumanFood();
+                        }
+                        
+                        this.spawnFood();
+                        break;
+                    }
+                }
+            }
+
+            eatHumanFood() {
+                this.score += 10;
+                this.health = Math.min(100, this.health + 15);
+                this.size = Math.min(20, this.size + 1);
+                this.sickDuration = 0;
+                
+                // Check for butterfly transformation
+                if (this.size >= 15) {
+                    this.transformToButterfly();
+                }
+            }
+
+            eatNonHumanFood() {
+                this.health = Math.max(0, this.health - 25);
+                this.size = Math.max(1, this.size - 1);
+                this.sickDuration = 60; // Frames to stay sick
+                
+                if (this.health <= 0) {
+                    this.gameOver();
+                }
+            }
+
+            transformToButterfly() {
+                this.isButterfly = true;
+                this.gameRunning = false;
+                this.showVictory();
+            }
+
+            gameOver() {
+                this.gameRunning = false;
+                this.showGameOver();
+            }
+
+            showVictory() {
+                const victoryDiv = document.createElement('div');
+                victoryDiv.className = 'victory';
+                victoryDiv.innerHTML = `
+                    <h2>🦋 Congratulations! 🦋</h2>
+                    <p>The caterpillar has transformed into a beautiful butterfly!</p>
+                    <p>Final Score: ${this.score}</p>
+                    <button onclick="resetGame()">Play Again</button>
+                `;
+                this.gameBoard.appendChild(victoryDiv);
+            }
+
+            showGameOver() {
+                const gameOverDiv = document.createElement('div');
+                gameOverDiv.className = 'game-over';
+                gameOverDiv.innerHTML = `
+                    <h2>💀 Game Over 💀</h2>
+                    <p>The caterpillar got too sick from eating yucky food!</p>
+                    <p>Final Score: ${this.score}</p>
+                    <button onclick="resetGame()">Try Again</button>
+                `;
+                this.gameBoard.appendChild(gameOverDiv);
+            }
+
+            updateDisplay() {
+                this.sizeDisplay.textContent = this.size;
+                this.scoreDisplay.textContent = this.score;
+                this.healthFill.style.width = `${this.health}%`;
+                
+                if (this.sickDuration > 0) {
+                    this.healthFill.classList.add('sick');
+                } else {
+                    this.healthFill.classList.remove('sick');
+                }
+            }
+
+            render() {
+                this.clearBoard();
+                
+                if (this.isButterfly) {
+                    // Render butterfly
+                    const butterfly = document.createElement('div');
+                    butterfly.className = 'butterfly';
+                    butterfly.style.left = `${this.caterpillar[0].x - 10}px`;
+                    butterfly.style.top = `${this.caterpillar[0].y - 10}px`;
+                    this.gameBoard.appendChild(butterfly);
+                } else {
+                    // Render caterpillar
+                    this.caterpillar.forEach((segment, index) => {
+                        const segmentDiv = document.createElement('div');
+                        segmentDiv.className = index === 0 ? 
+                            'caterpillar-segment caterpillar-head' : 
+                            'caterpillar-segment caterpillar-body';
+                        
+                        if (this.sickDuration > 0) {
+                            segmentDiv.classList.add('caterpillar-sick');
+                        }
+                        
+                        // Add mouth to head
+                        if (index === 0) {
+                            const mouth = document.createElement('div');
+                            mouth.className = 'mouth';
+                            segmentDiv.appendChild(mouth);
+                        }
+                        
+                        segmentDiv.style.left = `${segment.x - 10}px`;
+                        segmentDiv.style.top = `${segment.y - 10}px`;
+                        this.gameBoard.appendChild(segmentDiv);
+                    });
+                }
+
+                // Render foods
+                this.foods.forEach(food => {
+                    const foodDiv = document.createElement('div');
+                    foodDiv.className = `food ${food.type}`;
+                    foodDiv.style.left = `${food.x - 12}px`;
+                    foodDiv.style.top = `${food.y - 12}px`;
+                    
+                    // Display actual food emoji
+                    foodDiv.textContent = food.emoji;
+                    foodDiv.title = food.emoji;
+                    
+                    this.gameBoard.appendChild(foodDiv);
+                });
+
+                // Add victory or game over screens
+                if (!this.gameRunning) {
+                    if (this.isButterfly) {
+                        this.showVictory();
+                    } else {
+                        this.showGameOver();
+                    }
+                }
+            }
+
+            gameLoop() {
+                if (this.gameRunning) {
+                    this.moveCaterpillar();
+                    
+                    if (this.sickDuration > 0) {
+                        this.sickDuration--;
+                    }
+                }
+                
+                this.updateDisplay();
+                this.render();
+                
+                setTimeout(() => this.gameLoop(), 200); // Game speed
+            }
+        }
+
+        // Global functions
+        let game;
+        
+        function resetGame() {
+            game = new CaterpillarGame();
+        }
+        
+        // Start the game when page loads
+        window.addEventListener('load', () => {
+            resetGame();
+        });
+    </script>
+</body>
+</html>
