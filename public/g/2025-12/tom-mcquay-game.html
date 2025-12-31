@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Jump Master GBC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+        
+        body {
+            background: #2d1b00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            background: #8b956d;
+            border: 8px solid #1a1a2e;
+            border-radius: 12px;
+            box-shadow: 
+                inset 0 0 0 4px #6b7353,
+                0 0 0 4px #0f0f1a,
+                8px 8px 0 #000;
+            padding: 8px;
+        }
+        
+        .screen-frame {
+            background: #0f380f;
+            border: 4px solid #1a1a2e;
+            padding: 4px;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px;
+            gap: 20px;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .game-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 4px solid #1a1a2e;
+            font-family: monospace;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255,255,255,0.3),
+                inset -2px -2px 0 rgba(0,0,0,0.3),
+                4px 4px 0 #000;
+            transition: transform 0.1s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .game-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 
+                inset 2px 2px 0 rgba(255,255,255,0.3),
+                inset -2px -2px 0 rgba(0,0,0,0.3),
+                2px 2px 0 #000;
+        }
+        
+        .car-btn {
+            background: #cc3333;
+            color: #fff;
+        }
+        
+        .truck-btn {
+            background: #3366cc;
+            color: #fff;
+        }
+        
+        .start-btn {
+            background: #339933;
+            color: #fff;
+            width: 60px;
+            height: 30px;
+            border-radius: 15px;
+            font-size: 8px;
+        }
+        
+        .lang-btn {
+            background: #666;
+            color: #fff;
+            width: 50px;
+            height: 25px;
+            border-radius: 12px;
+            font-size: 7px;
+        }
+        
+        .menu-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        
+        .label {
+            color: #1a1a2e;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 400px) {
+            .game-container {
+                transform: scale(0.85);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="screen-frame">
+            <canvas id="gameCanvas" width="320" height="288"></canvas>
+        </div>
+        <div class="controls">
+            <div class="btn-group">
+                <button class="game-btn car-btn" id="carBtn">CAR<br>🚗<br>[A]</button>
+                <span class="label" id="carLabel">CAR JUMP</span>
+            </div>
+            <div class="btn-group">
+                <button class="game-btn truck-btn" id="truckBtn">TRUCK<br>🚚<br>[S]</button>
+                <span class="label" id="truckLabel">TRUCK JUMP</span>
+            </div>
+        </div>
+        <div class="menu-btns">
+            <button class="game-btn start-btn" id="startBtn">START</button>
+            <button class="game-btn lang-btn" id="langBtn">LANG</button>
+        </div>
+    </div>
+
+    <script>
+        // ============== TRANSLATIONS ==============
+        const translations = {
+            en: {
+                title: "JUMP MASTER",
+                subtitle: "GBC EDITION",
+                start: "PRESS START",
+                carJump: "CAR JUMP",
+                truckJump: "TRUCK JUMP",
+                score: "SCORE",
+                gameOver: "GAME OVER",
+                insults: [
+                    "PATHETIC!",
+                    "MY GRANDMA\nPLAYS BETTER!",
+                    "LOL YOU DIED!",
+                    "TRY AGAIN\nNOOB!",
+                    "SKILL ISSUE!",
+                    "GET GOOD!",
+                    "HAHAHAHA!"
+                ],
+                tryAgain: "PRESS START",
+                car: "CAR",
+                truck: "TRUCK"
+            },
+            es: {
+                title: "MAESTRO SALTO",
+                subtitle: "EDICION GBC",
+                start: "PULSA INICIO",
+                carJump: "SALTO CARRO",
+                truckJump: "SALTO CAMION",
+                score: "PUNTOS",
+                gameOver: "FIN DEL JUEGO",
+                insults: [
+                    "PATETICO!",
+                    "MI ABUELA\nJUEGA MEJOR!",
+                    "JAJA MORISTE!",
+                    "INTENTA DE\nNUEVO NOVATO!",
+                    "QUE MALO!",
+                    "MEJORA YA!",
+                    "JAJAJAJA!"
+                ],
+                tryAgain: "PULSA INICIO",
+                car: "CARRO",
+                truck: "CAMION"
+            },
+            ko: {
+                title: "점프 마스터",
+                subtitle: "GBC 에디션",
+                start: "시작 누르기",
+                carJump: "자동차 점프",
+                truckJump: "트럭 점프",
+                score: "점수",
+                gameOver: "게임 오버",
+                insults: [
+                    "한심해!",
+                    "우리 할머니가\n더 잘해!",
+                    "ㅋㅋ 죽었다!",
+                    "다시 해봐\n초보야!",
+                    "실력 문제!",
+                    "잘 좀 해!",
+                    "하하하하!"
+                ],
+                tryAgain: "시작 누르기",
+                car: "자동차",
+                truck: "트럭"
+            },
+            eo: {
+                title: "SALTA MAJSTRO",
+                subtitle: "GBC ELDONO",
+                start: "PREMU STARTI",
+                carJump: "AUTO SALTO",
+                truckJump: "KAMIONA SALTO",
+                score: "POENTOJ",
+                gameOver: "LUDO FINITA",
+                insults: [
+                    "BEDAURINDA!",
+                    "MIA AVINO\nLUDAS PLI BONE!",
+                    "HA VI MORTIS!",
+                    "REPROVU\nKOMENCULO!",
+                    "SEN LERTO!",
+                    "LERNU PLI!",
+                    "HAHAHA!"
+                ],
+                tryAgain: "PREMU STARTI",
+                car: "AUTO",
+                truck: "KAMIONO"
+            }
+        };
+
+        let currentLang = 'en';
+        const languages = ['en', 'es', 'ko', 'eo'];
+        let langIndex = 0;
+
+        function getText(key) {
+            return translations[currentLang][key];
+        }
+
+        function cycleLang() {
+            langIndex = (langIndex + 1) % languages.length;
+            currentLang = languages[langIndex];
+            updateLabels();
+        }
+
+        function updateLabels() {
+            document.getElementById('carLabel').textContent = getText('carJump');
+            document.getElementById('truckLabel').textContent = getText('truckJump');
+        }
+
+        // ============== GAME BOY COLOR PALETTE ==============
+        const GBC_COLORS = {
+            darkest: '#0f380f',
+            dark: '#306230',
+            light: '#8bac0f',
+            lightest: '#9bbc0f',
+            white: '#c4cfa1',
+            black: '#1a1a2e',
+            red: '#cc3333',
+            blue: '#3366cc',
+            orange: '#ff6600',
+            yellow: '#ffcc00'
+        };
+
+        // ============== AUDIO - THE ENTERTAINER 8-BIT ==============
+        let audioContext = null;
+        let musicPlaying = false;
+        let currentTempo = 1.0;
+        let noteIndex = 0;
+        let scheduledTime = 0;
+
+        // The Entertainer melody (simplified)
+        const entertainerNotes = [
+            // Intro
+            { note: 'D5', dur: 0.125 }, { note: 'E5', dur: 0.125 }, { note: 'C5', dur: 0.25 },
+            { note: 'A4', dur: 0.5 }, { note: 'B4', dur: 0.125 }, { note: 'G4', dur: 0.375 },
+            // Main theme part 1
+            { note: 'D4', dur: 0.125 }, { note: 'Ds4', dur: 0.125 }, { note: 'E4', dur: 0.125 },
+            { note: 'C5', dur: 0.25 }, { note: 'E4', dur: 0.125 }, { note: 'C5', dur: 0.25 },
+            { note: 'E4', dur: 0.125 }, { note: 'C5', dur: 0.5 },
+            { note: 'C5', dur: 0.125 }, { note: 'D5', dur: 0.125 }, { note: 'Ds5', dur: 0.125 },
+            { note: 'E5', dur: 0.125 }, { note: 'C5', dur: 0.125 }, { note: 'D5', dur: 0.125 },
+            { note: 'E5', dur: 0.25 }, { note: 'B4', dur: 0.125 }, { note: 'D5', dur: 0.25 },
+            { note: 'C5', dur: 0.5 },
+            // Part 2
+            { note: 'D4', dur: 0.125 }, { note: 'Ds4', dur: 0.125 }, { note: 'E4', dur: 0.125 },
+            { note: 'C5', dur: 0.25 }, { note: 'E4', dur: 0.125 }, { note: 'C5', dur: 0.25 },
+            { note: 'E4', dur: 0.125 }, { note: 'C5', dur: 0.5 },
+            { note: 'A4', dur: 0.125 }, { note: 'G4', dur: 0.125 }, { note: 'Fs4', dur: 0.125 },
+            { note: 'A4', dur: 0.125 }, { note: 'C5', dur: 0.125 }, { note: 'E5', dur: 0.125 },
+            { note: 'D5', dur: 0.25 }, { note: 'C5', dur: 0.25 }, { note: 'A4', dur: 0.25 },
+            { note: 'D5', dur: 0.5 },
+            // Repeat with variation
+            { note: 'D4', dur: 0.125 }, { note: 'Ds4', dur: 0.125 }, { note: 'E4', dur: 0.125 },
+            { note: 'C5', dur: 0.25 }, { note: 'E4', dur: 0.125 }, { note: 'C5', dur: 0.25 },
+            { note: 'E4', dur: 0.125 }, { note: 'C5', dur: 0.5 },
+            { note: 'C5', dur: 0.125 }, { note: 'D5', dur: 0.125 }, { note: 'Ds5', dur: 0.125 },
+            { note: 'E5', dur: 0.125 }, { note: 'C5', dur: 0.125 }, { note: 'D5', dur: 0.125 },
+            { note: 'E5', dur: 0.25 }, { note: 'B4', dur: 0.125 }, { note: 'D5', dur: 0.25 },
+            { note: 'C5', dur: 0.5 },
+            // Bridge
+            { note: 'C5', dur: 0.25 }, { note: 'C5', dur: 0.125 }, { note: 'C5', dur: 0.25 },
+            { note: 'C5', dur: 0.125 }, { note: 'C5', dur: 0.125 }, { note: 'B4', dur: 0.125 },
+            { note: 'A4', dur: 0.125 }, { note: 'G4', dur: 0.125 }, { note: 'A4', dur: 0.25 },
+            { note: 'B4', dur: 0.25 }, { note: 'C5', dur: 0.5 },
+            // End phrase
+            { note: 'E5', dur: 0.125 }, { note: 'D5', dur: 0.125 }, { note: 'C5', dur: 0.125 },
+            { note: 'D5', dur: 0.125 }, { note: 'E5', dur: 0.25 }, { note: 'C5', dur: 0.25 },
+            { note: 'G4', dur: 0.25 }, { note: 'E4', dur: 0.25 }, { note: 'C4', dur: 0.5 },
+        ];
+
+        const noteFreqs = {
+            'C4': 261.63, 'Cs4': 277.18, 'D4': 293.66, 'Ds4': 311.13, 'E4': 329.63,
+            'F4': 349.23, 'Fs4': 369.99, 'G4': 392.00, 'Gs4': 415.30, 'A4': 440.00,
+            'As4': 466.16, 'B4': 493.88, 'C5': 523.25, 'Cs5': 554.37, 'D5': 587.33,
+            'Ds5': 622.25, 'E5': 659.25, 'F5': 698.46, 'Fs5': 739.99, 'G5': 783.99
+        };
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        function playSquareWave(frequency, duration, startTime) {
+            if (!audioContext) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.type = 'square';
+            osc.frequency.value = frequency;
+            
+            gain.gain.setValueAtTime(0.15, startTime);
+            gain.gain.exponentialDecayTo = 0.01;
+            gain.gain.setValueAtTime(0.15, startTime);
+            gain.gain.linearRampToValueAtTime(0.01, startTime + duration * 0.9);
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        function scheduleNotes() {
+            if (!musicPlaying || !audioContext) return;
+            
+            const lookAhead = 0.2;
+            
+            while (scheduledTime < audioContext.currentTime + lookAhead) {
+                const noteData = entertainerNotes[noteIndex];
+                const freq = noteFreqs[noteData.note];
+                const duration = (noteData.dur / currentTempo) * 0.9;
+                
+                if (freq) {
+                    playSquareWave(freq, duration, scheduledTime);
+                }
+                
+                scheduledTime += noteData.dur / currentTempo;
+                noteIndex = (noteIndex + 1) % entertainerNotes.length;
+            }
+            
+            setTimeout(scheduleNotes, 50);
+        }
+
+        function startMusic() {
+            initAudio();
+            if (!musicPlaying) {
+                musicPlaying = true;
+                noteIndex = 0;
+                scheduledTime = audioContext.currentTime;
+                scheduleNotes();
+            }
+        }
+
+        function stopMusic() {
+            musicPlaying = false;
+        }
+
+        function setMusicSpeed(speed) {
+            currentTempo = speed;
+        }
+
+        function playJumpSound() {
+            initAudio();
+            if (!audioContext) return;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(200, audioContext.currentTime);
+            osc.frequency.linearRampToValueAtTime(600, audioContext.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.15);
+        }
+
+        function playDeathSound() {
+            initAudio();
+            if (!audioContext) return;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(400, audioContext.currentTime);
+            osc.frequency.linearRampToValueAtTime(50, audioContext.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.5);
+        }
+
+        // ============== GAME STATE ==============
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GAME_STATE = {
+            TITLE: 0,
+            PLAYING: 1,
+            GAME_OVER: 2
+        };
+
+        let state = GAME_STATE.TITLE;
+        let score = 0;
+        let highScore = 0;
+        let gameSpeed = 3;
+        let obstacles = [];
+        let player = {
+            x: 50,
+            y: 200,
+            width: 24,
+            height: 32,
+            jumping: false,
+            jumpType: null, // 'car' or 'truck'
+            jumpVelocity: 0,
+            groundY: 200
+        };
+
+        let frameCount = 0;
+        let gameOverInsult = '';
+        let flameFrame = 0;
+
+        // ============== PIXEL ART DRAWING ==============
+        function drawPixelRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(Math.floor(x), Math.floor(y), w, h);
+        }
+
+        function drawPlayer() {
+            const px = Math.floor(player.x);
+            const py = Math.floor(player.y);
+            const frame = Math.floor(frameCount / 8) % 2;
+            
+            // Body
+            drawPixelRect(px + 8, py + 8, 8, 16, GBC_COLORS.light);
+            // Head
+            drawPixelRect(px + 6, py, 12, 10, GBC_COLORS.lightest);
+            // Eyes
+            drawPixelRect(px + 8, py + 3, 2, 2, GBC_COLORS.darkest);
+            drawPixelRect(px + 14, py + 3, 2, 2, GBC_COLORS.darkest);
+            // Legs (animated)
+            if (player.jumping) {
+                drawPixelRect(px + 6, py + 24, 4, 8, GBC_COLORS.dark);
+                drawPixelRect(px + 14, py + 24, 4, 8, GBC_COLORS.dark);
+            } else {
+                drawPixelRect(px + 8 + (frame * 4), py + 24, 4, 8, GBC_COLORS.dark);
+                drawPixelRect(px + 12 - (frame * 4), py + 24, 4, 8, GBC_COLORS.dark);
+            }
+            // Arms
+            drawPixelRect(px + 2, py + 10, 4, 10, GBC_COLORS.lightest);
+            drawPixelRect(px + 18, py + 10, 4, 10, GBC_COLORS.lightest);
+        }
+
+        function drawCar(x, y) {
+            // Car body
+            drawPixelRect(x, y + 8, 40, 16, GBC_COLORS.red);
+            // Roof
+            drawPixelRect(x + 8, y, 20, 10, GBC_COLORS.red);
+            // Windows
+            drawPixelRect(x + 10, y + 2, 7, 6, GBC_COLORS.light);
+            drawPixelRect(x + 19, y + 2, 7, 6, GBC_COLORS.light);
+            // Wheels
+            drawPixelRect(x + 4, y + 22, 10, 8, GBC_COLORS.darkest);
+            drawPixelRect(x + 26, y + 22, 10, 8, GBC_COLORS.darkest);
+            // Headlights
+            drawPixelRect(x + 36, y + 12, 4, 4, GBC_COLORS.yellow);
+        }
+
+        function drawTruck(x, y) {
+            // Truck bed
+            drawPixelRect(x, y, 40, 24, GBC_COLORS.blue);
+            // Cabin
+            drawPixelRect(x + 40, y + 4, 24, 20, GBC_COLORS.blue);
+            // Window
+            drawPixelRect(x + 44, y + 6, 16, 10, GBC_COLORS.light);
+            // Wheels
+            drawPixelRect(x + 4, y + 22, 12, 10, GBC_COLORS.darkest);
+            drawPixelRect(x + 24, y + 22, 12, 10, GBC_COLORS.darkest);
+            drawPixelRect(x + 48, y + 22, 12, 10, GBC_COLORS.darkest);
+            // Headlights
+            drawPixelRect(x + 60, y + 16, 4, 4, GBC_COLORS.yellow);
+        }
+
+        function drawGround() {
+            drawPixelRect(0, 232, 320, 56, GBC_COLORS.dark);
+            // Road markings
+            for (let i = 0; i < 10; i++) {
+                const offset = (frameCount * gameSpeed) % 64;
+                drawPixelRect(i * 64 - offset, 248, 32, 4, GBC_COLORS.yellow);
+            }
+        }
+
+        function drawSkullOnFire() {
+            const cx = 160;
+            const cy = 120;
+            
+            // Animated flames
+            flameFrame++;
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2 + flameFrame * 0.1;
+                const dist = 50 + Math.sin(flameFrame * 0.2 + i) * 10;
+                const fx = cx + Math.cos(angle) * dist;
+                const fy = cy + Math.sin(angle) * dist - Math.sin(flameFrame * 0.3 + i * 0.5) * 20;
+                const fh = 20 + Math.sin(flameFrame * 0.2 + i) * 10;
+                
+                drawPixelRect(fx - 6, fy - fh, 12, fh, GBC_COLORS.orange);
+                drawPixelRect(fx - 4, fy - fh - 8, 8, 12, GBC_COLORS.yellow);
+                drawPixelRect(fx - 2, fy - fh - 12, 4, 8, GBC_COLORS.lightest);
+            }
+            
+            // Skull
+            // Cranium
+            drawPixelRect(cx - 32, cy - 36, 64, 48, GBC_COLORS.lightest);
+            drawPixelRect(cx - 36, cy - 28, 72, 32, GBC_COLORS.lightest);
+            drawPixelRect(cx - 28, cy - 40, 56, 8, GBC_COLORS.lightest);
+            
+            // Eye sockets
+            drawPixelRect(cx - 24, cy - 24, 16, 20, GBC_COLORS.darkest);
+            drawPixelRect(cx + 8, cy - 24, 16, 20, GBC_COLORS.darkest);
+            
+            // Glowing eyes
+            const eyeGlow = Math.sin(flameFrame * 0.15) > 0;
+            if (eyeGlow) {
+                drawPixelRect(cx - 20, cy - 18, 8, 8, GBC_COLORS.red);
+                drawPixelRect(cx + 12, cy - 18, 8, 8, GBC_COLORS.red);
+            }
+            
+            // Nose hole
+            drawPixelRect(cx - 6, cy, 12, 12, GBC_COLORS.darkest);
+            
+            // Teeth
+            for (let i = 0; i < 6; i++) {
+                drawPixelRect(cx - 28 + i * 10, cy + 16, 8, 16, GBC_COLORS.lightest);
+                drawPixelRect(cx - 28 + i * 10, cy + 28, 8, 4, GBC_COLORS.dark);
+            }
+            
+            // Jaw line
+            drawPixelRect(cx - 32, cy + 12, 64, 4, GBC_COLORS.dark);
+        }
+
+        function drawText(text, x, y, color = GBC_COLORS.lightest, size = 1) {
+            ctx.fillStyle = color;
+            ctx.font = `${8 * size}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText(text, x, y);
+        }
+
+        function drawTitleScreen() {
+            ctx.fillStyle = GBC_COLORS.darkest;
+            ctx.fillRect(0, 0, 320, 288);
+            
+            // Title
+            drawText(getText('title'), 160, 60, GBC_COLORS.yellow, 3);
+            drawText(getText('subtitle'), 160, 85, GBC_COLORS.light, 1.5);
+            
+            // Draw sample car and truck
+            drawCar(60, 120);
+            drawText(`[A] ${getText('car')}`, 100, 175, GBC_COLORS.red, 1.5);
+            
+            drawTruck(180, 110);
+            drawText(`[S] ${getText('truck')}`, 230, 175, GBC_COLORS.blue, 1.5);
+            
+            // Blinking start text
+            if (Math.floor(frameCount / 30) % 2 === 0) {
+                drawText(getText('start'), 160, 230, GBC_COLORS.lightest, 1.5);
+            }
+            
+            // Language indicator
+            drawText(`LANG: ${currentLang.toUpperCase()}`, 160, 270, GBC_COLORS.dark, 1);
+            
+            // High score
+            if (highScore > 0) {
+                drawText(`HI-SCORE: ${highScore}`, 160, 250, GBC_COLORS.light, 1);
+            }
+        }
+
+        function drawGameScreen() {
+            ctx.fillStyle = GBC_COLORS.darkest;
+            ctx.fillRect(0, 0, 320, 288);
+            
+            // Sky details
+            for (let i = 0; i < 5; i++) {
+                const cloudX = ((i * 80) - (frameCount * 0.5) % 400 + 400) % 400 - 40;
+                drawPixelRect(cloudX, 30 + i * 15 % 40, 32, 8, GBC_COLORS.dark);
+                drawPixelRect(cloudX + 8, 26 + i * 15 % 40, 20, 6, GBC_COLORS.dark);
+            }
+            
+            drawGround();
+            
+            // Draw obstacles
+            obstacles.forEach(obs => {
+                if (obs.type === 'car') {
+                    drawCar(obs.x, obs.y);
+                } else {
+                    drawTruck(obs.x, obs.y);
+                }
+            });
+            
+            drawPlayer();
+            
+            // UI
+            drawText(`${getText('score')}: ${score}`, 160, 20, GBC_COLORS.yellow, 1.5);
+            
+            // Jump indicators
+            drawPixelRect(10, 260, 40, 20, GBC_COLORS.red);
+            drawText('A', 30, 275, GBC_COLORS.lightest, 1.5);
+            
+            drawPixelRect(270, 260, 40, 20, GBC_COLORS.blue);
+            drawText('S', 290, 275, GBC_COLORS.lightest, 1.5);
+        }
+
+        function drawGameOverScreen() {
+            ctx.fillStyle = GBC_COLORS.darkest;
+            ctx.fillRect(0, 0, 320, 288);
+            
+            drawSkullOnFire();
+            
+            // Game Over text
+            drawText(getText('gameOver'), 160, 30, GBC_COLORS.red, 2);
+            
+            // Insult text (split by newlines)
+            const insultLines = gameOverInsult.split('\n');
+            insultLines.forEach((line, i) => {
+                drawText(line, 160, 200 + i * 20, GBC_COLORS.yellow, 1.5);
+            });
+            
+            // Score
+            drawText(`${getText('score')}: ${score}`, 160, 245, GBC_COLORS.light, 1.5);
+            
+            // Try again
+            if (Math.floor(frameCount / 30) % 2 === 0) {
+                drawText(getText('tryAgain'), 160, 275, GBC_COLORS.lightest, 1);
+            }
+        }
+
+        // ============== GAME LOGIC ==============
+        function jump(type) {
+            if (!player.jumping && state === GAME_STATE.PLAYING) {
+                player.jumping = true;
+                player.jumpType = type;
+                player.jumpVelocity = type === 'car' ? -12 : -16; // Truck jump is higher
+                playJumpSound();
+            }
+        }
+
+        function spawnObstacle() {
+            const type = Math.random() < 0.5 ? 'car' : 'truck';
+            obstacles.push({
+                type: type,
+                x: 340,
+                y: type === 'car' ? 200 : 190,
+                width: type === 'car' ? 40 : 64,
+                height: type === 'car' ? 30 : 32
+            });
+        }
+
+        function updateGame() {
+            frameCount++;
+            
+            if (state === GAME_STATE.PLAYING) {
+                // Speed up music over time
+                const speedMult = 1 + (score / 100) * 0.5;
+                setMusicSpeed(Math.min(speedMult, 2.5));
+                gameSpeed = 3 + score / 50;
+                
+                // Update player jump
+                if (player.jumping) {
+                    player.y += player.jumpVelocity;
+                    player.jumpVelocity += 0.8; // Gravity
+                    
+                    if (player.y >= player.groundY) {
+                        player.y = player.groundY;
+                        player.jumping = false;
+                        player.jumpType = null;
+                    }
+                }
+                
+                // Update obstacles
+                obstacles.forEach(obs => {
+                    obs.x -= gameSpeed;
+                });
+                
+                // Remove off-screen obstacles and add score
+                obstacles = obstacles.filter(obs => {
+                    if (obs.x < -70) {
+                        score++;
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // Spawn new obstacles
+                if (obstacles.length === 0 || 
+                    (obstacles[obstacles.length - 1].x < 200 && Math.random() < 0.02)) {
+                    spawnObstacle();
+                }
+                
+                // Collision detection
+                obstacles.forEach(obs => {
+                    const playerBox = {
+                        x: player.x + 4,
+                        y: player.y + 4,
+                        width: player.width - 8,
+                        height: player.height - 4
+                    };
+                    
+                    const obsBox = {
+                        x: obs.x,
+                        y: obs.y,
+                        width: obs.width,
+                        height: obs.height
+                    };
+                    
+                    if (playerBox.x < obsBox.x + obsBox.width &&
+                        playerBox.x + playerBox.width > obsBox.x &&
+                        playerBox.y < obsBox.y + obsBox.height &&
+                        playerBox.y + playerBox.height > obsBox.y) {
+                        
+                        // Check if player is jumping with correct type
+                        const correctJump = player.jumping && player.jumpType === obs.type;
+                        
+                        // Only collide if on ground or wrong jump type
+                        if (!player.jumping || player.jumpType !== obs.type) {
+                            // Check if actually colliding (player low enough)
+                            if (player.y + player.height > obs.y + 10) {
+                                gameOver();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function gameOver() {
+            state = GAME_STATE.GAME_OVER;
+            stopMusic();
+            playDeathSound();
+            
+            if (score > highScore) {
+                highScore = score;
+            }
+            
+            const insults = getText('insults');
+            gameOverInsult = insults[Math.floor(Math.random() * insults.length)];
+        }
+
+        function startGame() {
+            state = GAME_STATE.PLAYING;
+            score = 0;
+            gameSpeed = 3;
+            obstacles = [];
+            player.y = player.groundY;
+            player.jumping = false;
+            player.jumpType = null;
+            currentTempo = 1.0;
+            startMusic();
+        }
+
+        function render() {
+            switch (state) {
+                case GAME_STATE.TITLE:
+                    drawTitleScreen();
+                    break;
+                case GAME_STATE.PLAYING:
+                    drawGameScreen();
+                    break;
+                case GAME_STATE.GAME_OVER:
+                    drawGameOverScreen();
+                    break;
+            }
+        }
+
+        function gameLoop() {
+            updateGame();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============== INPUT HANDLING ==============
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
+                if (state === GAME_STATE.PLAYING) {
+                    jump('car');
+                }
+            }
+            if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                if (state === GAME_STATE.PLAYING) {
+                    jump('truck');
+                }
+            }
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (state === GAME_STATE.TITLE || state === GAME_STATE.GAME_OVER) {
+                    startGame();
+                }
+            }
+        });
+
+        // Button handlers
+        document.getElementById('carBtn').addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (state === GAME_STATE.PLAYING) jump('car');
+        });
+        document.getElementById('carBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (state === GAME_STATE.PLAYING) jump('car');
+        });
+
+        document.getElementById('truckBtn').addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (state === GAME_STATE.PLAYING) jump('truck');
+        });
+        document.getElementById('truckBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (state === GAME_STATE.PLAYING) jump('truck');
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (state === GAME_STATE.TITLE || state === GAME_STATE.GAME_OVER) {
+                startGame();
+            }
+        });
+
+        document.getElementById('langBtn').addEventListener('click', () => {
+            cycleLang();
+        });
+
+        // Prevent context menu on long press
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Initialize
+        updateLabels();
+        gameLoop();
+    </script>
+</body>
+</html>
