@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🍦 Ice Cream Lick Challenge!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 50%, #FFE4B5 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-header {
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .game-title {
+            font-size: 2em;
+            color: #FF6B9D;
+            text-shadow: 2px 2px 0 #FFD700, 4px 4px 0 rgba(0,0,0,0.1);
+            margin-bottom: 5px;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: linear-gradient(135deg, #FF6B9D 0%, #FF8E53 100%);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(255,107,157,0.4);
+        }
+
+        .stat.high-score {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 30px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .melt-bar-container {
+            width: 80%;
+            max-width: 300px;
+            height: 25px;
+            background: #ddd;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 3px 10px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .melt-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 50%, #FFEB3B 75%, #FF5722 100%);
+            background-size: 400% 100%;
+            border-radius: 15px;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .melt-bar::after {
+            content: '🌡️ AVG TEMP';
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: rgba(0,0,0,0.6);
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .ice-cream-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .ice-cream-container:active {
+            transform: scale(0.98);
+        }
+
+        .ice-cream-stack {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            position: relative;
+        }
+
+        .scoop {
+            width: 100px;
+            height: 80px;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: -25px;
+            transition: all 0.3s ease;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.15),
+                        inset 5px 5px 15px rgba(255,255,255,0.4),
+                        0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .scoop::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 20px;
+            height: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            transform: rotate(-30deg);
+            transition: all 0.3s ease;
+        }
+
+        .scoop::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            background: inherit;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+
+        /* Drip blobs that appear as scoop melts */
+        .scoop .drip-blob {
+            position: absolute;
+            bottom: -10px;
+            background: inherit;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            filter: brightness(0.95);
+        }
+
+        .scoop.melting {
+            animation: melt-wobble 0.8s ease-in-out infinite;
+        }
+
+        .scoop.critical {
+            animation: melt-critical 0.4s ease-in-out infinite;
+        }
+
+        @keyframes melt-wobble {
+            0%, 100% { transform: var(--base-transform) rotate(0deg); }
+            50% { transform: var(--base-transform) rotate(1deg); }
+        }
+
+        @keyframes melt-critical {
+            0%, 100% { transform: var(--base-transform) rotate(-2deg); filter: brightness(1.1); }
+            50% { transform: var(--base-transform) rotate(2deg); filter: brightness(1); }
+        }
+
+        .brain-freeze-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(135,206,250,0.8) 0%, rgba(70,130,180,0.9) 100%);
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .brain-freeze-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .brain-freeze-text {
+            font-size: 3em;
+            color: white;
+            text-shadow: 3px 3px 0 #4169E1, 0 0 30px #87CEEB;
+            animation: freeze-shake 0.1s linear infinite;
+        }
+
+        .brain-freeze-timer {
+            font-size: 5em;
+            color: #FFD700;
+            text-shadow: 3px 3px 0 #4169E1;
+            margin-top: 20px;
+        }
+
+        .freeze-bar-container {
+            width: 80%;
+            max-width: 200px;
+            height: 15px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .freeze-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #87CEEB 0%, #4169E1 50%, #9400D3 100%);
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        @keyframes freeze-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .scoop.wobble {
+            animation: wobble 0.3s ease-in-out;
+        }
+
+        @keyframes melt {
+            0%, 100% { transform: scaleY(1) scaleX(1); }
+            50% { transform: scaleY(0.95) scaleX(1.03); }
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        .drip {
+            position: absolute;
+            width: 8px;
+            height: 15px;
+            border-radius: 0 0 50% 50%;
+            animation: drip-fall 1s ease-in forwards;
+        }
+
+        @keyframes drip-fall {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(200px) scale(0.5); opacity: 0; }
+        }
+
+        .cone {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-top: 150px solid #D2691E;
+            position: relative;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+
+        .cone::before {
+            content: '';
+            position: absolute;
+            top: -145px;
+            left: -45px;
+            width: 90px;
+            height: 140px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 8px,
+                rgba(139,69,19,0.3) 8px,
+                rgba(139,69,19,0.3) 10px
+            ),
+            repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 8px,
+                rgba(139,69,19,0.3) 8px,
+                rgba(139,69,19,0.3) 10px
+            );
+            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+        }
+
+        .lick-effect {
+            position: absolute;
+            pointer-events: none;
+            font-size: 2em;
+            animation: lick-pop 0.5s ease-out forwards;
+        }
+
+        @keyframes lick-pop {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+            100% { transform: scale(2) rotate(360deg) translateY(-50px); opacity: 0; }
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particle-fly 0.8s ease-out forwards;
+        }
+
+        @keyframes particle-fly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .combo-text {
+            position: absolute;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #FF6B9D;
+            text-shadow: 2px 2px 0 white;
+            animation: combo-pop 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes combo-pop {
+            0% { transform: scale(0) translateY(0); opacity: 1; }
+            50% { transform: scale(1.3) translateY(-20px); opacity: 1; }
+            100% { transform: scale(1) translateY(-60px); opacity: 0; }
+        }
+
+        .screen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .screen-overlay.hidden {
+            display: none;
+        }
+
+        .menu-box {
+            background: linear-gradient(180deg, #FFF5EE 0%, #FFE4E1 100%);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .menu-title {
+            font-size: 2.5em;
+            color: #FF6B9D;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0 #FFD700;
+        }
+
+        .menu-subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .menu-score {
+            font-size: 3em;
+            color: #FF8E53;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .menu-high-score {
+            font-size: 1.5em;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #FF6B9D 0%, #FF8E53 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.3em;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 8px 25px rgba(255,107,157,0.4);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255,107,157,0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 0.95em;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            color: #FF6B9D;
+            margin-bottom: 10px;
+        }
+
+        .new-record {
+            animation: rainbow 1s linear infinite, pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes rainbow {
+            0% { color: #FF6B9D; }
+            25% { color: #FFD700; }
+            50% { color: #4CAF50; }
+            75% { color: #2196F3; }
+            100% { color: #FF6B9D; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .falling {
+            animation: fall-apart 1s ease-in forwards;
+        }
+
+        @keyframes fall-apart {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(300px) rotate(180deg); opacity: 0; }
+        }
+
+        .tongue {
+            position: fixed;
+            bottom: -100px;
+            width: 80px;
+            height: 100px;
+            background: #FF9999;
+            border-radius: 50% 50% 40% 40%;
+            transition: bottom 0.15s ease-out;
+            z-index: 50;
+            box-shadow: inset 0 -10px 20px rgba(0,0,0,0.2);
+        }
+
+        .tongue.licking {
+            bottom: 0;
+        }
+
+        .tongue::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 40px;
+            background: rgba(200,100,100,0.5);
+            border-radius: 2px;
+        }
+
+        .level-up {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 0 #FF6B9D, 6px 6px 0 rgba(0,0,0,0.2);
+            animation: level-up-anim 1.5s ease-out forwards;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        @keyframes level-up-anim {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.3) rotate(5deg); opacity: 1; }
+            60% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5) rotate(0deg); opacity: 0; }
+        }
+
+        .sun {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #FFD700 0%, #FFA500 70%, transparent 70%);
+            border-radius: 50%;
+            animation: sun-pulse 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes sun-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px #FFD700; }
+            50% { transform: scale(1.1); box-shadow: 0 0 60px #FFA500; }
+        }
+
+        .cloud {
+            position: fixed;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+            z-index: 5;
+        }
+
+        @media (max-width: 500px) {
+            .game-title { font-size: 1.5em; }
+            .stat { font-size: 0.9em; padding: 6px 15px; }
+            .stats-container { gap: 15px; }
+            .scoop { width: 80px; height: 65px; }
+            .cone { border-left-width: 40px; border-right-width: 40px; border-top-width: 120px; }
+            .cone::before { width: 72px; height: 112px; left: -36px; top: -116px; }
+            .menu-box { padding: 25px; }
+            .menu-title { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sun"></div>
+    
+    <div class="game-header">
+        <h1 class="game-title">🍦 Ice Cream Lick Challenge! 🍦</h1>
+        <div class="stats-container">
+            <div class="stat">🍨 Scoops: <span id="scoops">1</span></div>
+            <div class="stat">⭐ Score: <span id="score">0</span></div>
+            <div class="stat high-score">🏆 Best: <span id="high-score">0</span></div>
+        </div>
+    </div>
+
+    <div class="game-area" id="game-area">
+        <div class="melt-bar-container">
+            <div class="melt-bar" id="melt-bar"></div>
+        </div>
+        <div class="ice-cream-container" id="ice-cream">
+            <div class="ice-cream-stack" id="stack"></div>
+            <div class="cone"></div>
+        </div>
+    </div>
+
+    <div class="tongue" id="tongue"></div>
+
+    <!-- Brain Freeze Overlay -->
+    <div class="brain-freeze-overlay" id="brain-freeze">
+        <div class="brain-freeze-text">🥶 BRAIN FREEZE! 🥶</div>
+        <div class="brain-freeze-timer" id="freeze-timer">3</div>
+    </div>
+
+    <!-- Freeze Meter -->
+    <div class="freeze-bar-container" id="freeze-meter" style="display: none;">
+        <div class="freeze-bar" id="freeze-bar"></div>
+    </div>
+
+    <!-- Start Screen -->
+    <div class="screen-overlay" id="start-screen">
+        <div class="menu-box">
+            <div class="menu-title">🍦 Ice Cream Lick! 🍦</div>
+            <div class="menu-subtitle">How many scoops can YOU handle?</div>
+            <button class="btn" onclick="startGame()">🎮 Start Game!</button>
+            <div class="instructions">
+                <h3>📜 How to Play:</h3>
+                <p>👆 <strong>Tap/Click</strong> the ice cream to lick it!</p>
+                <p>🌡️ Each scoop has its own <strong>melt meter</strong>!</p>
+                <p>🥶 Lick too fast = <strong>BRAIN FREEZE!</strong></p>
+                <p>⚖️ More scoops = <strong>harder balance</strong>!</p>
+                <p>🏆 Beat your high score!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="screen-overlay hidden" id="game-over-screen">
+        <div class="menu-box">
+            <div class="menu-title">🍦 Game Over! 🍦</div>
+            <div class="menu-subtitle" id="game-over-reason">Your ice cream melted!</div>
+            <div class="menu-score" id="final-score">0</div>
+            <div class="menu-high-score" id="high-score-display">🏆 High Score: 0</div>
+            <button class="btn" onclick="startGame()">🔄 Try Again!</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            score: 0,
+            scoops: 1,
+            scoopMeltLevels: [100], // Individual melt level for each scoop
+            isPlaying: false,
+            combo: 0,
+            lastLickTime: 0,
+            highScore: parseInt(localStorage.getItem('iceCreamHighScore')) || 0,
+            lickGoal: 0,
+            totalLicks: 0,
+            wobbleAmount: 0,
+            // Brain freeze system
+            freezeMeter: 0, // 0-100, triggers brain freeze at 100
+            isFrozen: false,
+            freezeEndTime: 0,
+            lickTimes: [] // Track recent lick timestamps for freeze calculation
+        };
+
+        // Flavor colors
+        const flavors = [
+            { name: 'Strawberry', color: '#FFB6C1', highlight: '#FFC0CB' },
+            { name: 'Chocolate', color: '#8B4513', highlight: '#A0522D' },
+            { name: 'Vanilla', color: '#FFF8DC', highlight: '#FFFACD' },
+            { name: 'Mint', color: '#98FB98', highlight: '#90EE90' },
+            { name: 'Blueberry', color: '#6495ED', highlight: '#87CEEB' },
+            { name: 'Mango', color: '#FFD700', highlight: '#FFEC8B' },
+            { name: 'Grape', color: '#9370DB', highlight: '#BA55D3' },
+            { name: 'Orange', color: '#FFA500', highlight: '#FFB347' },
+            { name: 'Pistachio', color: '#93C572', highlight: '#A8D8A8' },
+            { name: 'Cherry', color: '#DE3163', highlight: '#FF6B6B' }
+        ];
+
+        // DOM Elements
+        const stackEl = document.getElementById('stack');
+        const meltBarEl = document.getElementById('melt-bar');
+        const scoreEl = document.getElementById('score');
+        const scoopsEl = document.getElementById('scoops');
+        const highScoreEl = document.getElementById('high-score');
+        const gameArea = document.getElementById('game-area');
+        const iceCreamEl = document.getElementById('ice-cream');
+        const tongueEl = document.getElementById('tongue');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const brainFreezeEl = document.getElementById('brain-freeze');
+        const freezeTimerEl = document.getElementById('freeze-timer');
+        const freezeMeterEl = document.getElementById('freeze-meter');
+        const freezeBarEl = document.getElementById('freeze-bar');
+
+        // Audio Context for sound effects
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            switch(type) {
+                case 'lick':
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+                case 'levelUp':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+                    oscillator.frequency.setValueAtTime(1047, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+                case 'gameOver':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+                case 'combo':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(600 + gameState.combo * 50, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'brainFreeze':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(1500, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.8);
+                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 1);
+                    break;
+                case 'freezeWarn':
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+            }
+        }
+
+        // Initialize high score display
+        highScoreEl.textContent = gameState.highScore;
+
+        function createScoops(count) {
+            stackEl.innerHTML = '';
+            // Initialize melt levels for new scoops
+            while (gameState.scoopMeltLevels.length < count) {
+                gameState.scoopMeltLevels.push(100);
+            }
+            
+            for (let i = 0; i < count; i++) {
+                const scoop = document.createElement('div');
+                scoop.className = 'scoop';
+                const flavor = flavors[i % flavors.length];
+                scoop.style.background = `radial-gradient(circle at 30% 30%, ${flavor.highlight}, ${flavor.color})`;
+                scoop.dataset.index = i;
+                scoop.dataset.color = flavor.color;
+                
+                // Add drip blobs that will appear as scoop melts
+                for (let j = 0; j < 3; j++) {
+                    const blob = document.createElement('div');
+                    blob.className = 'drip-blob';
+                    blob.style.left = `${20 + j * 25}%`;
+                    blob.style.width = '0px';
+                    blob.style.height = '0px';
+                    blob.style.background = flavor.color;
+                    scoop.appendChild(blob);
+                }
+                
+                stackEl.appendChild(scoop);
+            }
+            
+            // Apply initial deformation
+            updateScoopDeformation();
+        }
+
+        function calculateLickGoal(scoops) {
+            // More scoops = more licks needed
+            return 5 + (scoops * 3) + Math.floor(scoops * scoops * 0.5);
+        }
+
+        // Logarithmic melt rate - melts faster as it gets warmer (lower melt level)
+        function calculateScoopMeltRate(scoopIndex, currentMeltLevel) {
+            // Base rate increases significantly with scoop position (top scoops melt MUCH faster)
+            // Index 0 = bottom (most protected), higher index = more exposed to sun
+            const positionMultiplier = 1 + (scoopIndex * 0.35);
+            
+            // Logarithmic acceleration: melts faster as it gets closer to 0
+            // When melt level is high (100), log factor is low
+            // When melt level is low (close to 0), log factor increases dramatically
+            const meltProgress = 100 - currentMeltLevel; // 0 when full, 100 when empty
+            const logFactor = 1 + Math.log10(1 + meltProgress * 0.15); // Ranges from ~1 to ~2.2
+            
+            // Add exponential component for dramatic end-game tension
+            const urgencyFactor = currentMeltLevel < 30 ? (1 + (30 - currentMeltLevel) * 0.05) : 1;
+            
+            // Base rate - slightly higher for more action
+            const baseRate = 0.18 + (gameState.scoops * 0.06);
+            
+            return baseRate * positionMultiplier * logFactor * urgencyFactor;
+        }
+
+        // Calculate freeze buildup based on lick frequency
+        function calculateFreezeBuildUp() {
+            const now = Date.now();
+            // Keep only licks from last 2 seconds
+            gameState.lickTimes = gameState.lickTimes.filter(t => now - t < 2000);
+            
+            // More than 8 licks in 2 seconds starts building freeze
+            const lickRate = gameState.lickTimes.length;
+            if (lickRate > 6) {
+                return (lickRate - 6) * 8; // Builds faster with more rapid clicking
+            }
+            return 0;
+        }
+
+        // Trigger brain freeze
+        function triggerBrainFreeze() {
+            gameState.isFrozen = true;
+            gameState.freezeEndTime = Date.now() + 3000; // 3 second freeze
+            gameState.freezeMeter = 0;
+            playSound('brainFreeze');
+            brainFreezeEl.classList.add('active');
+            
+            // Countdown animation
+            let countdown = 3;
+            freezeTimerEl.textContent = countdown;
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    freezeTimerEl.textContent = countdown;
+                } else {
+                    clearInterval(countdownInterval);
+                    endBrainFreeze();
+                }
+            }, 1000);
+        }
+
+        function endBrainFreeze() {
+            gameState.isFrozen = false;
+            gameState.lickTimes = [];
+            brainFreezeEl.classList.remove('active');
+        }
+
+        function startGame() {
+            initAudio();
+            
+            gameState = {
+                ...gameState,
+                score: 0,
+                scoops: 1,
+                scoopMeltLevels: [100],
+                isPlaying: true,
+                combo: 0,
+                lastLickTime: Date.now(),
+                lickGoal: calculateLickGoal(1),
+                totalLicks: 0,
+                wobbleAmount: 0,
+                freezeMeter: 0,
+                isFrozen: false,
+                freezeEndTime: 0,
+                lickTimes: []
+            };
+
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            freezeMeterEl.style.display = 'block';
+            
+            createScoops(gameState.scoops);
+            updateUI();
+            
+            gameLoop();
+        }
+
+        function endGame(reason) {
+            gameState.isPlaying = false;
+            playSound('gameOver');
+            
+            // Check for high score
+            const isNewRecord = gameState.score > gameState.highScore;
+            if (isNewRecord) {
+                gameState.highScore = gameState.score;
+                localStorage.setItem('iceCreamHighScore', gameState.highScore);
+                highScoreEl.textContent = gameState.highScore;
+            }
+
+            // Animate falling scoops
+            const scoops = document.querySelectorAll('.scoop');
+            scoops.forEach((scoop, i) => {
+                setTimeout(() => {
+                    scoop.classList.add('falling');
+                    scoop.style.animationDelay = `${i * 0.1}s`;
+                }, i * 100);
+            });
+
+            setTimeout(() => {
+                document.getElementById('game-over-reason').textContent = reason;
+                document.getElementById('final-score').textContent = `${gameState.score} points`;
+                document.getElementById('final-score').className = isNewRecord ? 'menu-score new-record' : 'menu-score';
+                document.getElementById('high-score-display').textContent = `🏆 High Score: ${gameState.highScore}`;
+                if (isNewRecord) {
+                    document.getElementById('high-score-display').innerHTML = '🎉 NEW RECORD! 🎉';
+                }
+                gameOverScreen.classList.remove('hidden');
+            }, 800);
+        }
+
+        function lick(e) {
+            if (!gameState.isPlaying) return;
+            if (gameState.isFrozen) return; // Can't lick during brain freeze!
+            
+            const now = Date.now();
+            const timeSinceLastLick = now - gameState.lastLickTime;
+            
+            // Track lick time for brain freeze calculation
+            gameState.lickTimes.push(now);
+            
+            // Build up freeze meter
+            const freezeBuildup = calculateFreezeBuildUp();
+            if (freezeBuildup > 0) {
+                gameState.freezeMeter = Math.min(100, gameState.freezeMeter + freezeBuildup);
+                if (gameState.freezeMeter > 50) {
+                    playSound('freezeWarn');
+                }
+                if (gameState.freezeMeter >= 100) {
+                    triggerBrainFreeze();
+                    return;
+                }
+            }
+            
+            // Combo system
+            if (timeSinceLastLick < 500) {
+                gameState.combo = Math.min(gameState.combo + 1, 10);
+                playSound('combo');
+            } else {
+                gameState.combo = 1;
+            }
+            gameState.lastLickTime = now;
+
+            // Determine which scoop was clicked
+            let targetScoopIndex = -1;
+            const scoops = document.querySelectorAll('.scoop');
+            scoops.forEach((scoop, i) => {
+                const rect = scoop.getBoundingClientRect();
+                if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                    e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                    targetScoopIndex = i;
+                }
+            });
+            
+            // If no specific scoop clicked, target the most melted one
+            if (targetScoopIndex === -1) {
+                targetScoopIndex = 0;
+                let lowestMelt = gameState.scoopMeltLevels[0];
+                for (let i = 1; i < gameState.scoopMeltLevels.length; i++) {
+                    if (gameState.scoopMeltLevels[i] < lowestMelt) {
+                        lowestMelt = gameState.scoopMeltLevels[i];
+                        targetScoopIndex = i;
+                    }
+                }
+            }
+            
+            const targetMeltLevel = gameState.scoopMeltLevels[targetScoopIndex];
+
+            // Calculate points
+            const basePoints = 10 * gameState.scoops;
+            const comboBonus = Math.floor(basePoints * (gameState.combo * 0.2));
+            // Bonus for saving a nearly-melted scoop!
+            const rescueBonus = targetMeltLevel < 30 ? Math.floor((30 - targetMeltLevel) * 2) : 0;
+            const totalPoints = basePoints + comboBonus + rescueBonus;
+            
+            gameState.score += totalPoints;
+            gameState.totalLicks++;
+            
+            // Restore melt level of target scoop (more restoration for direct clicks)
+            const restoreAmount = 12 + gameState.combo * 2;
+            gameState.scoopMeltLevels[targetScoopIndex] = Math.min(100, gameState.scoopMeltLevels[targetScoopIndex] + restoreAmount);
+            
+            // Smaller restoration to adjacent scoops (heat transfer)
+            if (targetScoopIndex > 0) {
+                gameState.scoopMeltLevels[targetScoopIndex - 1] = Math.min(100, gameState.scoopMeltLevels[targetScoopIndex - 1] + 3);
+            }
+            if (targetScoopIndex < gameState.scoopMeltLevels.length - 1) {
+                gameState.scoopMeltLevels[targetScoopIndex + 1] = Math.min(100, gameState.scoopMeltLevels[targetScoopIndex + 1] + 3);
+            }
+            
+            // Flash the licked scoop
+            if (scoops[targetScoopIndex]) {
+                scoops[targetScoopIndex].style.filter = 'brightness(1.5)';
+                setTimeout(() => updateScoopDeformation(), 100);
+            }
+            
+            // Visual effects
+            playSound('lick');
+            showLickEffect(e);
+            showParticles(e);
+            
+            if (gameState.combo >= 3) {
+                showComboText(e);
+            }
+            
+            if (rescueBonus > 0) {
+                showRescueText(e, rescueBonus);
+            }
+
+            // Tongue animation
+            tongueEl.style.left = `${e.clientX - 40}px`;
+            tongueEl.classList.add('licking');
+            setTimeout(() => tongueEl.classList.remove('licking'), 150);
+
+            // Wobble effect (more scoops = more wobble)
+            if (gameState.scoops > 2) {
+                gameState.wobbleAmount += 0.5;
+                scoops.forEach((scoop, i) => {
+                    if (i > 0) {
+                        scoop.classList.add('wobble');
+                        setTimeout(() => scoop.classList.remove('wobble'), 300);
+                    }
+                });
+                
+                // Too much wobble = game over
+                if (gameState.wobbleAmount > 10 + gameState.scoops * 2) {
+                    endGame('Your ice cream tower fell over! 🗼💥');
+                    return;
+                }
+            }
+
+            // Check for level up
+            if (gameState.totalLicks >= gameState.lickGoal) {
+                levelUp();
+            }
+
+            updateUI();
+        }
+
+        function showRescueText(e, bonus) {
+            const rescue = document.createElement('div');
+            rescue.className = 'combo-text';
+            rescue.style.color = '#4CAF50';
+            rescue.textContent = `🆘 RESCUE! +${bonus}`;
+            rescue.style.left = `${e.clientX + 30}px`;
+            rescue.style.top = `${e.clientY}px`;
+            document.body.appendChild(rescue);
+            
+            setTimeout(() => rescue.remove(), 800);
+        }
+
+        function levelUp() {
+            gameState.scoops++;
+            gameState.totalLicks = 0;
+            gameState.lickGoal = calculateLickGoal(gameState.scoops);
+            // Reset all scoop melt levels for new level
+            gameState.scoopMeltLevels = Array(gameState.scoops).fill(100);
+            gameState.wobbleAmount = 0;
+            gameState.freezeMeter = Math.max(0, gameState.freezeMeter - 30); // Bonus: reduce freeze on level up
+            
+            createScoops(gameState.scoops);
+            playSound('levelUp');
+            
+            // Show level up text
+            const levelUpEl = document.createElement('div');
+            levelUpEl.className = 'level-up';
+            levelUpEl.innerHTML = `🍨 +1 SCOOP! 🍨<br>Level ${gameState.scoops}!`;
+            document.body.appendChild(levelUpEl);
+            
+            setTimeout(() => levelUpEl.remove(), 1500);
+        }
+
+        function showLickEffect(e) {
+            const effect = document.createElement('div');
+            effect.className = 'lick-effect';
+            effect.textContent = ['👅', '😋', '🤤', '😛'][Math.floor(Math.random() * 4)];
+            effect.style.left = `${e.clientX}px`;
+            effect.style.top = `${e.clientY}px`;
+            document.body.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        function showParticles(e) {
+            const colors = ['#FFB6C1', '#98FB98', '#FFD700', '#87CEEB', '#DDA0DD'];
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${e.clientX}px`;
+                particle.style.top = `${e.clientY}px`;
+                particle.style.width = `${Math.random() * 10 + 5}px`;
+                particle.style.height = particle.style.width;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.setProperty('--tx', `${(Math.random() - 0.5) * 100}px`);
+                particle.style.setProperty('--ty', `${(Math.random() - 0.5) * 100}px`);
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 800);
+            }
+        }
+
+        function showComboText(e) {
+            const combo = document.createElement('div');
+            combo.className = 'combo-text';
+            combo.textContent = `${gameState.combo}x COMBO! +${Math.floor(10 * gameState.scoops * gameState.combo * 0.2)}`;
+            combo.style.left = `${e.clientX}px`;
+            combo.style.top = `${e.clientY - 50}px`;
+            document.body.appendChild(combo);
+            
+            setTimeout(() => combo.remove(), 800);
+        }
+
+        function createDrip() {
+            if (!gameState.isPlaying) return;
+            
+            const scoops = document.querySelectorAll('.scoop');
+            if (scoops.length === 0) return;
+            
+            // Prefer dripping from more melted scoops
+            let meltedScoopIndices = [];
+            gameState.scoopMeltLevels.forEach((level, i) => {
+                if (level < 70) meltedScoopIndices.push(i);
+            });
+            
+            let scoopIndex;
+            if (meltedScoopIndices.length > 0) {
+                scoopIndex = meltedScoopIndices[Math.floor(Math.random() * meltedScoopIndices.length)];
+            } else {
+                scoopIndex = Math.floor(Math.random() * scoops.length);
+            }
+            
+            const randomScoop = scoops[scoopIndex];
+            if (!randomScoop) return;
+            
+            const rect = randomScoop.getBoundingClientRect();
+            const flavor = flavors[scoopIndex % flavors.length];
+            
+            const drip = document.createElement('div');
+            drip.className = 'drip';
+            drip.style.left = `${rect.left + Math.random() * rect.width}px`;
+            drip.style.top = `${rect.bottom - 10}px`;
+            drip.style.background = flavor.color;
+            document.body.appendChild(drip);
+            
+            setTimeout(() => drip.remove(), 1000);
+        }
+
+        function updateUI() {
+            scoreEl.textContent = gameState.score;
+            scoopsEl.textContent = gameState.scoops;
+            
+            // Calculate average melt for main bar
+            const avgMelt = gameState.scoopMeltLevels.reduce((a, b) => a + b, 0) / gameState.scoopMeltLevels.length;
+            meltBarEl.style.width = `${avgMelt}%`;
+            
+            // Change bar color based on level
+            const bgPos = 100 - avgMelt;
+            meltBarEl.style.backgroundPosition = `${bgPos}% 0`;
+            
+            // Update scoop deformation
+            updateScoopDeformation();
+            
+            // Update freeze meter
+            freezeBarEl.style.width = `${gameState.freezeMeter}%`;
+            if (gameState.freezeMeter > 70) {
+                freezeBarEl.style.background = 'linear-gradient(90deg, #FF5722 0%, #9400D3 100%)';
+            } else {
+                freezeBarEl.style.background = 'linear-gradient(90deg, #87CEEB 0%, #4169E1 50%, #9400D3 100%)';
+            }
+        }
+
+        function updateScoopDeformation() {
+            const scoops = document.querySelectorAll('.scoop');
+            scoops.forEach((scoop, i) => {
+                const meltLevel = gameState.scoopMeltLevels[i];
+                if (meltLevel === undefined) return;
+                
+                const meltProgress = (100 - meltLevel) / 100; // 0 = fresh, 1 = fully melted
+                
+                // Calculate deformation values - more dramatic differences
+                const scaleY = 1 - (meltProgress * 0.55); // Flatten from 1 to 0.45
+                const scaleX = 1 + (meltProgress * 0.5); // Widen from 1 to 1.5
+                const skewX = meltProgress * 8 * (i % 2 === 0 ? 1 : -1); // Alternate skew direction
+                const translateY = meltProgress * 20; // Slide down more
+                const rotate = meltProgress * 3 * (i % 2 === 0 ? 1 : -1); // Slight rotation
+                
+                // Calculate border radius changes for droopy effect - each scoop droops differently
+                const baseRadius = 50;
+                const droopOffset = (i % 3) * 5; // Vary droop by position
+                const bottomLeftRadius = baseRadius + (meltProgress * (35 + droopOffset));
+                const bottomRightRadius = baseRadius + (meltProgress * (25 + (10 - droopOffset)));
+                const topLeftRadius = baseRadius - (meltProgress * (10 + droopOffset / 2));
+                const topRightRadius = baseRadius - (meltProgress * (8 - droopOffset / 2));
+                
+                // Apply transforms
+                const baseTransform = `scaleY(${scaleY}) scaleX(${scaleX}) skewX(${skewX}deg) translateY(${translateY}px) rotate(${rotate}deg)`;
+                scoop.style.setProperty('--base-transform', baseTransform);
+                scoop.style.transform = baseTransform;
+                
+                // Apply droopy border radius - asymmetric for natural look
+                scoop.style.borderRadius = `${topLeftRadius}% ${topRightRadius}% ${bottomRightRadius}% ${bottomLeftRadius}%`;
+                
+                // Adjust opacity as it melts
+                scoop.style.opacity = 0.65 + (meltLevel / 100) * 0.35;
+                
+                // Add glossy/wet look as it melts - different saturation per flavor
+                const wetness = meltProgress * 0.35;
+                const saturationLoss = meltProgress * 0.4;
+                scoop.style.filter = `saturate(${1 - saturationLoss}) brightness(${1 + wetness * 0.25})`;
+                
+                // Update drip blobs - more dramatic
+                const blobs = scoop.querySelectorAll('.drip-blob');
+                blobs.forEach((blob, j) => {
+                    const blobThreshold = 0.2 + (j * 0.1); // Different thresholds for each blob
+                    if (meltProgress > blobThreshold) {
+                        const blobProgress = Math.max(0, (meltProgress - blobThreshold) / (1 - blobThreshold));
+                        const blobSize = blobProgress * (14 + j * 5);
+                        const blobDrop = blobProgress * (18 + j * 10);
+                        blob.style.width = `${blobSize}px`;
+                        blob.style.height = `${blobSize * 1.4}px`;
+                        blob.style.bottom = `${-8 - blobDrop}px`;
+                        blob.style.opacity = 0.95 - blobProgress * 0.25;
+                        blob.style.borderRadius = '45% 45% 50% 50%';
+                    } else {
+                        blob.style.width = '0px';
+                        blob.style.height = '0px';
+                    }
+                });
+                
+                // Add animation classes based on individual scoop's melt level
+                scoop.classList.remove('melting', 'critical');
+                if (meltLevel < 20) {
+                    scoop.classList.add('critical');
+                } else if (meltLevel < 40) {
+                    scoop.classList.add('melting');
+                }
+            });
+        }
+
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!gameState.isPlaying) return;
+            
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            // Melt each scoop individually with logarithmic rate
+            for (let i = 0; i < gameState.scoopMeltLevels.length; i++) {
+                const meltRate = calculateScoopMeltRate(i, gameState.scoopMeltLevels[i]);
+                gameState.scoopMeltLevels[i] -= meltRate * (deltaTime / 100);
+                
+                // Check if this scoop melted
+                if (gameState.scoopMeltLevels[i] <= 0) {
+                    const flavor = flavors[i % flavors.length];
+                    endGame(`Your ${flavor.name} scoop melted! 🫠`);
+                    return;
+                }
+            }
+            
+            // Freeze meter decay (recovers when not licking fast)
+            if (!gameState.isFrozen) {
+                gameState.freezeMeter = Math.max(0, gameState.freezeMeter - 0.3);
+            }
+            
+            // Wobble recovery
+            gameState.wobbleAmount = Math.max(0, gameState.wobbleAmount - 0.02);
+            
+            // Random drips from melting scoops
+            const minMelt = Math.min(...gameState.scoopMeltLevels);
+            if (Math.random() < 0.02 && minMelt < 70) {
+                createDrip();
+            }
+            
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listeners
+        iceCreamEl.addEventListener('click', lick);
+        iceCreamEl.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            lick({ clientX: touch.clientX, clientY: touch.clientY });
+        });
+
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', (e) => {
+            if (gameState.isPlaying) e.preventDefault();
+        }, { passive: false });
+
+        // Add some clouds
+        function createClouds() {
+            for (let i = 0; i < 3; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = `${80 + Math.random() * 60}px`;
+                cloud.style.height = `${30 + Math.random() * 20}px`;
+                cloud.style.top = `${50 + Math.random() * 100}px`;
+                cloud.style.left = `${Math.random() * 100}%`;
+                document.body.appendChild(cloud);
+            }
+        }
+        createClouds();
+    </script>
+</body>
+</html>
