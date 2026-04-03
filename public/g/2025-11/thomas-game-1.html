@@ -1,631 +1,727 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Space Shooter Game</title>
     <style>
-        body { margin: 0; background: black; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; }
-        canvas { border: 1px solid white; }
+      body {
+        margin: 0;
+        background: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+      canvas {
+        border: 1px solid white;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const WIDTH = canvas.width;
-        const HEIGHT = canvas.height;
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const WIDTH = canvas.width;
+      const HEIGHT = canvas.height;
 
-        // Game states
-        let state = 'game';
-        let level = 1;
-        let points = 0;
-        let levelStartPoints = 0;
-        let levelComplete = false;
-        let screenMessage = '';
-        let lastTime = performance.now();
-        let particles = [];
+      // Game states
+      let state = 'game';
+      let level = 1;
+      let points = 0;
+      let levelStartPoints = 0;
+      let levelComplete = false;
+      let screenMessage = '';
+      let lastTime = performance.now();
+      let particles = [];
 
-        // Player
-        const player = {
-            x: WIDTH / 2,
-            y: HEIGHT / 2,
+      // Player
+      const player = {
+        x: WIDTH / 2,
+        y: HEIGHT / 2,
+        vx: 0,
+        vy: 0,
+        angle: 0,
+        size: 22,
+        maxHealth: 100,
+        health: 100,
+        maxShield: 0,
+        shield: 0,
+        damage: 12,
+        regenRate: 0,
+        shieldRegenRate: 30,
+        lastHitTime: 0,
+        shieldRegenDelay: 2000,
+        maxSpeed: 260,
+        nextShootTime: 0,
+        fireRateUpgrades: 0,
+        trail: [],
+        lastTrailTime: 0,
+        trailColor: '#00ffff',
+        hullColor: '#00ff00',
+        cockpitColor: '#006600',
+        turnSpeed: 4.2,
+      };
+
+      const upgradeCost = 10;
+      const tierProps = [
+        {
+          hull: '#ffcc88',
+          cockpit: '#ddaa66',
+          speedMod: 1.0,
+          accMod: 1.0,
+          healthMod: 1.0,
+          fireMod: 1.0,
+        },
+        {
+          hull: '#ff7744',
+          cockpit: '#dd5522',
+          speedMod: 1.25,
+          accMod: 1.2,
+          healthMod: 1.3,
+          fireMod: 1.25,
+        },
+        {
+          hull: '#cc3311',
+          cockpit: '#aa2200',
+          speedMod: 1.5,
+          accMod: 1.45,
+          healthMod: 1.7,
+          fireMod: 1.6,
+        },
+      ];
+
+      let enemies = [];
+      let projectiles = [];
+      let stars = [];
+
+      // Stars
+      for (let i = 0; i < 350; i++) {
+        stars.push({
+          x: Math.random() * WIDTH,
+          y: Math.random() * HEIGHT,
+          size: 0.4 + Math.random() * 1.6,
+          speed: 0.15 + Math.random() * 0.45,
+        });
+      }
+
+      // Input
+      const keys = {};
+      window.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        keys[key] = true;
+      });
+      window.addEventListener('keyup', (e) => {
+        keys[e.key.toLowerCase()] = false;
+      });
+
+      function getPlayerCooldown() {
+        return Math.max(130, 360 - 42 * player.fireRateUpgrades);
+      }
+
+      function spawnEnemies() {
+        enemies = [];
+        const numEnemies = level === 1 ? 3 : level * 2 + 2;
+        for (let i = 0; i < numEnemies; i++) {
+          let attempts = 0;
+          let ex, ey;
+          do {
+            ex = (0.15 + Math.random() * 0.7) * WIDTH;
+            ey = (0.15 + Math.random() * 0.5) * HEIGHT;
+            attempts++;
+          } while (
+            Math.hypot(ex - player.x, ey - player.y) < 120 &&
+            attempts < 20
+          );
+
+          const isOrbiter = Math.random() < 0.28;
+          const tier = level === 1 ? 1 : 1 + Math.floor(Math.random() * 3);
+          const props = tierProps[tier - 1];
+          enemies.push({
+            x: ex,
+            y: ey,
             vx: 0,
             vy: 0,
-            angle: 0,
-            size: 22,
-            maxHealth: 100,
-            health: 100,
-            maxShield: 0,
-            shield: 0,
-            damage: 12,
-            regenRate: 0,
-            shieldRegenRate: 30,
-            lastHitTime: 0,
-            shieldRegenDelay: 2000,
-            maxSpeed: 260,
+            angle: Math.random() * Math.PI * 2 - Math.PI,
+            size: 18,
+            health: 0,
+            maxHealth: 0,
+            damage: 7 + level * 2.8,
+            shootInterval: 0,
             nextShootTime: 0,
-            fireRateUpgrades: 0,
+            maxSpeed: 0,
+            acc: 0,
+            rotGain: 0,
+            turnSpeed: 4.8,
+            tier: tier,
+            hullColor: props.hull,
+            cockpitColor: props.cockpit,
+            trailColor: '#ff6600',
             trail: [],
             lastTrailTime: 0,
-            trailColor: '#00ffff',
-            hullColor: '#00ff00',
-            cockpitColor: '#006600',
-            turnSpeed: 4.2
-        };
-
-        const upgradeCost = 10;
-        const tierProps = [
-            {hull: '#ffcc88', cockpit: '#ddaa66', speedMod: 1.0, accMod: 1.0, healthMod: 1.0, fireMod: 1.0},
-            {hull: '#ff7744', cockpit: '#dd5522', speedMod: 1.25, accMod: 1.2, healthMod: 1.3, fireMod: 1.25},
-            {hull: '#cc3311', cockpit: '#aa2200', speedMod: 1.5, accMod: 1.45, healthMod: 1.7, fireMod: 1.6}
-        ];
-
-        let enemies = [];
-        let projectiles = [];
-        let stars = [];
-
-        // Stars
-        for (let i = 0; i < 350; i++) {
-            stars.push({
-                x: Math.random() * WIDTH,
-                y: Math.random() * HEIGHT,
-                size: 0.4 + Math.random() * 1.6,
-                speed: 0.15 + Math.random() * 0.45
-            });
+            type: isOrbiter ? 'orbiter' : 'chaser',
+            orbitFreq: 0.25 + Math.random() * 0.35,
+            orbitPhase: Math.random() * Math.PI * 2,
+            orbitRadius: 140 + Math.random() * 140,
+          });
         }
-
-        // Input
-        const keys = {};
-        window.addEventListener('keydown', (e) => {
-            const key = e.key.toLowerCase();
-            keys[key] = true;
+        // Set stats
+        enemies.forEach((enemy) => {
+          const props = tierProps[enemy.tier - 1];
+          enemy.maxSpeed =
+            (205 + level * 17) * props.speedMod + Math.random() * 35;
+          enemy.acc = (235 + level * 24) * props.accMod + Math.random() * 45;
+          enemy.health = Math.floor(
+            (20 + level * 13) * props.healthMod + Math.random() * 8,
+          );
+          enemy.maxHealth = enemy.health;
+          enemy.shootInterval = (1550 + Math.random() * 650) / props.fireMod;
+          enemy.rotGain = 2.8 + (enemy.tier - 1) * 1.4 + level * 0.45;
+          enemy.damage = (7 + level * 2.2) * (1 + (enemy.tier - 1) * 0.35);
+          enemy.nextShootTime = Math.random() * enemy.shootInterval * 0.7;
         });
-        window.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
+      }
 
-        function getPlayerCooldown() {
-            return Math.max(130, 360 - 42 * player.fireRateUpgrades);
+      function spawnExplosion(x, y, color) {
+        for (let i = 0; i < 28; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 80 + Math.random() * 220;
+          particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1.0,
+            maxLife: 0.85,
+            size: 2 + Math.random() * 4,
+            color: color,
+          });
         }
+      }
 
-        function spawnEnemies() {
-            enemies = [];
-            const numEnemies = level === 1 ? 3 : level * 2 + 2;
-            for (let i = 0; i < numEnemies; i++) {
-                let attempts = 0;
-                let ex, ey;
-                do {
-                    ex = (0.15 + Math.random() * 0.7) * WIDTH;
-                    ey = (0.15 + Math.random() * 0.5) * HEIGHT;
-                    attempts++;
-                } while (Math.hypot(ex - player.x, ey - player.y) < 120 && attempts < 20);
-
-                const isOrbiter = Math.random() < 0.28;
-                const tier = level === 1 ? 1 : 1 + Math.floor(Math.random() * 3);
-                const props = tierProps[tier - 1];
-                enemies.push({
-                    x: ex,
-                    y: ey,
-                    vx: 0,
-                    vy: 0,
-                    angle: Math.random() * Math.PI * 2 - Math.PI,
-                    size: 18,
-                    health: 0,
-                    maxHealth: 0,
-                    damage: 7 + level * 2.8,
-                    shootInterval: 0,
-                    nextShootTime: 0,
-                    maxSpeed: 0,
-                    acc: 0,
-                    rotGain: 0,
-                    turnSpeed: 4.8,
-                    tier: tier,
-                    hullColor: props.hull,
-                    cockpitColor: props.cockpit,
-                    trailColor: '#ff6600',
-                    trail: [],
-                    lastTrailTime: 0,
-                    type: isOrbiter ? 'orbiter' : 'chaser',
-                    orbitFreq: 0.25 + Math.random() * 0.35,
-                    orbitPhase: Math.random() * Math.PI * 2,
-                    orbitRadius: 140 + Math.random() * 140
-                });
-            }
-            // Set stats
-            enemies.forEach(enemy => {
-                const props = tierProps[enemy.tier - 1];
-                enemy.maxSpeed = (205 + level * 17) * props.speedMod + Math.random() * 35;
-                enemy.acc = (235 + level * 24) * props.accMod + Math.random() * 45;
-                enemy.health = Math.floor((20 + level * 13) * props.healthMod + Math.random() * 8);
-                enemy.maxHealth = enemy.health;
-                enemy.shootInterval = (1550 + Math.random() * 650) / props.fireMod;
-                enemy.rotGain = 2.8 + (enemy.tier - 1) * 1.4 + level * 0.45;
-                enemy.damage = (7 + level * 2.2) * (1 + (enemy.tier - 1) * 0.35);
-                enemy.nextShootTime = Math.random() * enemy.shootInterval * 0.7;
-            });
+      function pushTrail(shooter, now) {
+        const rearDist = shooter.size * 0.38;
+        const cosA = Math.cos(shooter.angle);
+        const sinA = Math.sin(shooter.angle);
+        const rearX = shooter.x - cosA * rearDist;
+        const rearY = shooter.y - sinA * rearDist;
+        shooter.trail.push({ x: rearX, y: rearY, t: now });
+        if (shooter.trail.length > 35) {
+          shooter.trail.shift();
         }
+      }
 
-        function spawnExplosion(x, y, color) {
-            for (let i = 0; i < 28; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 80 + Math.random() * 220;
-                particles.push({
-                    x: x,
-                    y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    life: 1.0,
-                    maxLife: 0.85,
-                    size: 2 + Math.random() * 4,
-                    color: color
-                });
-            }
+      function pruneTrail(shooter, now) {
+        while (shooter.trail.length > 0 && now - shooter.trail[0].t > 1200) {
+          shooter.trail.shift();
         }
+      }
 
-        function pushTrail(shooter, now) {
-            const rearDist = shooter.size * 0.38;
-            const cosA = Math.cos(shooter.angle);
-            const sinA = Math.sin(shooter.angle);
-            const rearX = shooter.x - cosA * rearDist;
-            const rearY = shooter.y - sinA * rearDist;
-            shooter.trail.push({x: rearX, y: rearY, t: now});
-            if (shooter.trail.length > 35) {
-                shooter.trail.shift();
-            }
-        }
-
-        function pruneTrail(shooter, now) {
-            while (shooter.trail.length > 0 && (now - shooter.trail[0].t) > 1200) {
-                shooter.trail.shift();
-            }
-        }
-
-        function drawTrail(shooter, now) {
-            if (shooter.trail.length < 2) return;
-            ctx.save();
-            ctx.strokeStyle = shooter.trailColor;
-            ctx.lineWidth = 2.8;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            for (let i = 0; i < shooter.trail.length - 1; i++) {
-                const p1 = shooter.trail[i];
-                const p2 = shooter.trail[i + 1];
-                const age1 = (now - p1.t) / 1200;
-                const age2 = (now - p2.t) / 1200;
-                const alpha = Math.max(0, 1 - ((age1 + age2) / 2));
-                if (alpha > 0.02) {
-                    ctx.globalAlpha = alpha * 0.85;
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
-                }
-            }
-            ctx.globalAlpha = 1;
-            ctx.restore();
-        }
-
-        function shoot(fromPlayer, shooter, now) {
-            const projSpeed = 330;
-            const cosA = Math.cos(shooter.angle);
-            const sinA = Math.sin(shooter.angle);
-            const wingLocalX = shooter.size * 0.27;
-            const halfWingY = shooter.size * 0.73;
-            for (let side = -1; side <= 1; side += 2) {
-                const localY = side * halfWingY;
-                const dx = cosA * wingLocalX - sinA * localY;
-                const dy = sinA * wingLocalX + cosA * localY;
-                const startX = shooter.x + dx;
-                const startY = shooter.y + dy;
-                const vx = cosA * projSpeed;
-                const vy = sinA * projSpeed;
-                projectiles.push({
-                    x: startX,
-                    y: startY,
-                    vx: vx,
-                    vy: vy,
-                    angle: shooter.angle,
-                    damage: shooter.damage,
-                    isPlayer: fromPlayer,
-                    hitRadius: 1.7
-                });
-            }
-        }
-
-        function drawShip(shooter, isPlayer) {
-            ctx.save();
-            ctx.translate(shooter.x, shooter.y);
-            ctx.rotate(shooter.angle);
-            ctx.fillStyle = shooter.hullColor;
-            const strokeCol = isPlayer ? 'rgba(0,255,0,0.65)' : 'rgba(255,255,255,0.35)';
-            const strokeW = isPlayer ? 1.6 : 1.1;
-            ctx.strokeStyle = strokeCol;
-            ctx.lineWidth = strokeW;
+      function drawTrail(shooter, now) {
+        if (shooter.trail.length < 2) return;
+        ctx.save();
+        ctx.strokeStyle = shooter.trailColor;
+        ctx.lineWidth = 2.8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (let i = 0; i < shooter.trail.length - 1; i++) {
+          const p1 = shooter.trail[i];
+          const p2 = shooter.trail[i + 1];
+          const age1 = (now - p1.t) / 1200;
+          const age2 = (now - p2.t) / 1200;
+          const alpha = Math.max(0, 1 - (age1 + age2) / 2);
+          if (alpha > 0.02) {
+            ctx.globalAlpha = alpha * 0.85;
             ctx.beginPath();
-            ctx.moveTo(shooter.size, 0);
-            ctx.lineTo(shooter.size * 0.24, -shooter.size * 0.76);
-            ctx.lineTo(shooter.size * 0.24, shooter.size * 0.76);
-            ctx.closePath();
-            ctx.fill();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
             ctx.stroke();
-            // Cockpit
-            ctx.fillStyle = shooter.cockpitColor;
+          }
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
+      function shoot(fromPlayer, shooter, now) {
+        const projSpeed = 330;
+        const cosA = Math.cos(shooter.angle);
+        const sinA = Math.sin(shooter.angle);
+        const wingLocalX = shooter.size * 0.27;
+        const halfWingY = shooter.size * 0.73;
+        for (let side = -1; side <= 1; side += 2) {
+          const localY = side * halfWingY;
+          const dx = cosA * wingLocalX - sinA * localY;
+          const dy = sinA * wingLocalX + cosA * localY;
+          const startX = shooter.x + dx;
+          const startY = shooter.y + dy;
+          const vx = cosA * projSpeed;
+          const vy = sinA * projSpeed;
+          projectiles.push({
+            x: startX,
+            y: startY,
+            vx: vx,
+            vy: vy,
+            angle: shooter.angle,
+            damage: shooter.damage,
+            isPlayer: fromPlayer,
+            hitRadius: 1.7,
+          });
+        }
+      }
+
+      function drawShip(shooter, isPlayer) {
+        ctx.save();
+        ctx.translate(shooter.x, shooter.y);
+        ctx.rotate(shooter.angle);
+        ctx.fillStyle = shooter.hullColor;
+        const strokeCol = isPlayer
+          ? 'rgba(0,255,0,0.65)'
+          : 'rgba(255,255,255,0.35)';
+        const strokeW = isPlayer ? 1.6 : 1.1;
+        ctx.strokeStyle = strokeCol;
+        ctx.lineWidth = strokeW;
+        ctx.beginPath();
+        ctx.moveTo(shooter.size, 0);
+        ctx.lineTo(shooter.size * 0.24, -shooter.size * 0.76);
+        ctx.lineTo(shooter.size * 0.24, shooter.size * 0.76);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // Cockpit
+        ctx.fillStyle = shooter.cockpitColor;
+        ctx.beginPath();
+        ctx.arc(shooter.size * 0.56, 0, shooter.size * 0.155, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      spawnEnemies();
+
+      let dt = 0;
+      function update() {
+        const now = performance.now();
+        dt = Math.min((now - lastTime) / 1000, 0.033);
+        lastTime = now;
+
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+        // Stars parallax only in game
+        if (state === 'game') {
+          const starSpeed = 1.4;
+          stars.forEach((star) => {
+            star.x -= player.vx * dt * star.speed * starSpeed;
+            star.y -= player.vy * dt * star.speed * starSpeed;
+            if (star.x < -15) star.x += WIDTH + 30;
+            if (star.x > WIDTH + 15) star.x -= WIDTH + 30;
+            if (star.y < -15) star.y += HEIGHT + 30;
+            if (star.y > HEIGHT + 15) star.y -= HEIGHT + 30;
+          });
+        }
+
+        // Draw stars
+        ctx.fillStyle = 'white';
+        stars.forEach((star) => {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        if (state === 'game') {
+          // Player update
+          const acc = 370 * dt;
+          const rotSpeed = player.turnSpeed * dt;
+          const brakeAcc = 520 * dt;
+
+          // Rotation
+          if (keys['a'] || keys['arrowleft']) player.angle -= rotSpeed;
+          if (keys['d'] || keys['arrowright']) player.angle += rotSpeed;
+
+          const thrusting = keys['w'] || keys['arrowup'];
+          const cosA = Math.cos(player.angle);
+          const sinA = Math.sin(player.angle);
+          if (thrusting) {
+            player.vx += cosA * acc;
+            player.vy += sinA * acc;
+          }
+
+          // Brake
+          if (keys['s'] || keys['arrowdown']) {
+            const speed = Math.hypot(player.vx, player.vy);
+            if (speed > 0.2) {
+              player.vx -= (player.vx / speed) * brakeAcc;
+              player.vy -= (player.vy / speed) * brakeAcc;
+            }
+          }
+
+          // Cap speed
+          const pSpeed = Math.hypot(player.vx, player.vy);
+          if (pSpeed > player.maxSpeed) {
+            player.vx = (player.vx / pSpeed) * player.maxSpeed;
+            player.vy = (player.vy / pSpeed) * player.maxSpeed;
+          }
+
+          // Position
+          player.x += player.vx * dt;
+          player.y += player.vy * dt;
+
+          // Bounds
+          if (player.x < player.size) {
+            player.x = player.size;
+            player.vx = 0;
+          }
+          if (player.x > WIDTH - player.size) {
+            player.x = WIDTH - player.size;
+            player.vx = 0;
+          }
+          if (player.y < player.size) {
+            player.y = player.size;
+            player.vy = 0;
+          }
+          if (player.y > HEIGHT - player.size) {
+            player.y = HEIGHT - player.size;
+            player.vy = 0;
+          }
+
+          // Trail
+          if (thrusting && now - player.lastTrailTime > 35) {
+            pushTrail(player, now);
+            player.lastTrailTime = now;
+          }
+
+          // Shoot
+          if (keys[' '] && now > player.nextShootTime) {
+            shoot(true, player, now);
+            player.nextShootTime = now + getPlayerCooldown();
+          }
+
+          // Regen
+          if (player.health < player.maxHealth) {
+            player.health = Math.min(
+              player.maxHealth,
+              player.health + player.regenRate * dt,
+            );
+          }
+          if (
+            now - player.lastHitTime > player.shieldRegenDelay &&
+            player.shield < player.maxShield
+          ) {
+            player.shield = Math.min(
+              player.maxShield,
+              player.shield + player.shieldRegenRate * dt,
+            );
+          }
+
+          // Enemies update
+          enemies.forEach((enemy) => {
+            // Target
+            let tx = player.x;
+            let ty = player.y;
+            if (enemy.type === 'orbiter') {
+              const orbitAng =
+                enemy.orbitPhase + enemy.orbitFreq * (now / 1000);
+              tx += Math.cos(orbitAng) * enemy.orbitRadius;
+              ty += Math.sin(orbitAng) * enemy.orbitRadius;
+            }
+            const dx = tx - enemy.x;
+            const dy = ty - enemy.y;
+            const targetAngle = Math.atan2(dy, dx);
+            let angleDiff = targetAngle - enemy.angle;
+            angleDiff = ((angleDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+            // Rotate towards target
+            enemy.angle +=
+              Math.sign(angleDiff) *
+              Math.min(Math.abs(angleDiff), enemy.rotGain * dt);
+
+            // Thrust
+            const eAcc = enemy.acc * dt;
+            const eCos = Math.cos(enemy.angle);
+            const eSin = Math.sin(enemy.angle);
+            enemy.vx += eCos * eAcc;
+            enemy.vy += eSin * eAcc;
+
+            // Trail
+            if (now - enemy.lastTrailTime > 42) {
+              pushTrail(enemy, now);
+              enemy.lastTrailTime = now;
+            }
+
+            // Cap speed
+            const eSpeed = Math.hypot(enemy.vx, enemy.vy);
+            if (eSpeed > enemy.maxSpeed) {
+              enemy.vx = (enemy.vx / eSpeed) * enemy.maxSpeed;
+              enemy.vy = (enemy.vy / eSpeed) * enemy.maxSpeed;
+            }
+
+            // Position
+            enemy.x += enemy.vx * dt;
+            enemy.y += enemy.vy * dt;
+
+            // Bounds
+            if (enemy.x < enemy.size) {
+              enemy.x = enemy.size;
+              enemy.vx = 0;
+            }
+            if (enemy.x > WIDTH - enemy.size) {
+              enemy.x = WIDTH - enemy.size;
+              enemy.vx = 0;
+            }
+            if (enemy.y < enemy.size) {
+              enemy.y = enemy.size;
+              enemy.vy = 0;
+            }
+            if (enemy.y > HEIGHT - enemy.size) {
+              enemy.y = HEIGHT - enemy.size;
+              enemy.vy = 0;
+            }
+
+            // Shoot
+            if (now >= enemy.nextShootTime && Math.abs(angleDiff) < 0.68) {
+              shoot(false, enemy, now);
+              enemy.nextShootTime = now + enemy.shootInterval;
+            }
+          });
+
+          // Prune trails
+          pruneTrail(player, now);
+          enemies.forEach((e) => pruneTrail(e, now));
+
+          // Update projectiles positions
+          for (let pi = 0; pi < projectiles.length; ) {
+            const proj = projectiles[pi];
+            proj.x += proj.vx * dt;
+            proj.y += proj.vy * dt;
+            if (
+              proj.x < -60 ||
+              proj.x > WIDTH + 60 ||
+              proj.y < -60 ||
+              proj.y > HEIGHT + 60
+            ) {
+              projectiles.splice(pi, 1);
+              continue;
+            }
+            pi++;
+          }
+
+          // Collisions
+          for (let pi = projectiles.length - 1; pi >= 0; pi--) {
+            const proj = projectiles[pi];
+            if (proj.isPlayer) {
+              for (let ei = enemies.length - 1; ei >= 0; ei--) {
+                const enemy = enemies[ei];
+                const dx = proj.x - enemy.x;
+                const dy = proj.y - enemy.y;
+                if (Math.hypot(dx, dy) < proj.hitRadius + enemy.size * 0.65) {
+                  enemy.health -= proj.damage;
+                  projectiles.splice(pi, 1);
+                  if (enemy.health <= 0) {
+                    spawnExplosion(enemy.x, enemy.y, enemy.hullColor);
+                    enemies.splice(ei, 1);
+                    points += enemy.tier * 2 + Math.floor(level * 1.3);
+                  }
+                  break;
+                }
+              }
+            } else {
+              const dx = proj.x - player.x;
+              const dy = proj.y - player.y;
+              if (Math.hypot(dx, dy) < proj.hitRadius + player.size * 0.65) {
+                const dmg = proj.damage;
+                if (player.shield > 0) {
+                  player.shield = Math.max(0, player.shield - dmg);
+                } else {
+                  player.health = Math.max(0, player.health - dmg);
+                }
+                player.lastHitTime = now;
+                projectiles.splice(pi, 1);
+                if (player.health <= 0) {
+                  spawnExplosion(player.x, player.y, player.hullColor);
+                  const gained = points - levelStartPoints;
+                  points = levelStartPoints + Math.floor(gained / 2);
+                  screenMessage = `Mission Failed on Level ${level}!`;
+                  levelComplete = false;
+                  state = 'upgrade';
+                  player.health = player.maxHealth;
+                  player.shield = player.maxShield;
+                }
+                break;
+              }
+            }
+          }
+
+          // Draw trails
+          drawTrail(player, now);
+          enemies.forEach((enemy) => drawTrail(enemy, now));
+
+          // Draw projectiles
+          projectiles.forEach((proj) => {
+            ctx.save();
+            ctx.translate(proj.x, proj.y);
+            ctx.rotate(proj.angle);
+            ctx.fillStyle = proj.isPlayer ? '#00ff88' : '#ff8844';
+            const len = 13;
+            const wid = 1.45;
+            ctx.fillRect(-len / 2, -wid / 2, len, wid);
+            ctx.restore();
+          });
+
+          // Draw enemies
+          enemies.forEach((enemy) => drawShip(enemy, false));
+
+          // Draw player
+          drawShip(player, true);
+
+          // Update and draw particles
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt * 4.5;
+            if (p.life <= 0) {
+              particles.splice(i, 1);
+              continue;
+            }
+            ctx.save();
+            ctx.globalAlpha = p.life / p.maxLife;
+            ctx.fillStyle = p.color;
             ctx.beginPath();
-            ctx.arc(shooter.size * 0.56, 0, shooter.size * 0.155, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
-        }
+          }
 
-        spawnEnemies();
+          // UI
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 22px Arial';
+          ctx.textAlign = 'left';
+          ctx.fillText(`Level: ${level}  Points: ${points}`, 15, 32);
+          ctx.textAlign = 'left';
+          ctx.font = '18px Arial';
 
-        let dt = 0;
-        function update() {
-            const now = performance.now();
-            dt = Math.min((now - lastTime) / 1000, 0.033);
-            lastTime = now;
-
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-            // Stars parallax only in game
-            if (state === 'game') {
-                const starSpeed = 1.4;
-                stars.forEach(star => {
-                    star.x -= player.vx * dt * star.speed * starSpeed;
-                    star.y -= player.vy * dt * star.speed * starSpeed;
-                    if (star.x < -15) star.x += WIDTH + 30;
-                    if (star.x > WIDTH + 15) star.x -= WIDTH + 30;
-                    if (star.y < -15) star.y += HEIGHT + 30;
-                    if (star.y > HEIGHT + 15) star.y -= HEIGHT + 30;
-                });
-            }
-
-            // Draw stars
+          // Shield
+          if (player.maxShield > 0) {
+            ctx.fillStyle = 'rgba(0,120,255,0.35)';
+            ctx.fillRect(15, 50, 120, 14);
+            ctx.fillStyle = 'cyan';
+            ctx.fillRect(15, 50, (player.shield / player.maxShield) * 120, 14);
             ctx.fillStyle = 'white';
-            stars.forEach(star => {
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
+            ctx.fillText(
+              `Shield: ${Math.floor(player.shield)}/${player.maxShield}`,
+              145,
+              63,
+            );
+          }
 
-            if (state === 'game') {
-                // Player update
-                const acc = 370 * dt;
-                const rotSpeed = player.turnSpeed * dt;
-                const brakeAcc = 520 * dt;
+          // Health
+          ctx.fillStyle = 'rgba(255,40,40,0.4)';
+          ctx.fillRect(15, 72, 120, 14);
+          ctx.fillStyle = '#ff4444';
+          ctx.fillRect(15, 72, (player.health / player.maxHealth) * 120, 14);
+          ctx.fillStyle = 'white';
+          ctx.fillText(
+            `Health: ${Math.floor(player.health)}/${player.maxHealth}`,
+            145,
+            85,
+          );
 
-                // Rotation
-                if (keys['a'] || keys['arrowleft']) player.angle -= rotSpeed;
-                if (keys['d'] || keys['arrowright']) player.angle += rotSpeed;
+          // Level complete
+          if (enemies.length === 0) {
+            levelComplete = true;
+            screenMessage = `Level ${level} Complete!`;
+            state = 'upgrade';
+          }
+        } else if (state === 'upgrade') {
+          ctx.fillStyle = 'rgba(0,0,0,0.85)';
+          ctx.fillRect(0, 0, WIDTH, HEIGHT);
+          ctx.fillStyle = 'white';
+          ctx.textAlign = 'center';
+          ctx.font = 'bold 34px Arial';
+          ctx.fillText(screenMessage, WIDTH / 2, HEIGHT / 2 - 130);
+          ctx.font = 'bold 28px Arial';
+          ctx.fillText(`Points: ${points}`, WIDTH / 2, HEIGHT / 2 - 85);
+          ctx.font = '22px Arial';
+          ctx.textAlign = 'left';
+          const left = WIDTH / 2 - 220;
+          const top = HEIGHT / 2 - 25;
+          ctx.fillText(
+            `1: Laser Damage (${upgradeCost})  ${player.damage}`,
+            left,
+            top + 0,
+          );
+          ctx.fillText(
+            `2: Max Health (${upgradeCost})  ${player.maxHealth}`,
+            left,
+            top + 32,
+          );
+          ctx.fillText(
+            `3: Regen/sec (${upgradeCost})  ${player.regenRate.toFixed(1)}`,
+            left,
+            top + 64,
+          );
+          ctx.fillText(
+            `4: Max Shields (${upgradeCost})  ${player.maxShield}`,
+            left,
+            top + 96,
+          );
+          const fireCD = getPlayerCooldown();
+          ctx.fillText(
+            `5: Fire Rate (${upgradeCost})  ${fireCD}ms`,
+            left,
+            top + 128,
+          );
+          ctx.font = 'bold 26px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('Press ENTER to continue', WIDTH / 2, HEIGHT / 2 + 170);
+          ctx.textAlign = 'left';
 
-                const thrusting = keys['w'] || keys['arrowup'];
-                const cosA = Math.cos(player.angle);
-                const sinA = Math.sin(player.angle);
-                if (thrusting) {
-                    player.vx += cosA * acc;
-                    player.vy += sinA * acc;
-                }
-
-                // Brake
-                if (keys['s'] || keys['arrowdown']) {
-                    const speed = Math.hypot(player.vx, player.vy);
-                    if (speed > 0.2) {
-                        player.vx -= (player.vx / speed) * brakeAcc;
-                        player.vy -= (player.vy / speed) * brakeAcc;
-                    }
-                }
-
-                // Cap speed
-                const pSpeed = Math.hypot(player.vx, player.vy);
-                if (pSpeed > player.maxSpeed) {
-                    player.vx = (player.vx / pSpeed) * player.maxSpeed;
-                    player.vy = (player.vy / pSpeed) * player.maxSpeed;
-                }
-
-                // Position
-                player.x += player.vx * dt;
-                player.y += player.vy * dt;
-
-                // Bounds
-                if (player.x < player.size) {
-                    player.x = player.size;
-                    player.vx = 0;
-                }
-                if (player.x > WIDTH - player.size) {
-                    player.x = WIDTH - player.size;
-                    player.vx = 0;
-                }
-                if (player.y < player.size) {
-                    player.y = player.size;
-                    player.vy = 0;
-                }
-                if (player.y > HEIGHT - player.size) {
-                    player.y = HEIGHT - player.size;
-                    player.vy = 0;
-                }
-
-                // Trail
-                if (thrusting && now - player.lastTrailTime > 35) {
-                    pushTrail(player, now);
-                    player.lastTrailTime = now;
-                }
-
-                // Shoot
-                if (keys[' '] && now > player.nextShootTime) {
-                    shoot(true, player, now);
-                    player.nextShootTime = now + getPlayerCooldown();
-                }
-
-                // Regen
-                if (player.health < player.maxHealth) {
-                    player.health = Math.min(player.maxHealth, player.health + player.regenRate * dt);
-                }
-                if (now - player.lastHitTime > player.shieldRegenDelay && player.shield < player.maxShield) {
-                    player.shield = Math.min(player.maxShield, player.shield + player.shieldRegenRate * dt);
-                }
-
-                // Enemies update
-                enemies.forEach(enemy => {
-                    // Target
-                    let tx = player.x;
-                    let ty = player.y;
-                    if (enemy.type === 'orbiter') {
-                        const orbitAng = enemy.orbitPhase + enemy.orbitFreq * (now / 1000);
-                        tx += Math.cos(orbitAng) * enemy.orbitRadius;
-                        ty += Math.sin(orbitAng) * enemy.orbitRadius;
-                    }
-                    const dx = tx - enemy.x;
-                    const dy = ty - enemy.y;
-                    const targetAngle = Math.atan2(dy, dx);
-                    let angleDiff = targetAngle - enemy.angle;
-                    angleDiff = ((angleDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-
-                    // Rotate towards target
-                    enemy.angle += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), enemy.rotGain * dt);
-
-                    // Thrust
-                    const eAcc = enemy.acc * dt;
-                    const eCos = Math.cos(enemy.angle);
-                    const eSin = Math.sin(enemy.angle);
-                    enemy.vx += eCos * eAcc;
-                    enemy.vy += eSin * eAcc;
-
-                    // Trail
-                    if (now - enemy.lastTrailTime > 42) {
-                        pushTrail(enemy, now);
-                        enemy.lastTrailTime = now;
-                    }
-
-                    // Cap speed
-                    const eSpeed = Math.hypot(enemy.vx, enemy.vy);
-                    if (eSpeed > enemy.maxSpeed) {
-                        enemy.vx = (enemy.vx / eSpeed) * enemy.maxSpeed;
-                        enemy.vy = (enemy.vy / eSpeed) * enemy.maxSpeed;
-                    }
-
-                    // Position
-                    enemy.x += enemy.vx * dt;
-                    enemy.y += enemy.vy * dt;
-
-                    // Bounds
-                    if (enemy.x < enemy.size) { enemy.x = enemy.size; enemy.vx = 0; }
-                    if (enemy.x > WIDTH - enemy.size) { enemy.x = WIDTH - enemy.size; enemy.vx = 0; }
-                    if (enemy.y < enemy.size) { enemy.y = enemy.size; enemy.vy = 0; }
-                    if (enemy.y > HEIGHT - enemy.size) { enemy.y = HEIGHT - enemy.size; enemy.vy = 0; }
-
-                    // Shoot
-                    if (now >= enemy.nextShootTime && Math.abs(angleDiff) < 0.68) {
-                        shoot(false, enemy, now);
-                        enemy.nextShootTime = now + enemy.shootInterval;
-                    }
-                });
-
-                // Prune trails
-                pruneTrail(player, now);
-                enemies.forEach(e => pruneTrail(e, now));
-
-                // Update projectiles positions
-                for (let pi = 0; pi < projectiles.length; ) {
-                    const proj = projectiles[pi];
-                    proj.x += proj.vx * dt;
-                    proj.y += proj.vy * dt;
-                    if (proj.x < -60 || proj.x > WIDTH + 60 || proj.y < -60 || proj.y > HEIGHT + 60) {
-                        projectiles.splice(pi, 1);
-                        continue;
-                    }
-                    pi++;
-                }
-
-                // Collisions
-                for (let pi = projectiles.length - 1; pi >= 0; pi--) {
-                    const proj = projectiles[pi];
-                    if (proj.isPlayer) {
-                        for (let ei = enemies.length - 1; ei >= 0; ei--) {
-                            const enemy = enemies[ei];
-                            const dx = proj.x - enemy.x;
-                            const dy = proj.y - enemy.y;
-                            if (Math.hypot(dx, dy) < proj.hitRadius + enemy.size * 0.65) {
-                                enemy.health -= proj.damage;
-                                projectiles.splice(pi, 1);
-                                if (enemy.health <= 0) {
-                                    spawnExplosion(enemy.x, enemy.y, enemy.hullColor);
-                                    enemies.splice(ei, 1);
-                                    points += enemy.tier * 2 + Math.floor(level * 1.3);
-                                }
-                                break;
-                            }
-                        }
-                    } else {
-                        const dx = proj.x - player.x;
-                        const dy = proj.y - player.y;
-                        if (Math.hypot(dx, dy) < proj.hitRadius + player.size * 0.65) {
-                            const dmg = proj.damage;
-                            if (player.shield > 0) {
-                                player.shield = Math.max(0, player.shield - dmg);
-                            } else {
-                                player.health = Math.max(0, player.health - dmg);
-                            }
-                            player.lastHitTime = now;
-                            projectiles.splice(pi, 1);
-                            if (player.health <= 0) {
-                                spawnExplosion(player.x, player.y, player.hullColor);
-                                const gained = points - levelStartPoints;
-                                points = levelStartPoints + Math.floor(gained / 2);
-                                screenMessage = `Mission Failed on Level ${level}!`;
-                                levelComplete = false;
-                                state = 'upgrade';
-                                player.health = player.maxHealth;
-                                player.shield = player.maxShield;
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                // Draw trails
-                drawTrail(player, now);
-                enemies.forEach(enemy => drawTrail(enemy, now));
-
-                // Draw projectiles
-                projectiles.forEach(proj => {
-                    ctx.save();
-                    ctx.translate(proj.x, proj.y);
-                    ctx.rotate(proj.angle);
-                    ctx.fillStyle = proj.isPlayer ? '#00ff88' : '#ff8844';
-                    const len = 13;
-                    const wid = 1.45;
-                    ctx.fillRect(-len / 2, -wid / 2, len, wid);
-                    ctx.restore();
-                });
-
-                // Draw enemies
-                enemies.forEach(enemy => drawShip(enemy, false));
-
-                // Draw player
-                drawShip(player, true);
-
-                // Update and draw particles
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.x += p.vx * dt;
-                    p.y += p.vy * dt;
-                    p.life -= dt * 4.5;
-                    if (p.life <= 0) {
-                        particles.splice(i, 1);
-                        continue;
-                    }
-                    ctx.save();
-                    ctx.globalAlpha = p.life / p.maxLife;
-                    ctx.fillStyle = p.color;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
-
-                // UI
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 22px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText(`Level: ${level}  Points: ${points}`, 15, 32);
-                ctx.textAlign = 'left';
-                ctx.font = '18px Arial';
-
-                // Shield
-                if (player.maxShield > 0) {
-                    ctx.fillStyle = 'rgba(0,120,255,0.35)';
-                    ctx.fillRect(15, 50, 120, 14);
-                    ctx.fillStyle = 'cyan';
-                    ctx.fillRect(15, 50, (player.shield / player.maxShield) * 120, 14);
-                    ctx.fillStyle = 'white';
-                    ctx.fillText(`Shield: ${Math.floor(player.shield)}/${player.maxShield}`, 145, 63);
-                }
-
-                // Health
-                ctx.fillStyle = 'rgba(255,40,40,0.4)';
-                ctx.fillRect(15, 72, 120, 14);
-                ctx.fillStyle = '#ff4444';
-                ctx.fillRect(15, 72, (player.health / player.maxHealth) * 120, 14);
-                ctx.fillStyle = 'white';
-                ctx.fillText(`Health: ${Math.floor(player.health)}/${player.maxHealth}`, 145, 85);
-
-                // Level complete
-                if (enemies.length === 0) {
-                    levelComplete = true;
-                    screenMessage = `Level ${level} Complete!`;
-                    state = 'upgrade';
-                }
-            } else if (state === 'upgrade') {
-                ctx.fillStyle = 'rgba(0,0,0,0.85)';
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
-                ctx.fillStyle = 'white';
-                ctx.textAlign = 'center';
-                ctx.font = 'bold 34px Arial';
-                ctx.fillText(screenMessage, WIDTH / 2, HEIGHT / 2 - 130);
-                ctx.font = 'bold 28px Arial';
-                ctx.fillText(`Points: ${points}`, WIDTH / 2, HEIGHT / 2 - 85);
-                ctx.font = '22px Arial';
-                ctx.textAlign = 'left';
-                const left = WIDTH / 2 - 220;
-                const top = HEIGHT / 2 - 25;
-                ctx.fillText(`1: Laser Damage (${upgradeCost})  ${player.damage}`, left, top + 0);
-                ctx.fillText(`2: Max Health (${upgradeCost})  ${player.maxHealth}`, left, top + 32);
-                ctx.fillText(`3: Regen/sec (${upgradeCost})  ${player.regenRate.toFixed(1)}`, left, top + 64);
-                ctx.fillText(`4: Max Shields (${upgradeCost})  ${player.maxShield}`, left, top + 96);
-                const fireCD = getPlayerCooldown();
-                ctx.fillText(`5: Fire Rate (${upgradeCost})  ${fireCD}ms`, left, top + 128);
-                ctx.font = 'bold 26px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Press ENTER to continue', WIDTH / 2, HEIGHT / 2 + 170);
-                ctx.textAlign = 'left';
-
-                // Upgrades
-                if (keys['1'] && points >= upgradeCost) {
-                    points -= upgradeCost;
-                    player.damage += 7;
-                    keys['1'] = false;
-                }
-                if (keys['2'] && points >= upgradeCost) {
-                    points -= upgradeCost;
-                    player.maxHealth += 28;
-                    player.health = player.maxHealth;
-                    keys['2'] = false;
-                }
-                if (keys['3'] && points >= upgradeCost) {
-                    points -= upgradeCost;
-                    player.regenRate += 1.3;
-                    keys['3'] = false;
-                }
-                if (keys['4'] && points >= upgradeCost) {
-                    points -= upgradeCost;
-                    player.maxShield += 28;
-                    player.shield = player.maxShield;
-                    keys['4'] = false;
-                }
-                if (keys['5'] && points >= upgradeCost) {
-                    points -= upgradeCost;
-                    player.fireRateUpgrades += 1;
-                    keys['5'] = false;
-                }
-                if (keys['enter']) {
-                    particles = [];
-                    if (levelComplete) {
-                        level++;
-                    }
-                    levelStartPoints = points;
-                    player.trail = [];
-                    spawnEnemies();
-                    levelComplete = false;
-                    screenMessage = '';
-                    state = 'game';
-                    keys['enter'] = false;
-                }
+          // Upgrades
+          if (keys['1'] && points >= upgradeCost) {
+            points -= upgradeCost;
+            player.damage += 7;
+            keys['1'] = false;
+          }
+          if (keys['2'] && points >= upgradeCost) {
+            points -= upgradeCost;
+            player.maxHealth += 28;
+            player.health = player.maxHealth;
+            keys['2'] = false;
+          }
+          if (keys['3'] && points >= upgradeCost) {
+            points -= upgradeCost;
+            player.regenRate += 1.3;
+            keys['3'] = false;
+          }
+          if (keys['4'] && points >= upgradeCost) {
+            points -= upgradeCost;
+            player.maxShield += 28;
+            player.shield = player.maxShield;
+            keys['4'] = false;
+          }
+          if (keys['5'] && points >= upgradeCost) {
+            points -= upgradeCost;
+            player.fireRateUpgrades += 1;
+            keys['5'] = false;
+          }
+          if (keys['enter']) {
+            particles = [];
+            if (levelComplete) {
+              level++;
             }
-
-            requestAnimationFrame(update);
+            levelStartPoints = points;
+            player.trail = [];
+            spawnEnemies();
+            levelComplete = false;
+            screenMessage = '';
+            state = 'game';
+            keys['enter'] = false;
+          }
         }
 
-        update();
+        requestAnimationFrame(update);
+      }
+
+      update();
     </script>
-</body>
+  </body>
 </html>

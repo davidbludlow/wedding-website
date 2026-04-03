@@ -1,775 +1,817 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pixel Ice Cream Shop</title>
     <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Press Start 2P', 'Courier New', monospace;
-    background: linear-gradient(to bottom, #87ceeb 0%, #98d8c8 100%);
-    color: #2c2c2c;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    font-size: 12px;
-}
-
-.game-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-header {
-    background: #ff9999;
-    border: 4px solid #ff6b6b;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 0 #ff6b6b;
-    text-align: center;
-}
-
-header h1 {
-    color: #fff8dc;
-    text-shadow: 4px 4px 0 #2c2c2c;
-    font-size: 1.8em;
-    margin-bottom: 10px;
-    letter-spacing: 2px;
-}
-
-.stats {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    color: #fff8dc;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.game-area {
-    display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    gap: 20px;
-}
-
-.customer-zone,
-.build-zone {
-    background: #f5deb3;
-    border: 4px solid #8b7355;
-    padding: 20px;
-    box-shadow: 0 8px 0 #8b7355;
-}
-
-.customer-zone h2,
-.build-zone h2 {
-    color: #654321;
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 1.5em;
-}
-
-.customer-display {
-    background: #fff;
-    border: 3px solid #2c2c2c;
-    padding: 20px;
-    margin-bottom: 15px;
-    min-height: 200px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.customer-sprite {
-    width: 64px;
-    height: 64px;
-    background: #ffdbac;
-    border: 3px solid #2c2c2c;
-    position: relative;
-    margin-bottom: 10px;
-    image-rendering: pixelated;
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
-}
-
-/* Pixel art customer faces */
-.customer-sprite::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    width: 6px;
-    height: 6px;
-    background: #2c2c2c;
-    box-shadow: 
-        24px 0 0 6px #2c2c2c,
-        4px 12px 0 3px #ff6b6b,
-        10px 12px 0 3px #ff6b6b,
-        16px 12px 0 3px #ff6b6b;
-}
-
-/* Hair */
-.customer-sprite::after {
-    content: '';
-    position: absolute;
-    top: 5px;
-    left: 10px;
-    width: 44px;
-    height: 15px;
-    background: var(--hair-color, #654321);
-    border: 3px solid #2c2c2c;
-    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.3);
-}
-
-.speech-bubble {
-    background: #fff;
-    border: 3px solid #2c2c2c;
-    padding: 12px;
-    border-radius: 0;
-    position: relative;
-    max-width: 200px;
-    text-align: center;
-    font-size: 0.75em;
-    margin-top: 10px;
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
-    line-height: 1.6;
-}
-
-.speech-bubble::before {
-    content: '';
-    position: absolute;
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 12px;
-    height: 12px;
-    background: #2c2c2c;
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-
-.speech-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -9px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 9px;
-    height: 9px;
-    background: #fff;
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-
-.order-ticket {
-    background: #fffacd;
-    border: 3px solid #2c2c2c;
-    padding: 15px;
-    margin-bottom: 15px;
-    min-height: 120px;
-    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
-}
-
-.order-ticket h3 {
-    color: #654321;
-    margin-bottom: 10px;
-    text-decoration: underline;
-}
-
-.order-ticket ul {
-    list-style: none;
-    padding-left: 10px;
-}
-
-.order-ticket li {
-    margin: 5px 0;
-    padding-left: 15px;
-    position: relative;
-}
-
-.order-ticket li::before {
-    content: '▸';
-    position: absolute;
-    left: 0;
-    color: #654321;
-}
-
-.stations {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.station {
-    background: #98d8c8;
-    border: 4px solid #5f9ea0;
-    padding: 15px;
-    box-shadow: 0 6px 0 #5f9ea0;
-}
-
-.station h3 {
-    color: #2c2c2c;
-    margin-bottom: 10px;
-    font-size: 1.2em;
-}
-
-.items-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 10px;
-}
-
-.item {
-    background: #fff;
-    border: 3px solid #2c2c2c;
-    padding: 10px;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-    text-align: center;
-    box-shadow: 0 4px 0 #2c2c2c;
-}
-
-.item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #2c2c2c;
-}
-
-.item:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #2c2c2c;
-}
-
-.item span {
-    display: block;
-    margin-top: 5px;
-    font-size: 0.8em;
-    font-weight: bold;
-}
-
-/* Cone Graphics */
-.cone-waffle,
-.cone-sugar,
-.cone-cup {
-    width: 40px;
-    height: 50px;
-    margin: 0 auto;
-    position: relative;
-    image-rendering: pixelated;
-}
-
-.cone-waffle, .build-cone.cone-waffle-cone {
-    background: linear-gradient(45deg, #d2691e 25%, #cd853f 25%, #cd853f 50%, #d2691e 50%, #d2691e 75%, #cd853f 75%);
-    background-size: 6px 6px;
-    clip-path: polygon(50% 100%, 0 0, 100% 0);
-    border: 3px solid #8b4513;
-    box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.3), 3px 3px 0 rgba(0, 0, 0, 0.2);
-}
-
-.cone-sugar, .build-cone.cone-sugar-cone {
-    background: #f4a460;
-    clip-path: polygon(50% 100%, 0 0, 100% 0);
-    border: 3px solid #d2691e;
-    box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.3), 3px 3px 0 rgba(0, 0, 0, 0.2);
-}
-
-.cone-cup, .build-cone.cone-cup {
-    background: #ff69b4;
-    border: 3px solid #c71585;
-    border-radius: 0;
-    width: 45px;
-    height: 40px;
-    box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.3), 3px 3px 0 rgba(0, 0, 0, 0.2);
-}
-
-.cone-cup::before, .build-cone.cone-cup::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -3px;
-    right: -3px;
-    height: 8px;
-    background: #ff1493;
-    border: 3px solid #c71585;
-    border-radius: 0;
-}
-
-/* Ice Cream Scoops */
-.scoop {
-    width: 45px;
-    height: 40px;
-    margin: 0 auto;
-    border: 3px solid #2c2c2c;
-    border-radius: 50% 50% 45% 45%;
-    box-shadow: 
-        inset -3px -3px 0 rgba(0, 0, 0, 0.3),
-        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
-        3px 3px 0 rgba(0, 0, 0, 0.2);
-    image-rendering: pixelated;
-}
-
-.scoop-vanilla {
-    background: linear-gradient(135deg, #fffacd 0%, #ffefd5 100%);
-}
-
-.scoop-chocolate {
-    background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
-}
-
-.scoop-strawberry {
-    background: linear-gradient(135deg, #ffb6c1 0%, #ff69b4 100%);
-}
-
-.scoop-mint {
-    background: linear-gradient(135deg, #b4f0d4 0%, #a0e7c4 100%);
-}
-
-.scoop-blueberry {
-    background: linear-gradient(135deg, #b8a9dc 0%, #9b8fd6 100%);
-}
-
-/* Scoop Tools */
-.scoop-tools {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 15px;
-}
-
-.scoop-btn {
-    background: #fff;
-    border: 3px solid #2c2c2c;
-    padding: 10px;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-    text-align: center;
-    box-shadow: 0 4px 0 #2c2c2c;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    min-width: 70px;
-}
-
-.scoop-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #2c2c2c;
-}
-
-.scoop-btn:active,
-.scoop-btn.active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #2c2c2c;
-    background: #4ecdc4;
-}
-
-.scoop-btn span {
-    font-size: 0.8em;
-    font-weight: bold;
-}
-
-.scoop-instruction {
-    background: #fffacd;
-    border: 3px solid #2c2c2c;
-    padding: 10px;
-    text-align: center;
-    font-weight: bold;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Topping Tools */
-.topping-tools {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 15px;
-}
-
-.tool-btn {
-    background: #fff;
-    border: 3px solid #2c2c2c;
-    padding: 10px;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-    text-align: center;
-    box-shadow: 0 4px 0 #2c2c2c;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    min-width: 70px;
-}
-
-.tool-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #2c2c2c;
-}
-
-.tool-btn:active,
-.tool-btn.active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #2c2c2c;
-    background: #4ecdc4;
-}
-
-.tool-btn span {
-    font-size: 0.8em;
-    font-weight: bold;
-}
-
-.topping-instruction {
-    background: #fffacd;
-    border: 3px solid #2c2c2c;
-    padding: 10px;
-    text-align: center;
-    font-weight: bold;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Toppings Graphics */
-.topping-sprinkles,
-.topping-cherry,
-.topping-chips,
-.topping-caramel,
-.topping-whipped {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto;
-    position: relative;
-    pointer-events: none;
-}
-
-.topping-sprinkles {
-    background: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 2px,
-        #ff6b6b 2px,
-        #ff6b6b 4px,
-        transparent 4px,
-        transparent 6px,
-        #4ecdc4 6px,
-        #4ecdc4 8px
-    );
-}
-
-.topping-cherry {
-    width: 25px;
-    height: 25px;
-    background: #dc143c;
-    border-radius: 50%;
-    border: 3px solid #8b0000;
-    box-shadow: 
-        inset -2px -2px 0 rgba(0, 0, 0, 0.4),
-        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
-        2px 2px 0 rgba(0, 0, 0, 0.3);
-}
-
-.topping-cherry::before {
-    content: '';
-    position: absolute;
-    top: -8px;
-    left: 10px;
-    width: 4px;
-    height: 12px;
-    background: #228b22;
-    box-shadow: 1px 0 0 #1a5c1a;
-}
-
-.topping-chips {
-    background: #654321;
-    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-    box-shadow: 
-        5px 5px 0 #8b4513,
-        -5px 10px 0 #654321,
-        10px -5px 0 #8b4513;
-}
-
-.topping-caramel {
-    background: linear-gradient(to bottom, #8b4513 0%, #8b4513 30%, #daa520 30%, #daa520 100%);
-    border: 3px solid #654321;
-    border-radius: 0;
-    box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.3);
-}
-
-.topping-caramel::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 12px;
-    height: 8px;
-    background: #654321;
-    border: 2px solid #2c2c2c;
-}
-
-.topping-caramel::after {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 8px;
-    height: 6px;
-    background: #8b4513;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
-}
-
-.topping-whipped {
-    background: #fffaf0;
-    border: 2px solid #f5f5dc;
-    border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
-    box-shadow: 
-        -10px 5px 0 -5px #fffaf0,
-        10px 5px 0 -5px #fffaf0;
-}
-
-/* Build Zone */
-.ice-cream-build {
-    background: #fff;
-    border: 4px solid #2c2c2c;
-    min-height: 350px;
-    padding: 20px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    position: relative;
-    cursor: crosshair;
-}
-
-.ice-cream-build.tool-active {
-    cursor: pointer;
-}
-
-#topping-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 10;
-}
-
-.ice-cream-build.tool-active #topping-canvas {
-    pointer-events: all;
-}
-
-#build-display {
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    gap: 5px;
-    position: relative;
-    z-index: 5;
-}
-
-.drop-zone-indicator {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 60px;
-    border: 3px dashed #4ecdc4;
-    border-radius: 50%;
-    background: rgba(78, 205, 196, 0.1);
-    pointer-events: none;
-    z-index: 15;
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 0.5;
-        transform: translateX(-50%) scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: translateX(-50%) scale(1.1);
-    }
-}
-
-.build-cone,
-.build-scoop,
-.build-topping {
-    animation: pop-in 0.3s ease-out;
-}
-
-@keyframes pop-in {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes scoop-fall {
-    0% {
-        transform: translateY(-400px) rotate(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(0) rotate(360deg);
-        opacity: 1;
-    }
-}
-
-.falling-scoop {
-    position: absolute;
-    animation: scoop-fall 0.8s ease-in;
-    pointer-events: none;
-    z-index: 20;
-}
-
-.build-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.pixel-btn {
-    font-family: 'Press Start 2P', 'Courier New', monospace;
-    font-size: 0.7em;
-    font-weight: bold;
-    padding: 12px 16px;
-    border: 4px solid #2c2c2c;
-    background: #98d8c8;
-    color: #2c2c2c;
-    cursor: pointer;
-    box-shadow: 0 6px 0 #2c2c2c;
-    transition: transform 0.1s, box-shadow 0.1s;
-    flex: 1;
-    letter-spacing: 1px;
-}
-
-.pixel-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 0 #2c2c2c;
-}
-
-.pixel-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #2c2c2c;
-}
-
-.pixel-btn.primary {
-    background: #4ecdc4;
-}
-
-.pixel-btn:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: #f5deb3;
-    border: 6px solid #2c2c2c;
-    padding: 30px;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 10px 0 #2c2c2c;
-}
-
-.modal-content h2 {
-    color: #654321;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 2em;
-}
-
-#results-content {
-    background: #fff;
-    border: 3px solid #2c2c2c;
-    padding: 20px;
-}
-
-.result-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 2px dotted #ccc;
-    margin-bottom: 8px;
-}
-
-.result-row.correct {
-    color: #228b22;
-}
-
-.result-row.incorrect {
-    color: #dc143c;
-}
-
-.result-summary {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 3px solid #2c2c2c;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-@media (max-width: 1200px) {
-    .game-area {
-        grid-template-columns: 1fr;
-    }
-    
-    .items-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    header h1 {
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Press Start 2P', 'Courier New', monospace;
+        background: linear-gradient(to bottom, #87ceeb 0%, #98d8c8 100%);
+        color: #2c2c2c;
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+        font-size: 12px;
+      }
+
+      .game-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      header {
+        background: #ff9999;
+        border: 4px solid #ff6b6b;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 0 #ff6b6b;
+        text-align: center;
+      }
+
+      header h1 {
+        color: #fff8dc;
+        text-shadow: 4px 4px 0 #2c2c2c;
         font-size: 1.8em;
-    }
-    
-    .stats {
+        margin-bottom: 10px;
+        letter-spacing: 2px;
+      }
+
+      .stats {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        color: #fff8dc;
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      .game-area {
+        display: grid;
+        grid-template-columns: 300px 1fr 300px;
+        gap: 20px;
+      }
+
+      .customer-zone,
+      .build-zone {
+        background: #f5deb3;
+        border: 4px solid #8b7355;
+        padding: 20px;
+        box-shadow: 0 8px 0 #8b7355;
+      }
+
+      .customer-zone h2,
+      .build-zone h2 {
+        color: #654321;
+        margin-bottom: 15px;
+        text-align: center;
+        font-size: 1.5em;
+      }
+
+      .customer-display {
+        background: #fff;
+        border: 3px solid #2c2c2c;
+        padding: 20px;
+        margin-bottom: 15px;
+        min-height: 200px;
+        position: relative;
+        display: flex;
         flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .customer-sprite {
+        width: 64px;
+        height: 64px;
+        background: #ffdbac;
+        border: 3px solid #2c2c2c;
+        position: relative;
+        margin-bottom: 10px;
+        image-rendering: pixelated;
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      /* Pixel art customer faces */
+      .customer-sprite::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        width: 6px;
+        height: 6px;
+        background: #2c2c2c;
+        box-shadow:
+          24px 0 0 6px #2c2c2c,
+          4px 12px 0 3px #ff6b6b,
+          10px 12px 0 3px #ff6b6b,
+          16px 12px 0 3px #ff6b6b;
+      }
+
+      /* Hair */
+      .customer-sprite::after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 10px;
+        width: 44px;
+        height: 15px;
+        background: var(--hair-color, #654321);
+        border: 3px solid #2c2c2c;
+        box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .speech-bubble {
+        background: #fff;
+        border: 3px solid #2c2c2c;
+        padding: 12px;
+        border-radius: 0;
+        position: relative;
+        max-width: 200px;
+        text-align: center;
+        font-size: 0.75em;
+        margin-top: 10px;
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+        line-height: 1.6;
+      }
+
+      .speech-bubble::before {
+        content: '';
+        position: absolute;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        background: #2c2c2c;
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+      }
+
+      .speech-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -9px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 9px;
+        height: 9px;
+        background: #fff;
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+      }
+
+      .order-ticket {
+        background: #fffacd;
+        border: 3px solid #2c2c2c;
+        padding: 15px;
+        margin-bottom: 15px;
+        min-height: 120px;
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      .order-ticket h3 {
+        color: #654321;
+        margin-bottom: 10px;
+        text-decoration: underline;
+      }
+
+      .order-ticket ul {
+        list-style: none;
+        padding-left: 10px;
+      }
+
+      .order-ticket li {
+        margin: 5px 0;
+        padding-left: 15px;
+        position: relative;
+      }
+
+      .order-ticket li::before {
+        content: '▸';
+        position: absolute;
+        left: 0;
+        color: #654321;
+      }
+
+      .stations {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .station {
+        background: #98d8c8;
+        border: 4px solid #5f9ea0;
+        padding: 15px;
+        box-shadow: 0 6px 0 #5f9ea0;
+      }
+
+      .station h3 {
+        color: #2c2c2c;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+      }
+
+      .items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
         gap: 10px;
-    }
-    
-    .items-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
+      }
+
+      .item {
+        background: #fff;
+        border: 3px solid #2c2c2c;
+        padding: 10px;
+        cursor: pointer;
+        transition:
+          transform 0.1s,
+          box-shadow 0.1s;
+        text-align: center;
+        box-shadow: 0 4px 0 #2c2c2c;
+      }
+
+      .item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 #2c2c2c;
+      }
+
+      .item:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #2c2c2c;
+      }
+
+      .item span {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      /* Cone Graphics */
+      .cone-waffle,
+      .cone-sugar,
+      .cone-cup {
+        width: 40px;
+        height: 50px;
+        margin: 0 auto;
+        position: relative;
+        image-rendering: pixelated;
+      }
+
+      .cone-waffle,
+      .build-cone.cone-waffle-cone {
+        background: linear-gradient(
+          45deg,
+          #d2691e 25%,
+          #cd853f 25%,
+          #cd853f 50%,
+          #d2691e 50%,
+          #d2691e 75%,
+          #cd853f 75%
+        );
+        background-size: 6px 6px;
+        clip-path: polygon(50% 100%, 0 0, 100% 0);
+        border: 3px solid #8b4513;
+        box-shadow:
+          inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+          3px 3px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      .cone-sugar,
+      .build-cone.cone-sugar-cone {
+        background: #f4a460;
+        clip-path: polygon(50% 100%, 0 0, 100% 0);
+        border: 3px solid #d2691e;
+        box-shadow:
+          inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+          3px 3px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      .cone-cup,
+      .build-cone.cone-cup {
+        background: #ff69b4;
+        border: 3px solid #c71585;
+        border-radius: 0;
+        width: 45px;
+        height: 40px;
+        box-shadow:
+          inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+          3px 3px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      .cone-cup::before,
+      .build-cone.cone-cup::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -3px;
+        right: -3px;
+        height: 8px;
+        background: #ff1493;
+        border: 3px solid #c71585;
+        border-radius: 0;
+      }
+
+      /* Ice Cream Scoops */
+      .scoop {
+        width: 45px;
+        height: 40px;
+        margin: 0 auto;
+        border: 3px solid #2c2c2c;
+        border-radius: 50% 50% 45% 45%;
+        box-shadow:
+          inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+          inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+          3px 3px 0 rgba(0, 0, 0, 0.2);
+        image-rendering: pixelated;
+      }
+
+      .scoop-vanilla {
+        background: linear-gradient(135deg, #fffacd 0%, #ffefd5 100%);
+      }
+
+      .scoop-chocolate {
+        background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+      }
+
+      .scoop-strawberry {
+        background: linear-gradient(135deg, #ffb6c1 0%, #ff69b4 100%);
+      }
+
+      .scoop-mint {
+        background: linear-gradient(135deg, #b4f0d4 0%, #a0e7c4 100%);
+      }
+
+      .scoop-blueberry {
+        background: linear-gradient(135deg, #b8a9dc 0%, #9b8fd6 100%);
+      }
+
+      /* Scoop Tools */
+      .scoop-tools {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+
+      .scoop-btn {
+        background: #fff;
+        border: 3px solid #2c2c2c;
+        padding: 10px;
+        cursor: pointer;
+        transition:
+          transform 0.1s,
+          box-shadow 0.1s;
+        text-align: center;
+        box-shadow: 0 4px 0 #2c2c2c;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        min-width: 70px;
+      }
+
+      .scoop-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 #2c2c2c;
+      }
+
+      .scoop-btn:active,
+      .scoop-btn.active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #2c2c2c;
+        background: #4ecdc4;
+      }
+
+      .scoop-btn span {
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      .scoop-instruction {
+        background: #fffacd;
+        border: 3px solid #2c2c2c;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Topping Tools */
+      .topping-tools {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+
+      .tool-btn {
+        background: #fff;
+        border: 3px solid #2c2c2c;
+        padding: 10px;
+        cursor: pointer;
+        transition:
+          transform 0.1s,
+          box-shadow 0.1s;
+        text-align: center;
+        box-shadow: 0 4px 0 #2c2c2c;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        min-width: 70px;
+      }
+
+      .tool-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 #2c2c2c;
+      }
+
+      .tool-btn:active,
+      .tool-btn.active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #2c2c2c;
+        background: #4ecdc4;
+      }
+
+      .tool-btn span {
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      .topping-instruction {
+        background: #fffacd;
+        border: 3px solid #2c2c2c;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Toppings Graphics */
+      .topping-sprinkles,
+      .topping-cherry,
+      .topping-chips,
+      .topping-caramel,
+      .topping-whipped {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto;
+        position: relative;
+        pointer-events: none;
+      }
+
+      .topping-sprinkles {
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 2px,
+          #ff6b6b 2px,
+          #ff6b6b 4px,
+          transparent 4px,
+          transparent 6px,
+          #4ecdc4 6px,
+          #4ecdc4 8px
+        );
+      }
+
+      .topping-cherry {
+        width: 25px;
+        height: 25px;
+        background: #dc143c;
+        border-radius: 50%;
+        border: 3px solid #8b0000;
+        box-shadow:
+          inset -2px -2px 0 rgba(0, 0, 0, 0.4),
+          inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+          2px 2px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .topping-cherry::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 10px;
+        width: 4px;
+        height: 12px;
+        background: #228b22;
+        box-shadow: 1px 0 0 #1a5c1a;
+      }
+
+      .topping-chips {
+        background: #654321;
+        clip-path: polygon(
+          30% 0%,
+          70% 0%,
+          100% 30%,
+          100% 70%,
+          70% 100%,
+          30% 100%,
+          0% 70%,
+          0% 30%
+        );
+        box-shadow:
+          5px 5px 0 #8b4513,
+          -5px 10px 0 #654321,
+          10px -5px 0 #8b4513;
+      }
+
+      .topping-caramel {
+        background: linear-gradient(
+          to bottom,
+          #8b4513 0%,
+          #8b4513 30%,
+          #daa520 30%,
+          #daa520 100%
+        );
+        border: 3px solid #654321;
+        border-radius: 0;
+        box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .topping-caramel::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 8px;
+        background: #654321;
+        border: 2px solid #2c2c2c;
+      }
+
+      .topping-caramel::after {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 8px;
+        height: 6px;
+        background: #8b4513;
+        clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+      }
+
+      .topping-whipped {
+        background: #fffaf0;
+        border: 2px solid #f5f5dc;
+        border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+        box-shadow:
+          -10px 5px 0 -5px #fffaf0,
+          10px 5px 0 -5px #fffaf0;
+      }
+
+      /* Build Zone */
+      .ice-cream-build {
+        background: #fff;
+        border: 4px solid #2c2c2c;
+        min-height: 350px;
+        padding: 20px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        position: relative;
+        cursor: crosshair;
+      }
+
+      .ice-cream-build.tool-active {
+        cursor: pointer;
+      }
+
+      #topping-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .ice-cream-build.tool-active #topping-canvas {
+        pointer-events: all;
+      }
+
+      #build-display {
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+        gap: 5px;
+        position: relative;
+        z-index: 5;
+      }
+
+      .drop-zone-indicator {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 60px;
+        border: 3px dashed #4ecdc4;
+        border-radius: 50%;
+        background: rgba(78, 205, 196, 0.1);
+        pointer-events: none;
+        z-index: 15;
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.5;
+          transform: translateX(-50%) scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: translateX(-50%) scale(1.1);
+        }
+      }
+
+      .build-cone,
+      .build-scoop,
+      .build-topping {
+        animation: pop-in 0.3s ease-out;
+      }
+
+      @keyframes pop-in {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes scoop-fall {
+        0% {
+          transform: translateY(-400px) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(0) rotate(360deg);
+          opacity: 1;
+        }
+      }
+
+      .falling-scoop {
+        position: absolute;
+        animation: scoop-fall 0.8s ease-in;
+        pointer-events: none;
+        z-index: 20;
+      }
+
+      .build-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .pixel-btn {
+        font-family: 'Press Start 2P', 'Courier New', monospace;
+        font-size: 0.7em;
+        font-weight: bold;
+        padding: 12px 16px;
+        border: 4px solid #2c2c2c;
+        background: #98d8c8;
+        color: #2c2c2c;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #2c2c2c;
+        transition:
+          transform 0.1s,
+          box-shadow 0.1s;
+        flex: 1;
+        letter-spacing: 1px;
+      }
+
+      .pixel-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 0 #2c2c2c;
+      }
+
+      .pixel-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #2c2c2c;
+      }
+
+      .pixel-btn.primary {
+        background: #4ecdc4;
+      }
+
+      .pixel-btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: #f5deb3;
+        border: 6px solid #2c2c2c;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 0 #2c2c2c;
+      }
+
+      .modal-content h2 {
+        color: #654321;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 2em;
+      }
+
+      #results-content {
+        background: #fff;
+        border: 3px solid #2c2c2c;
+        padding: 20px;
+      }
+
+      .result-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 2px dotted #ccc;
+        margin-bottom: 8px;
+      }
+
+      .result-row.correct {
+        color: #228b22;
+      }
+
+      .result-row.incorrect {
+        color: #dc143c;
+      }
+
+      .result-summary {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 3px solid #2c2c2c;
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      @media (max-width: 1200px) {
+        .game-area {
+          grid-template-columns: 1fr;
+        }
+
+        .items-grid {
+          grid-template-columns: repeat(5, 1fr);
+        }
+      }
+
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.8em;
+        }
+
+        .stats {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .items-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
     </style>
   </head>
   <body>
@@ -910,118 +952,180 @@ header h1 {
     </div>
 
     <script>
-// Game State
-const gameState = {
-    day: 1,
-    score: 0,
-    tips: 0,
-    currentCustomer: null,
-    currentOrder: null,
-    playerBuild: {
-        cone: null,
-        scoops: [],
-        scoopAccuracy: [], // Track centering accuracy for each scoop
-        toppings: []
-    },
-    currentTool: null,
-    currentFlavor: null,
-    toppingProgress: {
-        sprinkles: 0,
-        cherry: 0,
-        'chocolate-chips': 0,
-        caramel: 0,
-        'whipped-cream': 0
-    }
-};
+      // Game State
+      const gameState = {
+        day: 1,
+        score: 0,
+        tips: 0,
+        currentCustomer: null,
+        currentOrder: null,
+        playerBuild: {
+          cone: null,
+          scoops: [],
+          scoopAccuracy: [], // Track centering accuracy for each scoop
+          toppings: [],
+        },
+        currentTool: null,
+        currentFlavor: null,
+        toppingProgress: {
+          sprinkles: 0,
+          cherry: 0,
+          'chocolate-chips': 0,
+          caramel: 0,
+          'whipped-cream': 0,
+        },
+      };
 
-// Customer types with different hair colors, personalities, and difficulty
-const customerTypes = [
-    { name: "Alex", hairColor: "#654321", mood: "😊", difficulty: "easy", patience: 1.0 },
-    { name: "Sam", hairColor: "#ff6b6b", mood: "😄", difficulty: "easy", patience: 1.0 },
-    { name: "Taylor", hairColor: "#ffd700", mood: "🙂", difficulty: "medium", patience: 0.85 },
-    { name: "Jordan", hairColor: "#8b4513", mood: "😋", difficulty: "medium", patience: 0.85 },
-    { name: "Casey", hairColor: "#000000", mood: "😠", difficulty: "hard", patience: 0.6 },
-    { name: "Morgan", hairColor: "#ff1493", mood: "😤", difficulty: "hard", patience: 0.65 },
-    { name: "Gordon", hairColor: "#8b0000", mood: "🤬", difficulty: "extreme", patience: 0.4 },
-    { name: "Karen", hairColor: "#daa520", mood: "😒", difficulty: "extreme", patience: 0.45 },
-];
+      // Customer types with different hair colors, personalities, and difficulty
+      const customerTypes = [
+        {
+          name: 'Alex',
+          hairColor: '#654321',
+          mood: '😊',
+          difficulty: 'easy',
+          patience: 1.0,
+        },
+        {
+          name: 'Sam',
+          hairColor: '#ff6b6b',
+          mood: '😄',
+          difficulty: 'easy',
+          patience: 1.0,
+        },
+        {
+          name: 'Taylor',
+          hairColor: '#ffd700',
+          mood: '🙂',
+          difficulty: 'medium',
+          patience: 0.85,
+        },
+        {
+          name: 'Jordan',
+          hairColor: '#8b4513',
+          mood: '😋',
+          difficulty: 'medium',
+          patience: 0.85,
+        },
+        {
+          name: 'Casey',
+          hairColor: '#000000',
+          mood: '😠',
+          difficulty: 'hard',
+          patience: 0.6,
+        },
+        {
+          name: 'Morgan',
+          hairColor: '#ff1493',
+          mood: '😤',
+          difficulty: 'hard',
+          patience: 0.65,
+        },
+        {
+          name: 'Gordon',
+          hairColor: '#8b0000',
+          mood: '🤬',
+          difficulty: 'extreme',
+          patience: 0.4,
+        },
+        {
+          name: 'Karen',
+          hairColor: '#daa520',
+          mood: '😒',
+          difficulty: 'extreme',
+          patience: 0.45,
+        },
+      ];
 
-// Available items
-const coneTypes = ["waffle-cone", "sugar-cone", "cup"];
-const flavors = ["vanilla", "chocolate", "strawberry", "mint", "blueberry"];
-const toppings = ["sprinkles", "cherry", "chocolate-chips", "caramel", "whipped-cream"];
+      // Available items
+      const coneTypes = ['waffle-cone', 'sugar-cone', 'cup'];
+      const flavors = [
+        'vanilla',
+        'chocolate',
+        'strawberry',
+        'mint',
+        'blueberry',
+      ];
+      const toppings = [
+        'sprinkles',
+        'cherry',
+        'chocolate-chips',
+        'caramel',
+        'whipped-cream',
+      ];
 
-// DOM Elements
-const dayEl = document.getElementById("day");
-const scoreEl = document.getElementById("score");
-const tipsEl = document.getElementById("tips");
-const customerSpriteEl = document.getElementById("customer-sprite");
-const speechBubbleEl = document.getElementById("speech-bubble");
-const orderTicketEl = document.getElementById("order-ticket");
-const buildDisplayEl = document.getElementById("build-display");
-const newCustomerBtn = document.getElementById("new-customer-btn");
-const clearBtn = document.getElementById("clear-btn");
-const serveBtn = document.getElementById("serve-btn");
-const resultsModal = document.getElementById("results-modal");
-const resultsContent = document.getElementById("results-content");
-const continueBtn = document.getElementById("continue-btn");
-const toppingCanvas = document.getElementById("topping-canvas");
-const toppingCtx = toppingCanvas.getContext("2d");
-const iceCreamBuildEl = document.getElementById("ice-cream-build");
-const toppingInstructionEl = document.getElementById("topping-instruction");
-const scoopInstructionEl = document.getElementById("scoop-instruction");
+      // DOM Elements
+      const dayEl = document.getElementById('day');
+      const scoreEl = document.getElementById('score');
+      const tipsEl = document.getElementById('tips');
+      const customerSpriteEl = document.getElementById('customer-sprite');
+      const speechBubbleEl = document.getElementById('speech-bubble');
+      const orderTicketEl = document.getElementById('order-ticket');
+      const buildDisplayEl = document.getElementById('build-display');
+      const newCustomerBtn = document.getElementById('new-customer-btn');
+      const clearBtn = document.getElementById('clear-btn');
+      const serveBtn = document.getElementById('serve-btn');
+      const resultsModal = document.getElementById('results-modal');
+      const resultsContent = document.getElementById('results-content');
+      const continueBtn = document.getElementById('continue-btn');
+      const toppingCanvas = document.getElementById('topping-canvas');
+      const toppingCtx = toppingCanvas.getContext('2d');
+      const iceCreamBuildEl = document.getElementById('ice-cream-build');
+      const toppingInstructionEl = document.getElementById(
+        'topping-instruction',
+      );
+      const scoopInstructionEl = document.getElementById('scoop-instruction');
 
-// Initialize game
-function init() {
-    updateUI();
-    setupEventListeners();
-}
+      // Initialize game
+      function init() {
+        updateUI();
+        setupEventListeners();
+      }
 
-function setupEventListeners() {
-    // Cone selection
-    document.querySelectorAll(".cone").forEach(cone => {
-        cone.addEventListener("click", () => selectCone(cone.dataset.type));
-    });
+      function setupEventListeners() {
+        // Cone selection
+        document.querySelectorAll('.cone').forEach((cone) => {
+          cone.addEventListener('click', () => selectCone(cone.dataset.type));
+        });
 
-    // Flavor selection (scooping mode)
-    document.querySelectorAll(".scoop-btn").forEach(btn => {
-        btn.addEventListener("click", () => selectFlavor(btn.dataset.flavor));
-    });
+        // Flavor selection (scooping mode)
+        document.querySelectorAll('.scoop-btn').forEach((btn) => {
+          btn.addEventListener('click', () => selectFlavor(btn.dataset.flavor));
+        });
 
-    // Topping tools
-    document.querySelectorAll(".tool-btn").forEach(btn => {
-        btn.addEventListener("click", () => selectTool(btn.dataset.tool));
-    });
+        // Topping tools
+        document.querySelectorAll('.tool-btn').forEach((btn) => {
+          btn.addEventListener('click', () => selectTool(btn.dataset.tool));
+        });
 
-    // Canvas interactions
-    let isDrawing = false;
-    
-    toppingCanvas.addEventListener("mousedown", (e) => {
-        if (gameState.currentFlavor) {
+        // Canvas interactions
+        let isDrawing = false;
+
+        toppingCanvas.addEventListener('mousedown', (e) => {
+          if (gameState.currentFlavor) {
             handleScoopDrop(e);
-        } else if (gameState.currentTool) {
+          } else if (gameState.currentTool) {
             isDrawing = true;
             handleToppingApplication(e);
-        }
-    });
-    
-    toppingCanvas.addEventListener("mousemove", (e) => {
-        if (isDrawing && gameState.currentTool) {
-            handleToppingApplication(e);
-        }
-    });
-    
-    toppingCanvas.addEventListener("mouseup", () => {
-        isDrawing = false;
-    });
-    
-    toppingCanvas.addEventListener("mouseleave", () => {
-        isDrawing = false;
-    });
+          }
+        });
 
-    // Touch support
-    toppingCanvas.addEventListener("touchstart", (e) => {
-        if (gameState.currentTool) {
+        toppingCanvas.addEventListener('mousemove', (e) => {
+          if (isDrawing && gameState.currentTool) {
+            handleToppingApplication(e);
+          }
+        });
+
+        toppingCanvas.addEventListener('mouseup', () => {
+          isDrawing = false;
+        });
+
+        toppingCanvas.addEventListener('mouseleave', () => {
+          isDrawing = false;
+        });
+
+        // Touch support
+        toppingCanvas.addEventListener('touchstart', (e) => {
+          if (gameState.currentTool) {
             isDrawing = true;
             e.preventDefault();
             const touch = e.touches[0];
@@ -1030,759 +1134,865 @@ function setupEventListeners() {
             const scaleY = toppingCanvas.height / rect.height;
             const x = (touch.clientX - rect.left) * scaleX;
             const y = (touch.clientY - rect.top) * scaleY;
-            handleToppingApplication({ clientX: touch.clientX, clientY: touch.clientY });
-        }
-    });
-    
-    toppingCanvas.addEventListener("touchmove", (e) => {
-        if (isDrawing && gameState.currentTool) {
+            handleToppingApplication({
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+            });
+          }
+        });
+
+        toppingCanvas.addEventListener('touchmove', (e) => {
+          if (isDrawing && gameState.currentTool) {
             e.preventDefault();
             const touch = e.touches[0];
-            const mouseEvent = new MouseEvent("mousemove", {
-                clientX: touch.clientX,
-                clientY: touch.clientY
+            const mouseEvent = new MouseEvent('mousemove', {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
             });
             handleToppingApplication(mouseEvent);
+          }
+        });
+
+        toppingCanvas.addEventListener('touchend', () => {
+          isDrawing = false;
+        });
+
+        // Buttons
+        newCustomerBtn.addEventListener('click', generateCustomer);
+        clearBtn.addEventListener('click', clearBuild);
+        serveBtn.addEventListener('click', serveCustomer);
+        continueBtn.addEventListener('click', closeModal);
+      }
+
+      function generateCustomer() {
+        // Weight customers by day - harder customers appear sooner and more often
+        let availableCustomers = customerTypes;
+        if (gameState.day < 2) {
+          availableCustomers = customerTypes.filter(
+            (c) => c.difficulty === 'easy' || c.difficulty === 'medium',
+          );
+        } else if (gameState.day < 3) {
+          availableCustomers = customerTypes.filter(
+            (c) => c.difficulty !== 'extreme',
+          );
         }
-    });
-    
-    toppingCanvas.addEventListener("touchend", () => {
-        isDrawing = false;
-    });
+        // After day 3, all customers are available
 
-    // Buttons
-    newCustomerBtn.addEventListener("click", generateCustomer);
-    clearBtn.addEventListener("click", clearBuild);
-    serveBtn.addEventListener("click", serveCustomer);
-    continueBtn.addEventListener("click", closeModal);
-}
+        const customer =
+          availableCustomers[
+            Math.floor(Math.random() * availableCustomers.length)
+          ];
+        gameState.currentCustomer = customer;
 
-function generateCustomer() {
-    // Weight customers by day - harder customers appear sooner and more often
-    let availableCustomers = customerTypes;
-    if (gameState.day < 2) {
-        availableCustomers = customerTypes.filter(c => c.difficulty === "easy" || c.difficulty === "medium");
-    } else if (gameState.day < 3) {
-        availableCustomers = customerTypes.filter(c => c.difficulty !== "extreme");
-    }
-    // After day 3, all customers are available
-    
-    const customer = availableCustomers[Math.floor(Math.random() * availableCustomers.length)];
-    gameState.currentCustomer = customer;
-
-    // Generate random order based on difficulty
-    const order = {
-        cone: coneTypes[Math.floor(Math.random() * coneTypes.length)],
-        scoops: [],
-        toppings: [],
-        cherryPosition: null // For precise cherry placement
-    };
-
-    // Difficulty affects order complexity
-    let minScoops = 1, maxScoops = 2, minToppings = 0, maxToppings = 2;
-    
-    if (customer.difficulty === "medium") {
-        maxScoops = 3;
-        maxToppings = 3;
-    } else if (customer.difficulty === "hard") {
-        minScoops = 2;
-        maxScoops = 3;
-        minToppings = 2;
-        maxToppings = 4;
-    } else if (customer.difficulty === "extreme") {
-        minScoops = 3;
-        maxScoops = 3;
-        minToppings = 3;
-        maxToppings = 5;
-    }
-    
-    // Scoops (specific order matters for hard customers)
-    const numScoops = Math.floor(Math.random() * (maxScoops - minScoops + 1)) + minScoops;
-    for (let i = 0; i < numScoops; i++) {
-        order.scoops.push(flavors[Math.floor(Math.random() * flavors.length)]);
-    }
-
-    // Toppings
-    const numToppings = Math.floor(Math.random() * (maxToppings - minToppings + 1)) + minToppings;
-    const availableToppings = [...toppings];
-    for (let i = 0; i < numToppings; i++) {
-        const index = Math.floor(Math.random() * availableToppings.length);
-        order.toppings.push(availableToppings.splice(index, 1)[0]);
-    }
-    
-    // Set cherry position if cherry is in order
-    if (order.toppings.includes('cherry')) {
-        order.cherryPosition = {
-            x: 150 + (Math.random() - 0.5) * 40,
-            y: 100 + (Math.random() - 0.5) * 40
+        // Generate random order based on difficulty
+        const order = {
+          cone: coneTypes[Math.floor(Math.random() * coneTypes.length)],
+          scoops: [],
+          toppings: [],
+          cherryPosition: null, // For precise cherry placement
         };
-    }
 
-    gameState.currentOrder = order;
+        // Difficulty affects order complexity
+        let minScoops = 1,
+          maxScoops = 2,
+          minToppings = 0,
+          maxToppings = 2;
 
-    // Update customer display
-    customerSpriteEl.style.setProperty('--hair-color', customer.hairColor);
-    
-    let greeting = `Hi! I'm ${customer.name}! ${customer.mood}`;
-    if (customer.difficulty === "hard") {
-        greeting = `${customer.name} here. Don't mess up! ${customer.mood}`;
-    } else if (customer.difficulty === "extreme") {
-        greeting = `${customer.name}. This better be PERFECT! ${customer.mood}`;
-    }
-    speechBubbleEl.textContent = greeting;
+        if (customer.difficulty === 'medium') {
+          maxScoops = 3;
+          maxToppings = 3;
+        } else if (customer.difficulty === 'hard') {
+          minScoops = 2;
+          maxScoops = 3;
+          minToppings = 2;
+          maxToppings = 4;
+        } else if (customer.difficulty === 'extreme') {
+          minScoops = 3;
+          maxScoops = 3;
+          minToppings = 3;
+          maxToppings = 5;
+        }
 
-    // Display order ticket
-    displayOrder(order);
+        // Scoops (specific order matters for hard customers)
+        const numScoops =
+          Math.floor(Math.random() * (maxScoops - minScoops + 1)) + minScoops;
+        for (let i = 0; i < numScoops; i++) {
+          order.scoops.push(
+            flavors[Math.floor(Math.random() * flavors.length)],
+          );
+        }
 
-    // Reset build
-    clearBuild();
-    
-    // Enable serving
-    serveBtn.disabled = false;
-    newCustomerBtn.disabled = true;
-}
+        // Toppings
+        const numToppings =
+          Math.floor(Math.random() * (maxToppings - minToppings + 1)) +
+          minToppings;
+        const availableToppings = [...toppings];
+        for (let i = 0; i < numToppings; i++) {
+          const index = Math.floor(Math.random() * availableToppings.length);
+          order.toppings.push(availableToppings.splice(index, 1)[0]);
+        }
 
-function displayOrder(order) {
-    const customer = gameState.currentCustomer;
-    let html = '<h3>📋 Order:</h3><ul>';
-    
-    // Cone
-    html += `<li>Cone: <strong>${formatName(order.cone)}</strong></li>`;
-    
-    // Scoops (show order for hard customers)
-    if (customer.difficulty === "hard" || customer.difficulty === "extreme") {
-        html += '<li>Scoops (IN ORDER): <strong>';
-        html += order.scoops.map((s, i) => `${i+1}. ${formatName(s)}`).join(', ');
-        html += '</strong></li>';
-    } else {
-        html += '<li>Scoops: <strong>';
-        html += order.scoops.map(formatName).join(', ');
-        html += '</strong></li>';
-    }
-    
-    // Toppings
-    if (order.toppings.length > 0) {
-        html += '<li>Toppings: <strong>';
-        html += order.toppings.map(formatName).join(', ');
-        html += '</strong></li>';
-    } else {
-        html += '<li>Toppings: <strong>None</strong></li>';
-    }
-    
-    // Show cherry position indicator for extreme customers
-    if (order.cherryPosition && customer.difficulty === "extreme") {
-        html += '<li style="color: #dc143c;"><strong>⚠ Cherry must be placed EXACTLY on top center!</strong></li>';
-    }
-    
-    html += '</ul>';
-    orderTicketEl.innerHTML = html;
-}
+        // Set cherry position if cherry is in order
+        if (order.toppings.includes('cherry')) {
+          order.cherryPosition = {
+            x: 150 + (Math.random() - 0.5) * 40,
+            y: 100 + (Math.random() - 0.5) * 40,
+          };
+        }
 
-function formatName(str) {
-    return str.split('-').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-}
+        gameState.currentOrder = order;
 
-function selectCone(type) {
-    if (!gameState.currentOrder) {
-        showMessage("Get a customer first!");
-        return;
-    }
-    
-    gameState.playerBuild.cone = type;
-    updateBuildDisplay();
-}
+        // Update customer display
+        customerSpriteEl.style.setProperty('--hair-color', customer.hairColor);
 
-function addScoop(flavor) {
-    if (!gameState.currentOrder) {
-        showMessage("Get a customer first!");
-        return;
-    }
-    
-    if (gameState.playerBuild.scoops.length >= 3) {
-        showMessage("Maximum 3 scoops!");
-        return;
-    }
-    
-    gameState.playerBuild.scoops.push(flavor);
-    updateBuildDisplay();
-}
+        let greeting = `Hi! I'm ${customer.name}! ${customer.mood}`;
+        if (customer.difficulty === 'hard') {
+          greeting = `${customer.name} here. Don't mess up! ${customer.mood}`;
+        } else if (customer.difficulty === 'extreme') {
+          greeting = `${customer.name}. This better be PERFECT! ${customer.mood}`;
+        }
+        speechBubbleEl.textContent = greeting;
 
-function selectFlavor(flavor) {
-    if (!gameState.currentOrder) {
-        showMessage("Get a customer first!");
-        return;
-    }
-    
-    if (!gameState.playerBuild.cone) {
-        showMessage("You need to add a cone first!");
-        return;
-    }
-    
-    if (gameState.playerBuild.scoops.length >= 3) {
-        showMessage("Maximum 3 scoops!");
-        return;
-    }
-    
-    // Toggle flavor selection
-    if (gameState.currentFlavor === flavor) {
+        // Display order ticket
+        displayOrder(order);
+
+        // Reset build
+        clearBuild();
+
+        // Enable serving
+        serveBtn.disabled = false;
+        newCustomerBtn.disabled = true;
+      }
+
+      function displayOrder(order) {
+        const customer = gameState.currentCustomer;
+        let html = '<h3>📋 Order:</h3><ul>';
+
+        // Cone
+        html += `<li>Cone: <strong>${formatName(order.cone)}</strong></li>`;
+
+        // Scoops (show order for hard customers)
+        if (
+          customer.difficulty === 'hard' ||
+          customer.difficulty === 'extreme'
+        ) {
+          html += '<li>Scoops (IN ORDER): <strong>';
+          html += order.scoops
+            .map((s, i) => `${i + 1}. ${formatName(s)}`)
+            .join(', ');
+          html += '</strong></li>';
+        } else {
+          html += '<li>Scoops: <strong>';
+          html += order.scoops.map(formatName).join(', ');
+          html += '</strong></li>';
+        }
+
+        // Toppings
+        if (order.toppings.length > 0) {
+          html += '<li>Toppings: <strong>';
+          html += order.toppings.map(formatName).join(', ');
+          html += '</strong></li>';
+        } else {
+          html += '<li>Toppings: <strong>None</strong></li>';
+        }
+
+        // Show cherry position indicator for extreme customers
+        if (order.cherryPosition && customer.difficulty === 'extreme') {
+          html +=
+            '<li style="color: #dc143c;"><strong>⚠ Cherry must be placed EXACTLY on top center!</strong></li>';
+        }
+
+        html += '</ul>';
+        orderTicketEl.innerHTML = html;
+      }
+
+      function formatName(str) {
+        return str
+          .split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+
+      function selectCone(type) {
+        if (!gameState.currentOrder) {
+          showMessage('Get a customer first!');
+          return;
+        }
+
+        gameState.playerBuild.cone = type;
+        updateBuildDisplay();
+      }
+
+      function addScoop(flavor) {
+        if (!gameState.currentOrder) {
+          showMessage('Get a customer first!');
+          return;
+        }
+
+        if (gameState.playerBuild.scoops.length >= 3) {
+          showMessage('Maximum 3 scoops!');
+          return;
+        }
+
+        gameState.playerBuild.scoops.push(flavor);
+        updateBuildDisplay();
+      }
+
+      function selectFlavor(flavor) {
+        if (!gameState.currentOrder) {
+          showMessage('Get a customer first!');
+          return;
+        }
+
+        if (!gameState.playerBuild.cone) {
+          showMessage('You need to add a cone first!');
+          return;
+        }
+
+        if (gameState.playerBuild.scoops.length >= 3) {
+          showMessage('Maximum 3 scoops!');
+          return;
+        }
+
+        // Toggle flavor selection
+        if (gameState.currentFlavor === flavor) {
+          gameState.currentFlavor = null;
+          iceCreamBuildEl.classList.remove('tool-active');
+          document
+            .querySelectorAll('.scoop-btn')
+            .forEach((btn) => btn.classList.remove('active'));
+          scoopInstructionEl.textContent = 'Select a flavor to start scooping';
+          removeDropZone();
+        } else {
+          gameState.currentFlavor = flavor;
+          iceCreamBuildEl.classList.add('tool-active');
+          document
+            .querySelectorAll('.scoop-btn')
+            .forEach((btn) => btn.classList.remove('active'));
+          event.target.closest('.scoop-btn').classList.add('active');
+          scoopInstructionEl.textContent = `Click on the cone to drop ${formatName(
+            flavor,
+          )} scoop!`;
+          showDropZone();
+        }
+      }
+
+      function showDropZone() {
+        if (!document.querySelector('.drop-zone-indicator')) {
+          const dropZone = document.createElement('div');
+          dropZone.className = 'drop-zone-indicator';
+          iceCreamBuildEl.appendChild(dropZone);
+        }
+      }
+
+      function removeDropZone() {
+        const dropZone = document.querySelector('.drop-zone-indicator');
+        if (dropZone) {
+          dropZone.remove();
+        }
+      }
+
+      function handleScoopDrop(e) {
+        const rect = iceCreamBuildEl.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+
+        // Calculate how close to center (horizontal accuracy)
+        const distance = Math.abs(clickX - centerX);
+        const maxDistance = 60; // pixels from center
+        const accuracy = Math.max(0, (maxDistance - distance) / maxDistance);
+
+        // Store accuracy
+        gameState.playerBuild.scoopAccuracy.push(accuracy);
+
+        // Add scoop with drop animation
+        dropScoop(gameState.currentFlavor, clickX, accuracy);
+
+        // Add to build
+        gameState.playerBuild.scoops.push(gameState.currentFlavor);
+
+        // Deselect flavor
         gameState.currentFlavor = null;
         iceCreamBuildEl.classList.remove('tool-active');
-        document.querySelectorAll('.scoop-btn').forEach(btn => btn.classList.remove('active'));
-        scoopInstructionEl.textContent = "Select a flavor to start scooping";
+        document
+          .querySelectorAll('.scoop-btn')
+          .forEach((btn) => btn.classList.remove('active'));
+        scoopInstructionEl.textContent = 'Select a flavor to start scooping';
         removeDropZone();
-    } else {
-        gameState.currentFlavor = flavor;
-        iceCreamBuildEl.classList.add('tool-active');
-        document.querySelectorAll('.scoop-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.closest('.scoop-btn').classList.add('active');
-        scoopInstructionEl.textContent = `Click on the cone to drop ${formatName(flavor)} scoop!`;
-        showDropZone();
-    }
-}
 
-function showDropZone() {
-    if (!document.querySelector('.drop-zone-indicator')) {
-        const dropZone = document.createElement('div');
-        dropZone.className = 'drop-zone-indicator';
-        iceCreamBuildEl.appendChild(dropZone);
-    }
-}
-
-function removeDropZone() {
-    const dropZone = document.querySelector('.drop-zone-indicator');
-    if (dropZone) {
-        dropZone.remove();
-    }
-}
-
-function handleScoopDrop(e) {
-    const rect = iceCreamBuildEl.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    
-    // Calculate how close to center (horizontal accuracy)
-    const distance = Math.abs(clickX - centerX);
-    const maxDistance = 60; // pixels from center
-    const accuracy = Math.max(0, (maxDistance - distance) / maxDistance);
-    
-    // Store accuracy
-    gameState.playerBuild.scoopAccuracy.push(accuracy);
-    
-    // Add scoop with drop animation
-    dropScoop(gameState.currentFlavor, clickX, accuracy);
-    
-    // Add to build
-    gameState.playerBuild.scoops.push(gameState.currentFlavor);
-    
-    // Deselect flavor
-    gameState.currentFlavor = null;
-    iceCreamBuildEl.classList.remove('tool-active');
-    document.querySelectorAll('.scoop-btn').forEach(btn => btn.classList.remove('active'));
-    scoopInstructionEl.textContent = "Select a flavor to start scooping";
-    removeDropZone();
-    
-    // Provide feedback
-    if (accuracy > 0.9) {
-        showMessage("Perfect drop! 🎯");
-    } else if (accuracy > 0.7) {
-        showMessage("Great drop! 👍");
-    } else if (accuracy > 0.5) {
-        showMessage("Good drop! 👌");
-    } else {
-        showMessage("Try to center it better!");
-    }
-    
-    updateBuildDisplay();
-}
-
-function dropScoop(flavor, dropX, accuracy) {
-    // Create falling scoop animation
-    const fallingScoop = document.createElement('div');
-    fallingScoop.className = `falling-scoop scoop scoop-${flavor}`;
-    fallingScoop.style.left = `${dropX - 35}px`;
-    fallingScoop.style.width = '70px';
-    fallingScoop.style.height = '60px';
-    
-    iceCreamBuildEl.appendChild(fallingScoop);
-    
-    // Remove after animation
-    setTimeout(() => {
-        fallingScoop.remove();
-    }, 800);
-}
-
-function selectTool(tool) {
-    if (!gameState.currentOrder) {
-        showMessage("Get a customer first!");
-        return;
-    }
-    
-    // Toggle tool selection
-    if (gameState.currentTool === tool) {
-        gameState.currentTool = null;
-        iceCreamBuildEl.classList.remove('tool-active');
-        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-        toppingInstructionEl.textContent = "Select a topping tool above";
-    } else {
-        gameState.currentTool = tool;
-        iceCreamBuildEl.classList.add('tool-active');
-        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.closest('.tool-btn').classList.add('active');
-        
-        if (tool === 'cherry') {
-            toppingInstructionEl.textContent = "Click on top of ice cream to place cherry";
-        } else if (tool === 'sprinkles' || tool === 'chocolate-chips') {
-            toppingInstructionEl.textContent = "Click and drag to sprinkle on ice cream";
+        // Provide feedback
+        if (accuracy > 0.9) {
+          showMessage('Perfect drop! 🎯');
+        } else if (accuracy > 0.7) {
+          showMessage('Great drop! 👍');
+        } else if (accuracy > 0.5) {
+          showMessage('Good drop! 👌');
         } else {
-            toppingInstructionEl.textContent = "Click and drag to drizzle on ice cream";
+          showMessage('Try to center it better!');
         }
-    }
-}
 
-function handleToppingApplication(e) {
-    const rect = toppingCanvas.getBoundingClientRect();
-    const scaleX = toppingCanvas.width / rect.width;
-    const scaleY = toppingCanvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-    
-    const tool = gameState.currentTool;
-    
-    if (tool === 'cherry') {
-        // Place cherry (one-time click) - store position
-        if (!gameState.playerBuild.toppings.includes('cherry')) {
+        updateBuildDisplay();
+      }
+
+      function dropScoop(flavor, dropX, accuracy) {
+        // Create falling scoop animation
+        const fallingScoop = document.createElement('div');
+        fallingScoop.className = `falling-scoop scoop scoop-${flavor}`;
+        fallingScoop.style.left = `${dropX - 35}px`;
+        fallingScoop.style.width = '70px';
+        fallingScoop.style.height = '60px';
+
+        iceCreamBuildEl.appendChild(fallingScoop);
+
+        // Remove after animation
+        setTimeout(() => {
+          fallingScoop.remove();
+        }, 800);
+      }
+
+      function selectTool(tool) {
+        if (!gameState.currentOrder) {
+          showMessage('Get a customer first!');
+          return;
+        }
+
+        // Toggle tool selection
+        if (gameState.currentTool === tool) {
+          gameState.currentTool = null;
+          iceCreamBuildEl.classList.remove('tool-active');
+          document
+            .querySelectorAll('.tool-btn')
+            .forEach((btn) => btn.classList.remove('active'));
+          toppingInstructionEl.textContent = 'Select a topping tool above';
+        } else {
+          gameState.currentTool = tool;
+          iceCreamBuildEl.classList.add('tool-active');
+          document
+            .querySelectorAll('.tool-btn')
+            .forEach((btn) => btn.classList.remove('active'));
+          event.target.closest('.tool-btn').classList.add('active');
+
+          if (tool === 'cherry') {
+            toppingInstructionEl.textContent =
+              'Click on top of ice cream to place cherry';
+          } else if (tool === 'sprinkles' || tool === 'chocolate-chips') {
+            toppingInstructionEl.textContent =
+              'Click and drag to sprinkle on ice cream';
+          } else {
+            toppingInstructionEl.textContent =
+              'Click and drag to drizzle on ice cream';
+          }
+        }
+      }
+
+      function handleToppingApplication(e) {
+        const rect = toppingCanvas.getBoundingClientRect();
+        const scaleX = toppingCanvas.width / rect.width;
+        const scaleY = toppingCanvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+
+        const tool = gameState.currentTool;
+
+        if (tool === 'cherry') {
+          // Place cherry (one-time click) - store position
+          if (!gameState.playerBuild.toppings.includes('cherry')) {
             gameState.playerBuild.cherryPosition = { x, y };
             drawCherry(x, y);
             gameState.toppingProgress.cherry = 100;
             checkToppingComplete('cherry');
+          }
+        } else if (tool === 'sprinkles') {
+          // Sprinkle effect
+          drawSprinkles(x, y);
+          gameState.toppingProgress.sprinkles += 2;
+          checkToppingComplete('sprinkles');
+        } else if (tool === 'chocolate-chips') {
+          // Chocolate chips
+          drawChocolateChips(x, y);
+          gameState.toppingProgress['chocolate-chips'] += 2;
+          checkToppingComplete('chocolate-chips');
+        } else if (tool === 'caramel') {
+          // Drizzle caramel
+          drawDrizzle(x, y, '#daa520');
+          gameState.toppingProgress.caramel += 1.5;
+          checkToppingComplete('caramel');
+        } else if (tool === 'whipped-cream') {
+          // Spray whipped cream
+          drawWhippedCream(x, y);
+          gameState.toppingProgress['whipped-cream'] += 1.5;
+          checkToppingComplete('whipped-cream');
         }
-    } else if (tool === 'sprinkles') {
-        // Sprinkle effect
-        drawSprinkles(x, y);
-        gameState.toppingProgress.sprinkles += 2;
-        checkToppingComplete('sprinkles');
-    } else if (tool === 'chocolate-chips') {
-        // Chocolate chips
-        drawChocolateChips(x, y);
-        gameState.toppingProgress['chocolate-chips'] += 2;
-        checkToppingComplete('chocolate-chips');
-    } else if (tool === 'caramel') {
-        // Drizzle caramel
-        drawDrizzle(x, y, '#daa520');
-        gameState.toppingProgress.caramel += 1.5;
-        checkToppingComplete('caramel');
-    } else if (tool === 'whipped-cream') {
-        // Spray whipped cream
-        drawWhippedCream(x, y);
-        gameState.toppingProgress['whipped-cream'] += 1.5;
-        checkToppingComplete('whipped-cream');
-    }
-}
+      }
 
-function drawCherry(x, y) {
-    // More pixelated cherry
-    toppingCtx.fillStyle = '#dc143c';
-    toppingCtx.strokeStyle = '#8b0000';
-    toppingCtx.lineWidth = 3;
-    
-    toppingCtx.beginPath();
-    toppingCtx.arc(x, y, 10, 0, Math.PI * 2);
-    toppingCtx.fill();
-    toppingCtx.stroke();
-    
-    // Highlight
-    toppingCtx.fillStyle = '#ff6b6b';
-    toppingCtx.fillRect(x - 3, y - 3, 4, 4);
-    
-    // Shadow
-    toppingCtx.fillStyle = '#8b0000';
-    toppingCtx.fillRect(x + 2, y + 2, 4, 4);
-    
-    // Stem
-    toppingCtx.fillStyle = '#228b22';
-    toppingCtx.fillRect(x - 2, y - 15, 4, 8);
-    toppingCtx.fillRect(x - 1, y - 18, 2, 4);
-    
-    // Show target circle for extreme customers
-    if (gameState.currentOrder.cherryPosition && gameState.currentCustomer.difficulty === "extreme") {
-        const target = gameState.currentOrder.cherryPosition;
-        toppingCtx.strokeStyle = '#ff0000';
-        toppingCtx.lineWidth = 2;
-        toppingCtx.setLineDash([5, 5]);
+      function drawCherry(x, y) {
+        // More pixelated cherry
+        toppingCtx.fillStyle = '#dc143c';
+        toppingCtx.strokeStyle = '#8b0000';
+        toppingCtx.lineWidth = 3;
+
         toppingCtx.beginPath();
-        toppingCtx.arc(target.x, target.y, 30, 0, Math.PI * 2);
+        toppingCtx.arc(x, y, 10, 0, Math.PI * 2);
+        toppingCtx.fill();
         toppingCtx.stroke();
-        toppingCtx.setLineDash([]);
-    }
-}
 
-function drawSprinkles(x, y) {
-    const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8b94'];
-    
-    for (let i = 0; i < 3; i++) {
-        const offsetX = (Math.random() - 0.5) * 20;
-        const offsetY = (Math.random() - 0.5) * 20;
-        const angle = Math.random() * Math.PI;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        toppingCtx.strokeStyle = color;
-        toppingCtx.lineWidth = 2;
-        toppingCtx.beginPath();
-        toppingCtx.moveTo(x + offsetX, y + offsetY);
-        toppingCtx.lineTo(
+        // Highlight
+        toppingCtx.fillStyle = '#ff6b6b';
+        toppingCtx.fillRect(x - 3, y - 3, 4, 4);
+
+        // Shadow
+        toppingCtx.fillStyle = '#8b0000';
+        toppingCtx.fillRect(x + 2, y + 2, 4, 4);
+
+        // Stem
+        toppingCtx.fillStyle = '#228b22';
+        toppingCtx.fillRect(x - 2, y - 15, 4, 8);
+        toppingCtx.fillRect(x - 1, y - 18, 2, 4);
+
+        // Show target circle for extreme customers
+        if (
+          gameState.currentOrder.cherryPosition &&
+          gameState.currentCustomer.difficulty === 'extreme'
+        ) {
+          const target = gameState.currentOrder.cherryPosition;
+          toppingCtx.strokeStyle = '#ff0000';
+          toppingCtx.lineWidth = 2;
+          toppingCtx.setLineDash([5, 5]);
+          toppingCtx.beginPath();
+          toppingCtx.arc(target.x, target.y, 30, 0, Math.PI * 2);
+          toppingCtx.stroke();
+          toppingCtx.setLineDash([]);
+        }
+      }
+
+      function drawSprinkles(x, y) {
+        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8b94'];
+
+        for (let i = 0; i < 3; i++) {
+          const offsetX = (Math.random() - 0.5) * 20;
+          const offsetY = (Math.random() - 0.5) * 20;
+          const angle = Math.random() * Math.PI;
+          const color = colors[Math.floor(Math.random() * colors.length)];
+
+          toppingCtx.strokeStyle = color;
+          toppingCtx.lineWidth = 2;
+          toppingCtx.beginPath();
+          toppingCtx.moveTo(x + offsetX, y + offsetY);
+          toppingCtx.lineTo(
             x + offsetX + Math.cos(angle) * 6,
-            y + offsetY + Math.sin(angle) * 6
-        );
-        toppingCtx.stroke();
-    }
-}
+            y + offsetY + Math.sin(angle) * 6,
+          );
+          toppingCtx.stroke();
+        }
+      }
 
-function drawChocolateChips(x, y) {
-    for (let i = 0; i < 2; i++) {
-        const offsetX = (Math.random() - 0.5) * 15;
-        const offsetY = (Math.random() - 0.5) * 15;
-        
-        toppingCtx.fillStyle = '#654321';
-        toppingCtx.strokeStyle = '#2c2c2c';
-        toppingCtx.lineWidth = 1;
-        
+      function drawChocolateChips(x, y) {
+        for (let i = 0; i < 2; i++) {
+          const offsetX = (Math.random() - 0.5) * 15;
+          const offsetY = (Math.random() - 0.5) * 15;
+
+          toppingCtx.fillStyle = '#654321';
+          toppingCtx.strokeStyle = '#2c2c2c';
+          toppingCtx.lineWidth = 1;
+
+          toppingCtx.beginPath();
+          toppingCtx.arc(x + offsetX, y + offsetY, 3, 0, Math.PI * 2);
+          toppingCtx.fill();
+          toppingCtx.stroke();
+        }
+      }
+
+      function drawDrizzle(x, y, color) {
+        toppingCtx.strokeStyle = color;
+        toppingCtx.lineWidth = 4;
+        toppingCtx.lineCap = 'round';
+        toppingCtx.lineJoin = 'round';
+
+        // Create drizzle effect
+        if (!this.lastDrizzlePos) {
+          this.lastDrizzlePos = { x, y };
+        }
+
         toppingCtx.beginPath();
-        toppingCtx.arc(x + offsetX, y + offsetY, 3, 0, Math.PI * 2);
-        toppingCtx.fill();
+        toppingCtx.moveTo(this.lastDrizzlePos.x, this.lastDrizzlePos.y);
+        toppingCtx.lineTo(x, y);
         toppingCtx.stroke();
-    }
-}
 
-function drawDrizzle(x, y, color) {
-    toppingCtx.strokeStyle = color;
-    toppingCtx.lineWidth = 4;
-    toppingCtx.lineCap = 'round';
-    toppingCtx.lineJoin = 'round';
-    
-    // Create drizzle effect
-    if (!this.lastDrizzlePos) {
         this.lastDrizzlePos = { x, y };
-    }
-    
-    toppingCtx.beginPath();
-    toppingCtx.moveTo(this.lastDrizzlePos.x, this.lastDrizzlePos.y);
-    toppingCtx.lineTo(x, y);
-    toppingCtx.stroke();
-    
-    this.lastDrizzlePos = { x, y };
-    
-    // Reset after a delay
-    setTimeout(() => {
-        this.lastDrizzlePos = null;
-    }, 100);
-}
 
-function drawWhippedCream(x, y) {
-    toppingCtx.fillStyle = 'rgba(255, 250, 240, 0.8)';
-    toppingCtx.strokeStyle = '#f5f5dc';
-    toppingCtx.lineWidth = 2;
-    
-    for (let i = 0; i < 3; i++) {
-        const offsetX = (Math.random() - 0.5) * 15;
-        const offsetY = (Math.random() - 0.5) * 15;
-        const size = 5 + Math.random() * 5;
-        
-        toppingCtx.beginPath();
-        toppingCtx.arc(x + offsetX, y + offsetY, size, 0, Math.PI * 2);
-        toppingCtx.fill();
-        toppingCtx.stroke();
-    }
-}
+        // Reset after a delay
+        setTimeout(() => {
+          this.lastDrizzlePos = null;
+        }, 100);
+      }
 
-function checkToppingComplete(topping) {
-    if (gameState.toppingProgress[topping] >= 100 && !gameState.playerBuild.toppings.includes(topping)) {
-        gameState.playerBuild.toppings.push(topping);
-        showMessage(`${formatName(topping)} added! ✓`);
-        
-        // Deselect tool
-        gameState.currentTool = null;
-        iceCreamBuildEl.classList.remove('tool-active');
-        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-        toppingInstructionEl.textContent = "Select a topping tool above";
-    }
-}
+      function drawWhippedCream(x, y) {
+        toppingCtx.fillStyle = 'rgba(255, 250, 240, 0.8)';
+        toppingCtx.strokeStyle = '#f5f5dc';
+        toppingCtx.lineWidth = 2;
 
-function updateBuildDisplay() {
-    buildDisplayEl.innerHTML = '';
-    
-    // Add cone
-    if (gameState.playerBuild.cone) {
-        const coneEl = document.createElement('div');
-        coneEl.className = `build-cone cone-${gameState.playerBuild.cone}`;
-        coneEl.style.width = '60px';
-        coneEl.style.height = '80px';
-        coneEl.style.position = 'relative';
-        buildDisplayEl.appendChild(coneEl);
-    }
-    
-    // Add scoops (bottom to top)
-    gameState.playerBuild.scoops.forEach((flavor, index) => {
-        const scoopEl = document.createElement('div');
-        scoopEl.className = `build-scoop scoop scoop-${flavor}`;
-        scoopEl.style.width = '70px';
-        scoopEl.style.height = '60px';
-        scoopEl.style.marginBottom = '-20px';
-        buildDisplayEl.appendChild(scoopEl);
-    });
-    
-    // Add toppings on top
-    if (gameState.playerBuild.toppings.length > 0) {
-        const toppingContainer = document.createElement('div');
-        toppingContainer.style.display = 'flex';
-        toppingContainer.style.gap = '5px';
-        toppingContainer.style.flexWrap = 'wrap';
-        toppingContainer.style.justifyContent = 'center';
-        toppingContainer.style.maxWidth = '100px';
-        
-        gameState.playerBuild.toppings.forEach(topping => {
+        for (let i = 0; i < 3; i++) {
+          const offsetX = (Math.random() - 0.5) * 15;
+          const offsetY = (Math.random() - 0.5) * 15;
+          const size = 5 + Math.random() * 5;
+
+          toppingCtx.beginPath();
+          toppingCtx.arc(x + offsetX, y + offsetY, size, 0, Math.PI * 2);
+          toppingCtx.fill();
+          toppingCtx.stroke();
+        }
+      }
+
+      function checkToppingComplete(topping) {
+        if (
+          gameState.toppingProgress[topping] >= 100 &&
+          !gameState.playerBuild.toppings.includes(topping)
+        ) {
+          gameState.playerBuild.toppings.push(topping);
+          showMessage(`${formatName(topping)} added! ✓`);
+
+          // Deselect tool
+          gameState.currentTool = null;
+          iceCreamBuildEl.classList.remove('tool-active');
+          document
+            .querySelectorAll('.tool-btn')
+            .forEach((btn) => btn.classList.remove('active'));
+          toppingInstructionEl.textContent = 'Select a topping tool above';
+        }
+      }
+
+      function updateBuildDisplay() {
+        buildDisplayEl.innerHTML = '';
+
+        // Add cone
+        if (gameState.playerBuild.cone) {
+          const coneEl = document.createElement('div');
+          coneEl.className = `build-cone cone-${gameState.playerBuild.cone}`;
+          coneEl.style.width = '60px';
+          coneEl.style.height = '80px';
+          coneEl.style.position = 'relative';
+          buildDisplayEl.appendChild(coneEl);
+        }
+
+        // Add scoops (bottom to top)
+        gameState.playerBuild.scoops.forEach((flavor, index) => {
+          const scoopEl = document.createElement('div');
+          scoopEl.className = `build-scoop scoop scoop-${flavor}`;
+          scoopEl.style.width = '70px';
+          scoopEl.style.height = '60px';
+          scoopEl.style.marginBottom = '-20px';
+          buildDisplayEl.appendChild(scoopEl);
+        });
+
+        // Add toppings on top
+        if (gameState.playerBuild.toppings.length > 0) {
+          const toppingContainer = document.createElement('div');
+          toppingContainer.style.display = 'flex';
+          toppingContainer.style.gap = '5px';
+          toppingContainer.style.flexWrap = 'wrap';
+          toppingContainer.style.justifyContent = 'center';
+          toppingContainer.style.maxWidth = '100px';
+
+          gameState.playerBuild.toppings.forEach((topping) => {
             const toppingEl = document.createElement('div');
             toppingEl.className = `build-topping topping-${topping}`;
             toppingEl.style.width = '30px';
             toppingEl.style.height = '30px';
             toppingContainer.appendChild(toppingEl);
-        });
-        
-        buildDisplayEl.appendChild(toppingContainer);
-    }
-}
+          });
 
-function clearBuild() {
-    gameState.playerBuild = {
-        cone: null,
-        scoops: [],
-        scoopAccuracy: [],
-        toppings: [],
-        cherryPosition: null
-    };
-    gameState.currentFlavor = null;
-    gameState.toppingProgress = {
-        sprinkles: 0,
-        cherry: 0,
-        'chocolate-chips': 0,
-        caramel: 0,
-        'whipped-cream': 0
-    };
-    gameState.currentTool = null;
-    iceCreamBuildEl.classList.remove('tool-active');
-    document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.scoop-btn').forEach(btn => btn.classList.remove('active'));
-    toppingInstructionEl.textContent = "Select a topping tool above";
-    scoopInstructionEl.textContent = "Select a flavor to start scooping";
-    removeDropZone();
-    
-    // Clear canvas
-    toppingCtx.clearRect(0, 0, toppingCanvas.width, toppingCanvas.height);
-    
-    updateBuildDisplay();
-}
+          buildDisplayEl.appendChild(toppingContainer);
+        }
+      }
 
-function serveCustomer() {
-    if (!gameState.currentOrder) {
-        showMessage("No customer to serve!");
-        return;
-    }
-    
-    if (!gameState.playerBuild.cone) {
-        showMessage("You need to add a cone first!");
-        return;
-    }
-    
-    if (gameState.playerBuild.scoops.length === 0) {
-        showMessage("You need to add at least one scoop!");
-        return;
-    }
-    
-    // Calculate accuracy
-    const results = checkOrder();
-    displayResults(results);
-    
-    // Update score and tips
-    const accuracy = results.accuracy;
-    const points = Math.round(accuracy * 100);
-    const tip = Math.round(accuracy * 10);
-    
-    gameState.score += points;
-    gameState.tips += tip;
-    
-    // Check if day should advance (every 4 customers)
-    if ((gameState.score / 100) % 4 === 0 && points > 0) {
-        gameState.day++;
-    }
-    
-    updateUI();
-    
-    // Disable serving, enable new customer
-    serveBtn.disabled = true;
-    newCustomerBtn.disabled = false;
-}
+      function clearBuild() {
+        gameState.playerBuild = {
+          cone: null,
+          scoops: [],
+          scoopAccuracy: [],
+          toppings: [],
+          cherryPosition: null,
+        };
+        gameState.currentFlavor = null;
+        gameState.toppingProgress = {
+          sprinkles: 0,
+          cherry: 0,
+          'chocolate-chips': 0,
+          caramel: 0,
+          'whipped-cream': 0,
+        };
+        gameState.currentTool = null;
+        iceCreamBuildEl.classList.remove('tool-active');
+        document
+          .querySelectorAll('.tool-btn')
+          .forEach((btn) => btn.classList.remove('active'));
+        document
+          .querySelectorAll('.scoop-btn')
+          .forEach((btn) => btn.classList.remove('active'));
+        toppingInstructionEl.textContent = 'Select a topping tool above';
+        scoopInstructionEl.textContent = 'Select a flavor to start scooping';
+        removeDropZone();
 
-function checkOrder() {
-    const order = gameState.currentOrder;
-    const build = gameState.playerBuild;
-    const customer = gameState.currentCustomer;
-    
-    // For hard/extreme customers, scoop order matters
-    const scoopsCorrect = (customer.difficulty === "hard" || customer.difficulty === "extreme")
-        ? arraysEqual(build.scoops, order.scoops)
-        : arraysEqualUnordered(build.scoops, order.scoops);
-    
-    // Calculate average scoop accuracy
-    const avgScoopAccuracy = build.scoopAccuracy.length > 0
-        ? build.scoopAccuracy.reduce((a, b) => a + b, 0) / build.scoopAccuracy.length
-        : 1.0;
-    
-    const results = {
-        cone: { correct: build.cone === order.cone, expected: order.cone, got: build.cone },
-        scoops: { correct: scoopsCorrect, expected: order.scoops, got: build.scoops },
-        scoopAccuracy: avgScoopAccuracy,
-        toppings: { correct: arraysEqualUnordered(build.toppings, order.toppings), expected: order.toppings, got: build.toppings },
-        cherryPlacement: { correct: true, distance: 0 },
-        accuracy: 0
-    };
-    
-    // Check cherry placement accuracy for extreme customers
-    if (order.cherryPosition && build.cherryPosition) {
-        const dx = build.cherryPosition.x - order.cherryPosition.x;
-        const dy = build.cherryPosition.y - order.cherryPosition.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        results.cherryPlacement.distance = distance;
-        results.cherryPlacement.correct = distance < 60; // 60px tolerance (more forgiving)
-    }
-    
-    // Calculate accuracy
-    let correct = 0;
-    let total = 3; // cone, scoops, toppings
-    
-    if (results.cone.correct) correct++;
-    if (results.scoops.correct) correct++;
-    if (results.toppings.correct) correct++;
-    
-    // Cherry placement affects score for extreme customers
-    if (order.cherryPosition) {
-        total++;
-        if (results.cherryPlacement.correct) correct++;
-    }
-    
-    results.accuracy = correct / total;
-    
-    // Apply scoop accuracy multiplier (affects 20% of score)
-    results.accuracy = (results.accuracy * 0.8) + (results.scoopAccuracy * 0.2);
-    
-    // Apply patience multiplier
-    results.accuracy *= customer.patience;
-    
-    return results;
-}
+        // Clear canvas
+        toppingCtx.clearRect(0, 0, toppingCanvas.width, toppingCanvas.height);
 
-function arraysEqual(arr1, arr2) {
-    if (arr1.length !== arr2.length) return false;
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) return false;
-    }
-    return true;
-}
+        updateBuildDisplay();
+      }
 
-function arraysEqualUnordered(arr1, arr2) {
-    if (arr1.length !== arr2.length) return false;
-    const sorted1 = [...arr1].sort();
-    const sorted2 = [...arr2].sort();
-    return arraysEqual(sorted1, sorted2);
-}
+      function serveCustomer() {
+        if (!gameState.currentOrder) {
+          showMessage('No customer to serve!');
+          return;
+        }
 
-function displayResults(results) {
-    const customer = gameState.currentCustomer;
-    let html = '';
-    
-    // Cone check
-    html += `<div class="result-row ${results.cone.correct ? 'correct' : 'incorrect'}">
+        if (!gameState.playerBuild.cone) {
+          showMessage('You need to add a cone first!');
+          return;
+        }
+
+        if (gameState.playerBuild.scoops.length === 0) {
+          showMessage('You need to add at least one scoop!');
+          return;
+        }
+
+        // Calculate accuracy
+        const results = checkOrder();
+        displayResults(results);
+
+        // Update score and tips
+        const accuracy = results.accuracy;
+        const points = Math.round(accuracy * 100);
+        const tip = Math.round(accuracy * 10);
+
+        gameState.score += points;
+        gameState.tips += tip;
+
+        // Check if day should advance (every 4 customers)
+        if ((gameState.score / 100) % 4 === 0 && points > 0) {
+          gameState.day++;
+        }
+
+        updateUI();
+
+        // Disable serving, enable new customer
+        serveBtn.disabled = true;
+        newCustomerBtn.disabled = false;
+      }
+
+      function checkOrder() {
+        const order = gameState.currentOrder;
+        const build = gameState.playerBuild;
+        const customer = gameState.currentCustomer;
+
+        // For hard/extreme customers, scoop order matters
+        const scoopsCorrect =
+          customer.difficulty === 'hard' || customer.difficulty === 'extreme'
+            ? arraysEqual(build.scoops, order.scoops)
+            : arraysEqualUnordered(build.scoops, order.scoops);
+
+        // Calculate average scoop accuracy
+        const avgScoopAccuracy =
+          build.scoopAccuracy.length > 0
+            ? build.scoopAccuracy.reduce((a, b) => a + b, 0) /
+              build.scoopAccuracy.length
+            : 1.0;
+
+        const results = {
+          cone: {
+            correct: build.cone === order.cone,
+            expected: order.cone,
+            got: build.cone,
+          },
+          scoops: {
+            correct: scoopsCorrect,
+            expected: order.scoops,
+            got: build.scoops,
+          },
+          scoopAccuracy: avgScoopAccuracy,
+          toppings: {
+            correct: arraysEqualUnordered(build.toppings, order.toppings),
+            expected: order.toppings,
+            got: build.toppings,
+          },
+          cherryPlacement: { correct: true, distance: 0 },
+          accuracy: 0,
+        };
+
+        // Check cherry placement accuracy for extreme customers
+        if (order.cherryPosition && build.cherryPosition) {
+          const dx = build.cherryPosition.x - order.cherryPosition.x;
+          const dy = build.cherryPosition.y - order.cherryPosition.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          results.cherryPlacement.distance = distance;
+          results.cherryPlacement.correct = distance < 60; // 60px tolerance (more forgiving)
+        }
+
+        // Calculate accuracy
+        let correct = 0;
+        let total = 3; // cone, scoops, toppings
+
+        if (results.cone.correct) correct++;
+        if (results.scoops.correct) correct++;
+        if (results.toppings.correct) correct++;
+
+        // Cherry placement affects score for extreme customers
+        if (order.cherryPosition) {
+          total++;
+          if (results.cherryPlacement.correct) correct++;
+        }
+
+        results.accuracy = correct / total;
+
+        // Apply scoop accuracy multiplier (affects 20% of score)
+        results.accuracy = results.accuracy * 0.8 + results.scoopAccuracy * 0.2;
+
+        // Apply patience multiplier
+        results.accuracy *= customer.patience;
+
+        return results;
+      }
+
+      function arraysEqual(arr1, arr2) {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+          if (arr1[i] !== arr2[i]) return false;
+        }
+        return true;
+      }
+
+      function arraysEqualUnordered(arr1, arr2) {
+        if (arr1.length !== arr2.length) return false;
+        const sorted1 = [...arr1].sort();
+        const sorted2 = [...arr2].sort();
+        return arraysEqual(sorted1, sorted2);
+      }
+
+      function displayResults(results) {
+        const customer = gameState.currentCustomer;
+        let html = '';
+
+        // Cone check
+        html += `<div class="result-row ${
+          results.cone.correct ? 'correct' : 'incorrect'
+        }">
         <span>Cone:</span>
-        <span>${results.cone.correct ? '✓' : '✗'} ${formatName(results.cone.expected)}</span>
+        <span>${results.cone.correct ? '✓' : '✗'} ${formatName(
+          results.cone.expected,
+        )}</span>
     </div>`;
-    
-    // Scoops check
-    const scoopLabel = (customer.difficulty === "hard" || customer.difficulty === "extreme") ? "Scoops (Order)" : "Scoops";
-    html += `<div class="result-row ${results.scoops.correct ? 'correct' : 'incorrect'}">
+
+        // Scoops check
+        const scoopLabel =
+          customer.difficulty === 'hard' || customer.difficulty === 'extreme'
+            ? 'Scoops (Order)'
+            : 'Scoops';
+        html += `<div class="result-row ${
+          results.scoops.correct ? 'correct' : 'incorrect'
+        }">
         <span>${scoopLabel}:</span>
-        <span>${results.scoops.correct ? '✓' : '✗'} ${results.scoops.expected.map(formatName).join(', ')}</span>
+        <span>${results.scoops.correct ? '✓' : '✗'} ${results.scoops.expected
+          .map(formatName)
+          .join(', ')}</span>
     </div>`;
-    
-    if (!results.scoops.correct) {
-        html += `<div style="padding-left: 20px; font-size: 0.85em; color: #666;">
+
+        if (!results.scoops.correct) {
+          html += `<div style="padding-left: 20px; font-size: 0.85em; color: #666;">
             You made: ${results.scoops.got.map(formatName).join(', ') || 'None'}
         </div>`;
-    }
-    
-    // Scoop accuracy
-    const scoopAccPct = Math.round(results.scoopAccuracy * 100);
-    const scoopAccClass = scoopAccPct >= 80 ? 'correct' : 'incorrect';
-    html += `<div class="result-row ${scoopAccClass}">
+        }
+
+        // Scoop accuracy
+        const scoopAccPct = Math.round(results.scoopAccuracy * 100);
+        const scoopAccClass = scoopAccPct >= 80 ? 'correct' : 'incorrect';
+        html += `<div class="result-row ${scoopAccClass}">
         <span>Drop Accuracy:</span>
-        <span>${scoopAccPct}% ${scoopAccPct >= 90 ? '🎯' : scoopAccPct >= 70 ? '👍' : '😐'}</span>
+        <span>${scoopAccPct}% ${
+          scoopAccPct >= 90 ? '🎯' : scoopAccPct >= 70 ? '👍' : '😐'
+        }</span>
     </div>`;
-    
-    // Toppings check
-    html += `<div class="result-row ${results.toppings.correct ? 'correct' : 'incorrect'}">
+
+        // Toppings check
+        html += `<div class="result-row ${
+          results.toppings.correct ? 'correct' : 'incorrect'
+        }">
         <span>Toppings:</span>
-        <span>${results.toppings.correct ? '✓' : '✗'} ${results.toppings.expected.map(formatName).join(', ') || 'None'}</span>
+        <span>${results.toppings.correct ? '✓' : '✗'} ${
+          results.toppings.expected.map(formatName).join(', ') || 'None'
+        }</span>
     </div>`;
-    
-    if (!results.toppings.correct) {
-        html += `<div style="padding-left: 20px; font-size: 0.85em; color: #666;">
-            You made: ${results.toppings.got.map(formatName).join(', ') || 'None'}
+
+        if (!results.toppings.correct) {
+          html += `<div style="padding-left: 20px; font-size: 0.85em; color: #666;">
+            You made: ${
+              results.toppings.got.map(formatName).join(', ') || 'None'
+            }
         </div>`;
-    }
-    
-    // Cherry placement check for extreme customers
-    if (gameState.currentOrder.cherryPosition) {
-        const distance = Math.round(results.cherryPlacement.distance);
-        html += `<div class="result-row ${results.cherryPlacement.correct ? 'correct' : 'incorrect'}">
+        }
+
+        // Cherry placement check for extreme customers
+        if (gameState.currentOrder.cherryPosition) {
+          const distance = Math.round(results.cherryPlacement.distance);
+          html += `<div class="result-row ${
+            results.cherryPlacement.correct ? 'correct' : 'incorrect'
+          }">
             <span>Cherry Position:</span>
-            <span>${results.cherryPlacement.correct ? '✓ Perfect!' : `✗ Off by ${distance}px`}</span>
+            <span>${
+              results.cherryPlacement.correct
+                ? '✓ Perfect!'
+                : `✗ Off by ${distance}px`
+            }</span>
         </div>`;
-    }
-    
-    // Summary
-    const accuracy = Math.round(results.accuracy * 100);
-    let grade = 'F';
-    let message = 'Keep practicing!';
-    let customerReaction = '';
-    
-    if (accuracy === 100) {
-        grade = 'A+';
-        message = 'Perfect! 🌟';
-        customerReaction = customer.difficulty === "extreme" ? "Fine. It's acceptable." : "Amazing! Thank you!";
-    } else if (accuracy >= 85) {
-        grade = 'A';
-        message = 'Excellent! 🎉';
-        customerReaction = customer.difficulty === "extreme" ? "Hmph. Good enough." : "Great job!";
-    } else if (accuracy >= 70) {
-        grade = 'B';
-        message = 'Good job! 👍';
-        customerReaction = customer.difficulty === "hard" || customer.difficulty === "extreme" ? "This is mediocre at best." : "Pretty good!";
-    } else if (accuracy >= 50) {
-        grade = 'C';
-        message = 'Not bad! 👌';
-        customerReaction = customer.difficulty === "hard" || customer.difficulty === "extreme" ? "Disappointing." : "Thanks, I guess...";
-    } else if (accuracy >= 30) {
-        grade = 'D';
-        message = 'Needs improvement...';
-        customerReaction = "This is terrible!";
-    } else {
-        grade = 'F';
-        message = 'Oh no! Try again!';
-        customerReaction = "I want a refund!";
-    }
-    
-    html += `<div class="result-summary">
-        <div>Customer: ${customer.name} (${customer.difficulty.toUpperCase()})</div>
+        }
+
+        // Summary
+        const accuracy = Math.round(results.accuracy * 100);
+        let grade = 'F';
+        let message = 'Keep practicing!';
+        let customerReaction = '';
+
+        if (accuracy === 100) {
+          grade = 'A+';
+          message = 'Perfect! 🌟';
+          customerReaction =
+            customer.difficulty === 'extreme'
+              ? "Fine. It's acceptable."
+              : 'Amazing! Thank you!';
+        } else if (accuracy >= 85) {
+          grade = 'A';
+          message = 'Excellent! 🎉';
+          customerReaction =
+            customer.difficulty === 'extreme'
+              ? 'Hmph. Good enough.'
+              : 'Great job!';
+        } else if (accuracy >= 70) {
+          grade = 'B';
+          message = 'Good job! 👍';
+          customerReaction =
+            customer.difficulty === 'hard' || customer.difficulty === 'extreme'
+              ? 'This is mediocre at best.'
+              : 'Pretty good!';
+        } else if (accuracy >= 50) {
+          grade = 'C';
+          message = 'Not bad! 👌';
+          customerReaction =
+            customer.difficulty === 'hard' || customer.difficulty === 'extreme'
+              ? 'Disappointing.'
+              : 'Thanks, I guess...';
+        } else if (accuracy >= 30) {
+          grade = 'D';
+          message = 'Needs improvement...';
+          customerReaction = 'This is terrible!';
+        } else {
+          grade = 'F';
+          message = 'Oh no! Try again!';
+          customerReaction = 'I want a refund!';
+        }
+
+        html += `<div class="result-summary">
+        <div>Customer: ${
+          customer.name
+        } (${customer.difficulty.toUpperCase()})</div>
         <div>Grade: ${grade}</div>
         <div>Accuracy: ${accuracy}%</div>
         <div>Points: +${Math.round(accuracy)}</div>
@@ -1790,36 +2000,36 @@ function displayResults(results) {
         <div style="margin-top: 10px; color: #4ecdc4;">${message}</div>
         <div style="margin-top: 10px; font-style: italic; color: #666;">"${customerReaction}"</div>
     </div>`;
-    
-    resultsContent.innerHTML = html;
-    resultsModal.classList.add('active');
-}
 
-function closeModal() {
-    resultsModal.classList.remove('active');
-    gameState.currentCustomer = null;
-    gameState.currentOrder = null;
-    orderTicketEl.innerHTML = '';
-    speechBubbleEl.textContent = 'Thanks! Next customer please!';
-}
+        resultsContent.innerHTML = html;
+        resultsModal.classList.add('active');
+      }
 
-function showMessage(msg) {
-    speechBubbleEl.textContent = msg;
-    setTimeout(() => {
-        if (gameState.currentCustomer) {
+      function closeModal() {
+        resultsModal.classList.remove('active');
+        gameState.currentCustomer = null;
+        gameState.currentOrder = null;
+        orderTicketEl.innerHTML = '';
+        speechBubbleEl.textContent = 'Thanks! Next customer please!';
+      }
+
+      function showMessage(msg) {
+        speechBubbleEl.textContent = msg;
+        setTimeout(() => {
+          if (gameState.currentCustomer) {
             speechBubbleEl.textContent = `Hi! I'm ${gameState.currentCustomer.name}! ${gameState.currentCustomer.mood}`;
-        }
-    }, 2000);
-}
+          }
+        }, 2000);
+      }
 
-function updateUI() {
-    dayEl.textContent = gameState.day;
-    scoreEl.textContent = gameState.score;
-    tipsEl.textContent = gameState.tips;
-}
+      function updateUI() {
+        dayEl.textContent = gameState.day;
+        scoreEl.textContent = gameState.score;
+        tipsEl.textContent = gameState.tips;
+      }
 
-// Start game
-init();
+      // Start game
+      init();
     </script>
   </body>
 </html>

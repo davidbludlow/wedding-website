@@ -1,1053 +1,1224 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Three Labyrinths - A Race of Three Children</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        min-height: 100vh;
+        color: #fff;
+        overflow-x: hidden;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px rgba(255, 200, 100, 0.5);
+        color: #ffd700;
+      }
+
+      .subtitle {
+        text-align: center;
+        font-size: 1.2em;
+        margin-bottom: 20px;
+        color: #aaa;
+      }
+
+      .game-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .maze-container {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      }
+
+      canvas {
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(100, 150, 255, 0.3);
+      }
+
+      .children-info {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+
+      .child-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        min-width: 200px;
+        text-align: center;
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+        border: 2px solid transparent;
+      }
+
+      .child-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .child-card.maya {
+        border-color: #ff6b9d;
+      }
+      .child-card.sam {
+        border-color: #4ecdc4;
+      }
+      .child-card.leo {
+        border-color: #ffe66d;
+      }
+
+      .child-card.winner {
+        animation: winner-glow 0.5s ease-in-out infinite alternate;
+      }
+
+      @keyframes winner-glow {
+        from {
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            color: #fff;
-            overflow-x: hidden;
+        to {
+          box-shadow: 0 0 40px rgba(255, 215, 0, 0.9);
         }
+      }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
+      .child-emoji {
+        font-size: 3em;
+        margin-bottom: 10px;
+      }
+
+      .child-name {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .child-trait {
+        font-size: 0.9em;
+        color: #ccc;
+        margin-bottom: 10px;
+      }
+
+      .child-ability {
+        font-size: 0.8em;
+        color: #88ff88;
+        font-style: italic;
+      }
+
+      .child-status {
+        margin-top: 10px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 20px 0;
+      }
+
+      button {
+        padding: 15px 30px;
+        font-size: 1.1em;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .start-btn {
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        color: white;
+      }
+
+      .start-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(78, 205, 196, 0.5);
+      }
+
+      .reset-btn {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        color: white;
+      }
+
+      .reset-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(255, 107, 107, 0.5);
+      }
+
+      .speed-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ccc;
+      }
+
+      .speed-control input {
+        width: 100px;
+      }
+
+      .story-box {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 15px;
+        padding: 20px;
+        max-width: 800px;
+        margin: 20px auto;
+        border-left: 4px solid #ffd700;
+      }
+
+      .story-box h3 {
+        color: #ffd700;
+        margin-bottom: 10px;
+      }
+
+      .story-box p {
+        line-height: 1.6;
+        color: #ddd;
+      }
+
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin: 15px 0;
+        font-size: 0.9em;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+      }
+
+      .winner-announcement {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.95);
+        padding: 40px 60px;
+        border-radius: 20px;
+        text-align: center;
+        z-index: 1000;
+        animation: pop-in 0.5s ease-out;
+        border: 3px solid #ffd700;
+        display: none;
+      }
+
+      @keyframes pop-in {
+        from {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
         }
-
-        h1 {
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255, 200, 100, 0.5);
-            color: #ffd700;
+        to {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
         }
+      }
 
-        .subtitle {
-            text-align: center;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            color: #aaa;
-        }
+      .winner-announcement h2 {
+        font-size: 2.5em;
+        color: #ffd700;
+        margin-bottom: 15px;
+      }
 
-        .game-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
+      .winner-announcement .trophy {
+        font-size: 4em;
+        margin: 20px 0;
+      }
 
-        .maze-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
+      .winner-announcement button {
+        margin-top: 20px;
+      }
 
-        canvas {
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(100, 150, 255, 0.3);
-        }
+      .log-box {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        padding: 15px;
+        max-width: 800px;
+        margin: 20px auto;
+        max-height: 150px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 0.85em;
+      }
 
-        .children-info {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
+      .log-entry {
+        padding: 3px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
 
-        .child-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            min-width: 200px;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .child-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .child-card.maya { border-color: #ff6b9d; }
-        .child-card.sam { border-color: #4ecdc4; }
-        .child-card.leo { border-color: #ffe66d; }
-
-        .child-card.winner {
-            animation: winner-glow 0.5s ease-in-out infinite alternate;
-        }
-
-        @keyframes winner-glow {
-            from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-            to { box-shadow: 0 0 40px rgba(255, 215, 0, 0.9); }
-        }
-
-        .child-emoji {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-
-        .child-name {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .child-trait {
-            font-size: 0.9em;
-            color: #ccc;
-            margin-bottom: 10px;
-        }
-
-        .child-ability {
-            font-size: 0.8em;
-            color: #88ff88;
-            font-style: italic;
-        }
-
-        .child-status {
-            margin-top: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        button {
-            padding: 15px 30px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .start-btn {
-            background: linear-gradient(135deg, #4ecdc4, #44a08d);
-            color: white;
-        }
-
-        .start-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.5);
-        }
-
-        .reset-btn {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-            color: white;
-        }
-
-        .reset-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.5);
-        }
-
-        .speed-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ccc;
-        }
-
-        .speed-control input {
-            width: 100px;
-        }
-
-        .story-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 15px;
-            padding: 20px;
-            max-width: 800px;
-            margin: 20px auto;
-            border-left: 4px solid #ffd700;
-        }
-
-        .story-box h3 {
-            color: #ffd700;
-            margin-bottom: 10px;
-        }
-
-        .story-box p {
-            line-height: 1.6;
-            color: #ddd;
-        }
-
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin: 15px 0;
-            font-size: 0.9em;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        .winner-announcement {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            padding: 40px 60px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 1000;
-            animation: pop-in 0.5s ease-out;
-            border: 3px solid #ffd700;
-            display: none;
-        }
-
-        @keyframes pop-in {
-            from {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-            }
-            to {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-
-        .winner-announcement h2 {
-            font-size: 2.5em;
-            color: #ffd700;
-            margin-bottom: 15px;
-        }
-
-        .winner-announcement .trophy {
-            font-size: 4em;
-            margin: 20px 0;
-        }
-
-        .winner-announcement button {
-            margin-top: 20px;
-        }
-
-        .log-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            padding: 15px;
-            max-width: 800px;
-            margin: 20px auto;
-            max-height: 150px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.85em;
-        }
-
-        .log-entry {
-            padding: 3px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .log-entry.maya { color: #ff6b9d; }
-        .log-entry.sam { color: #4ecdc4; }
-        .log-entry.leo { color: #ffe66d; }
+      .log-entry.maya {
+        color: #ff6b9d;
+      }
+      .log-entry.sam {
+        color: #4ecdc4;
+      }
+      .log-entry.leo {
+        color: #ffe66d;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>🏰 The Three Labyrinths 🏰</h1>
-        <p class="subtitle">A race through interconnected mazes</p>
+      <h1>🏰 The Three Labyrinths 🏰</h1>
+      <p class="subtitle">A race through interconnected mazes</p>
 
-        <div class="story-box">
-            <h3>📖 The Story</h3>
-            <p>
-                In a magical kingdom, three brave children discovered an ancient labyrinth with three connected sections. 
-                <strong>Maya</strong> (deaf but incredibly observant), <strong>Sam</strong> (short but can squeeze through tiny passages), 
-                and <strong>Leo</strong> (tall and can peek over some walls) each entered from different gates. 
-                Who will find their way to the golden exit first? Watch their adventure unfold!
-            </p>
-        </div>
+      <div class="story-box">
+        <h3>📖 The Story</h3>
+        <p>
+          In a magical kingdom, three brave children discovered an ancient
+          labyrinth with three connected sections.
+          <strong>Maya</strong> (deaf but incredibly observant),
+          <strong>Sam</strong> (short but can squeeze through tiny passages),
+          and <strong>Leo</strong> (tall and can peek over some walls) each
+          entered from different gates. Who will find their way to the golden
+          exit first? Watch their adventure unfold!
+        </p>
+      </div>
 
-        <div class="children-info">
-            <div class="child-card maya" id="maya-card">
-                <div class="child-emoji">👧</div>
-                <div class="child-name" style="color: #ff6b9d;">Maya</div>
-                <div class="child-trait">🦻 Deaf</div>
-                <div class="child-ability">Super observant! Notices visual patterns others miss.</div>
-                <div class="child-status" id="maya-status">Ready at Gate 1</div>
-            </div>
-            <div class="child-card sam" id="sam-card">
-                <div class="child-emoji">👦</div>
-                <div class="child-name" style="color: #4ecdc4;">Sam</div>
-                <div class="child-trait">📏 Short</div>
-                <div class="child-ability">Can fit through small secret passages!</div>
-                <div class="child-status" id="sam-status">Ready at Gate 2</div>
-            </div>
-            <div class="child-card leo" id="leo-card">
-                <div class="child-emoji">🧒</div>
-                <div class="child-name" style="color: #ffe66d;">Leo</div>
-                <div class="child-trait">📐 Tall</div>
-                <div class="child-ability">Can see over low walls to plan ahead!</div>
-                <div class="child-status" id="leo-status">Ready at Gate 3</div>
-            </div>
+      <div class="children-info">
+        <div class="child-card maya" id="maya-card">
+          <div class="child-emoji">👧</div>
+          <div class="child-name" style="color: #ff6b9d">Maya</div>
+          <div class="child-trait">🦻 Deaf</div>
+          <div class="child-ability">
+            Super observant! Notices visual patterns others miss.
+          </div>
+          <div class="child-status" id="maya-status">Ready at Gate 1</div>
         </div>
+        <div class="child-card sam" id="sam-card">
+          <div class="child-emoji">👦</div>
+          <div class="child-name" style="color: #4ecdc4">Sam</div>
+          <div class="child-trait">📏 Short</div>
+          <div class="child-ability">
+            Can fit through small secret passages!
+          </div>
+          <div class="child-status" id="sam-status">Ready at Gate 2</div>
+        </div>
+        <div class="child-card leo" id="leo-card">
+          <div class="child-emoji">🧒</div>
+          <div class="child-name" style="color: #ffe66d">Leo</div>
+          <div class="child-trait">📐 Tall</div>
+          <div class="child-ability">Can see over low walls to plan ahead!</div>
+          <div class="child-status" id="leo-status">Ready at Gate 3</div>
+        </div>
+      </div>
 
-        <div class="controls">
-            <button class="start-btn" id="startBtn" onclick="startRace()">🏁 Start Race!</button>
-            <button class="reset-btn" id="resetBtn" onclick="resetGame()">🔄 Reset</button>
-            <div class="speed-control">
-                <label>Speed:</label>
-                <input type="range" id="speedSlider" min="1" max="10" value="5">
-                <span id="speedValue">5</span>
-            </div>
+      <div class="controls">
+        <button class="start-btn" id="startBtn" onclick="startRace()">
+          🏁 Start Race!
+        </button>
+        <button class="reset-btn" id="resetBtn" onclick="resetGame()">
+          🔄 Reset
+        </button>
+        <div class="speed-control">
+          <label>Speed:</label>
+          <input type="range" id="speedSlider" min="1" max="10" value="5" />
+          <span id="speedValue">5</span>
         </div>
+      </div>
 
-        <div class="game-area">
-            <div class="maze-container">
-                <canvas id="mazeCanvas" width="900" height="600"></canvas>
-            </div>
+      <div class="game-area">
+        <div class="maze-container">
+          <canvas id="mazeCanvas" width="900" height="600"></canvas>
         </div>
+      </div>
 
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ff6b9d;"></div>
-                <span>Maya (Deaf)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #4ecdc4;"></div>
-                <span>Sam (Short)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ffe66d;"></div>
-                <span>Leo (Tall)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ffd700;"></div>
-                <span>Exit</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #8b4513;"></div>
-                <span>Secret Passage (Sam only)</span>
-            </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ff6b9d"></div>
+          <span>Maya (Deaf)</span>
         </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #4ecdc4"></div>
+          <span>Sam (Short)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ffe66d"></div>
+          <span>Leo (Tall)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ffd700"></div>
+          <span>Exit</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #8b4513"></div>
+          <span>Secret Passage (Sam only)</span>
+        </div>
+      </div>
 
-        <div class="log-box" id="logBox">
-            <div class="log-entry">🎮 Game initialized. Press Start to begin the race!</div>
+      <div class="log-box" id="logBox">
+        <div class="log-entry">
+          🎮 Game initialized. Press Start to begin the race!
         </div>
+      </div>
     </div>
 
     <div class="winner-announcement" id="winnerAnnouncement">
-        <div class="trophy">🏆</div>
-        <h2 id="winnerName">Winner!</h2>
-        <p id="winnerMessage"></p>
-        <button class="start-btn" onclick="closeAnnouncement()">Continue</button>
+      <div class="trophy">🏆</div>
+      <h2 id="winnerName">Winner!</h2>
+      <p id="winnerMessage"></p>
+      <button class="start-btn" onclick="closeAnnouncement()">Continue</button>
     </div>
 
     <script>
-        const canvas = document.getElementById('mazeCanvas');
-        const ctx = canvas.getContext('2d');
-        const cellSize = 30;
-        const cols = 30;
-        const rows = 20;
+      const canvas = document.getElementById('mazeCanvas');
+      const ctx = canvas.getContext('2d');
+      const cellSize = 30;
+      const cols = 30;
+      const rows = 20;
 
-        // Maze representation: 0 = path, 1 = wall, 2 = secret passage (Sam only), 3 = low wall (Leo can see over)
-        let maze = [];
-        let children = [];
-        let gameRunning = false;
-        let winner = null;
-        let animationId = null;
+      // Maze representation: 0 = path, 1 = wall, 2 = secret passage (Sam only), 3 = low wall (Leo can see over)
+      let maze = [];
+      let children = [];
+      let gameRunning = false;
+      let winner = null;
+      let animationId = null;
 
-        // Exit position (shared by all labyrinths)
-        const exitPos = { x: 14, y: 9 };
+      // Exit position (shared by all labyrinths)
+      const exitPos = { x: 14, y: 9 };
 
-        // Entrance positions for each child
-        const entrances = {
-            maya: { x: 1, y: 1 },      // Top-left labyrinth
-            sam: { x: 28, y: 1 },      // Top-right labyrinth
-            leo: { x: 14, y: 18 }      // Bottom-center labyrinth
-        };
+      // Entrance positions for each child
+      const entrances = {
+        maya: { x: 1, y: 1 }, // Top-left labyrinth
+        sam: { x: 28, y: 1 }, // Top-right labyrinth
+        leo: { x: 14, y: 18 }, // Bottom-center labyrinth
+      };
 
-        class Child {
-            constructor(name, color, x, y, trait) {
-                this.name = name;
-                this.color = color;
-                this.x = x;
-                this.y = y;
-                this.trait = trait;
-                this.path = [{x, y}];
-                this.finished = false;
-                this.steps = 0;
-                this.visitedBonus = new Set();
-            }
-
-            getValidMoves() {
-                const moves = [];
-                const directions = [
-                    {dx: 0, dy: -1}, // up
-                    {dx: 0, dy: 1},  // down
-                    {dx: -1, dy: 0}, // left
-                    {dx: 1, dy: 0}   // right
-                ];
-
-                for (const dir of directions) {
-                    const nx = this.x + dir.dx;
-                    const ny = this.y + dir.dy;
-
-                    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                        const cell = maze[ny][nx];
-                        
-                        // Check if move is valid based on trait
-                        if (cell === 0 || cell === 3) {
-                            moves.push({x: nx, y: ny, priority: 0});
-                        } else if (cell === 2 && this.trait === 'short') {
-                            // Only Sam can use secret passages
-                            moves.push({x: nx, y: ny, priority: 2}); // Higher priority for shortcuts
-                        }
-                    }
-                }
-
-                return moves;
-            }
-
-            calculatePriority(move) {
-                // Distance to exit
-                const distToExit = Math.abs(move.x - exitPos.x) + Math.abs(move.y - exitPos.y);
-                let priority = -distToExit; // Closer to exit = higher priority
-
-                // Avoid recently visited cells
-                const key = `${move.x},${move.y}`;
-                if (this.path.some(p => p.x === move.x && p.y === move.y)) {
-                    priority -= 10;
-                }
-
-                // Trait bonuses
-                if (this.trait === 'deaf') {
-                    // Maya is more observant - better at detecting patterns
-                    // She gets a bonus for unexplored areas
-                    if (!this.visitedBonus.has(key)) {
-                        priority += 3;
-                    }
-                } else if (this.trait === 'tall') {
-                    // Leo can see further - gets bonus for moves toward exit
-                    if (distToExit < 10) {
-                        priority += 2;
-                    }
-                }
-
-                return priority + move.priority;
-            }
-
-            move() {
-                if (this.finished) return;
-
-                const moves = this.getValidMoves();
-                if (moves.length === 0) {
-                    // Backtrack
-                    if (this.path.length > 1) {
-                        this.path.pop();
-                        const prev = this.path[this.path.length - 1];
-                        this.x = prev.x;
-                        this.y = prev.y;
-                    }
-                    return;
-                }
-
-                // Calculate priorities and sort
-                moves.forEach(m => m.priority = this.calculatePriority(m));
-                moves.sort((a, b) => b.priority - a.priority);
-
-                // Add some randomness
-                const topMoves = moves.slice(0, Math.min(3, moves.length));
-                const chosen = topMoves[Math.floor(Math.random() * topMoves.length)];
-
-                this.x = chosen.x;
-                this.y = chosen.y;
-                this.path.push({x: this.x, y: this.y});
-                this.visitedBonus.add(`${this.x},${this.y}`);
-                this.steps++;
-
-                // Check if reached exit
-                if (this.x === exitPos.x && this.y === exitPos.y) {
-                    this.finished = true;
-                }
-            }
+      class Child {
+        constructor(name, color, x, y, trait) {
+          this.name = name;
+          this.color = color;
+          this.x = x;
+          this.y = y;
+          this.trait = trait;
+          this.path = [{ x, y }];
+          this.finished = false;
+          this.steps = 0;
+          this.visitedBonus = new Set();
         }
 
-        function generateMaze() {
-            // Initialize with all walls
-            maze = Array(rows).fill(null).map(() => Array(cols).fill(1));
+        getValidMoves() {
+          const moves = [];
+          const directions = [
+            { dx: 0, dy: -1 }, // up
+            { dx: 0, dy: 1 }, // down
+            { dx: -1, dy: 0 }, // left
+            { dx: 1, dy: 0 }, // right
+          ];
 
-            // Generate three separate labyrinths using recursive backtracking
-            // Section 1: Top-left (Maya's area) - columns 0-9, rows 0-9
-            generateLabyrinthSection(1, 1, 9, 9);
-            
-            // Section 2: Top-right (Sam's area) - columns 20-29, rows 0-9
-            generateLabyrinthSection(21, 1, 29, 9);
-            
-            // Section 3: Bottom-center (Leo's area) - columns 10-19, rows 10-19
-            generateLabyrinthSection(11, 11, 19, 19);
+          for (const dir of directions) {
+            const nx = this.x + dir.dx;
+            const ny = this.y + dir.dy;
 
-            // Create connection corridors between labyrinths
-            createConnectionCorridor(9, 5, 11, 5);   // Left labyrinth to center area
-            createConnectionCorridor(19, 5, 21, 5);  // Right labyrinth to center area
-            createConnectionCorridor(15, 9, 15, 11); // Top center to bottom labyrinth
-            
-            // Create the central hub that connects all three
-            for (let x = 10; x <= 20; x++) {
-                for (let y = 4; y <= 6; y++) {
-                    if (maze[y] && x < cols) {
-                        maze[y][x] = 0;
-                    }
-                }
+            if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+              const cell = maze[ny][nx];
+
+              // Check if move is valid based on trait
+              if (cell === 0 || cell === 3) {
+                moves.push({ x: nx, y: ny, priority: 0 });
+              } else if (cell === 2 && this.trait === 'short') {
+                // Only Sam can use secret passages
+                moves.push({ x: nx, y: ny, priority: 2 }); // Higher priority for shortcuts
+              }
             }
-            // Vertical connection from hub to bottom labyrinth
-            for (let y = 6; y <= 11; y++) {
-                maze[y][14] = 0;
-                maze[y][15] = 0;
-                maze[y][16] = 0;
-            }
+          }
 
-            // Ensure entrances and exit are clear
-            clearCell(entrances.maya.x, entrances.maya.y);
-            clearCell(entrances.sam.x, entrances.sam.y);
-            clearCell(entrances.leo.x, entrances.leo.y);
-            clearCell(exitPos.x, exitPos.y);
-
-            // Carve paths from entrances to nearest maze path
-            connectToMaze(entrances.maya.x, entrances.maya.y);
-            connectToMaze(entrances.sam.x, entrances.sam.y);
-            connectToMaze(entrances.leo.x, entrances.leo.y);
-            connectToMaze(exitPos.x, exitPos.y);
-
-            // Verify and fix solvability for each child
-            ensureSolvable(entrances.maya.x, entrances.maya.y, exitPos.x, exitPos.y);
-            ensureSolvable(entrances.sam.x, entrances.sam.y, exitPos.x, exitPos.y);
-            ensureSolvable(entrances.leo.x, entrances.leo.y, exitPos.x, exitPos.y);
-
-            // Add secret passages (only Sam can use) - find good wall locations
-            addSecretPassages();
-
-            // Add low walls (Leo can see over)
-            addLowWalls();
+          return moves;
         }
 
-        function generateLabyrinthSection(x1, y1, x2, y2) {
-            // Recursive backtracking maze generation
-            // Start with a grid where paths are on odd coordinates
-            const stack = [];
-            const visited = new Set();
-            
-            // Ensure bounds are odd for proper maze grid
-            const startX = x1 % 2 === 0 ? x1 + 1 : x1;
-            const startY = y1 % 2 === 0 ? y1 + 1 : y1;
-            
-            // Start from a random cell
-            let cx = startX;
-            let cy = startY;
-            
-            if (cx < cols && cy < rows) {
-                maze[cy][cx] = 0;
-                visited.add(`${cx},${cy}`);
-                stack.push({x: cx, y: cy});
+        calculatePriority(move) {
+          // Distance to exit
+          const distToExit =
+            Math.abs(move.x - exitPos.x) + Math.abs(move.y - exitPos.y);
+          let priority = -distToExit; // Closer to exit = higher priority
+
+          // Avoid recently visited cells
+          const key = `${move.x},${move.y}`;
+          if (this.path.some((p) => p.x === move.x && p.y === move.y)) {
+            priority -= 10;
+          }
+
+          // Trait bonuses
+          if (this.trait === 'deaf') {
+            // Maya is more observant - better at detecting patterns
+            // She gets a bonus for unexplored areas
+            if (!this.visitedBonus.has(key)) {
+              priority += 3;
             }
-
-            while (stack.length > 0) {
-                const current = stack[stack.length - 1];
-                cx = current.x;
-                cy = current.y;
-
-                // Get unvisited neighbors (2 cells away)
-                const neighbors = [];
-                const directions = [
-                    {dx: 0, dy: -2}, // up
-                    {dx: 0, dy: 2},  // down
-                    {dx: -2, dy: 0}, // left
-                    {dx: 2, dy: 0}   // right
-                ];
-
-                for (const dir of directions) {
-                    const nx = cx + dir.dx;
-                    const ny = cy + dir.dy;
-                    
-                    if (nx >= x1 && nx <= x2 && ny >= y1 && ny <= y2 && 
-                        nx < cols && ny < rows && !visited.has(`${nx},${ny}`)) {
-                        neighbors.push({x: nx, y: ny, wx: cx + dir.dx/2, wy: cy + dir.dy/2});
-                    }
-                }
-
-                if (neighbors.length > 0) {
-                    // Choose random neighbor
-                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                    
-                    // Remove wall between current and next
-                    if (next.wy >= 0 && next.wy < rows && next.wx >= 0 && next.wx < cols) {
-                        maze[next.wy][next.wx] = 0;
-                    }
-                    if (next.y >= 0 && next.y < rows && next.x >= 0 && next.x < cols) {
-                        maze[next.y][next.x] = 0;
-                    }
-                    
-                    visited.add(`${next.x},${next.y}`);
-                    stack.push({x: next.x, y: next.y});
-                } else {
-                    stack.pop();
-                }
+          } else if (this.trait === 'tall') {
+            // Leo can see further - gets bonus for moves toward exit
+            if (distToExit < 10) {
+              priority += 2;
             }
+          }
+
+          return priority + move.priority;
         }
 
-        function createConnectionCorridor(x1, y1, x2, y2) {
-            // Carve a corridor between two points
-            let x = x1;
-            let y = y1;
-            
-            while (x !== x2 || y !== y2) {
-                if (y >= 0 && y < rows && x >= 0 && x < cols) {
-                    maze[y][x] = 0;
-                }
-                
-                if (x < x2) x++;
-                else if (x > x2) x--;
-                else if (y < y2) y++;
-                else if (y > y2) y--;
+        move() {
+          if (this.finished) return;
+
+          const moves = this.getValidMoves();
+          if (moves.length === 0) {
+            // Backtrack
+            if (this.path.length > 1) {
+              this.path.pop();
+              const prev = this.path[this.path.length - 1];
+              this.x = prev.x;
+              this.y = prev.y;
             }
-            
-            if (y2 >= 0 && y2 < rows && x2 >= 0 && x2 < cols) {
-                maze[y2][x2] = 0;
+            return;
+          }
+
+          // Calculate priorities and sort
+          moves.forEach((m) => (m.priority = this.calculatePriority(m)));
+          moves.sort((a, b) => b.priority - a.priority);
+
+          // Add some randomness
+          const topMoves = moves.slice(0, Math.min(3, moves.length));
+          const chosen = topMoves[Math.floor(Math.random() * topMoves.length)];
+
+          this.x = chosen.x;
+          this.y = chosen.y;
+          this.path.push({ x: this.x, y: this.y });
+          this.visitedBonus.add(`${this.x},${this.y}`);
+          this.steps++;
+
+          // Check if reached exit
+          if (this.x === exitPos.x && this.y === exitPos.y) {
+            this.finished = true;
+          }
+        }
+      }
+
+      function generateMaze() {
+        // Initialize with all walls
+        maze = Array(rows)
+          .fill(null)
+          .map(() => Array(cols).fill(1));
+
+        // Generate three separate labyrinths using recursive backtracking
+        // Section 1: Top-left (Maya's area) - columns 0-9, rows 0-9
+        generateLabyrinthSection(1, 1, 9, 9);
+
+        // Section 2: Top-right (Sam's area) - columns 20-29, rows 0-9
+        generateLabyrinthSection(21, 1, 29, 9);
+
+        // Section 3: Bottom-center (Leo's area) - columns 10-19, rows 10-19
+        generateLabyrinthSection(11, 11, 19, 19);
+
+        // Create connection corridors between labyrinths
+        createConnectionCorridor(9, 5, 11, 5); // Left labyrinth to center area
+        createConnectionCorridor(19, 5, 21, 5); // Right labyrinth to center area
+        createConnectionCorridor(15, 9, 15, 11); // Top center to bottom labyrinth
+
+        // Create the central hub that connects all three
+        for (let x = 10; x <= 20; x++) {
+          for (let y = 4; y <= 6; y++) {
+            if (maze[y] && x < cols) {
+              maze[y][x] = 0;
             }
+          }
+        }
+        // Vertical connection from hub to bottom labyrinth
+        for (let y = 6; y <= 11; y++) {
+          maze[y][14] = 0;
+          maze[y][15] = 0;
+          maze[y][16] = 0;
         }
 
-        function clearCell(x, y) {
-            if (y >= 0 && y < rows && x >= 0 && x < cols) {
-                maze[y][x] = 0;
-            }
+        // Ensure entrances and exit are clear
+        clearCell(entrances.maya.x, entrances.maya.y);
+        clearCell(entrances.sam.x, entrances.sam.y);
+        clearCell(entrances.leo.x, entrances.leo.y);
+        clearCell(exitPos.x, exitPos.y);
+
+        // Carve paths from entrances to nearest maze path
+        connectToMaze(entrances.maya.x, entrances.maya.y);
+        connectToMaze(entrances.sam.x, entrances.sam.y);
+        connectToMaze(entrances.leo.x, entrances.leo.y);
+        connectToMaze(exitPos.x, exitPos.y);
+
+        // Verify and fix solvability for each child
+        ensureSolvable(
+          entrances.maya.x,
+          entrances.maya.y,
+          exitPos.x,
+          exitPos.y,
+        );
+        ensureSolvable(entrances.sam.x, entrances.sam.y, exitPos.x, exitPos.y);
+        ensureSolvable(entrances.leo.x, entrances.leo.y, exitPos.x, exitPos.y);
+
+        // Add secret passages (only Sam can use) - find good wall locations
+        addSecretPassages();
+
+        // Add low walls (Leo can see over)
+        addLowWalls();
+      }
+
+      function generateLabyrinthSection(x1, y1, x2, y2) {
+        // Recursive backtracking maze generation
+        // Start with a grid where paths are on odd coordinates
+        const stack = [];
+        const visited = new Set();
+
+        // Ensure bounds are odd for proper maze grid
+        const startX = x1 % 2 === 0 ? x1 + 1 : x1;
+        const startY = y1 % 2 === 0 ? y1 + 1 : y1;
+
+        // Start from a random cell
+        let cx = startX;
+        let cy = startY;
+
+        if (cx < cols && cy < rows) {
+          maze[cy][cx] = 0;
+          visited.add(`${cx},${cy}`);
+          stack.push({ x: cx, y: cy });
         }
 
-        function connectToMaze(startX, startY) {
-            // BFS to find nearest path cell and carve to it
-            const queue = [{x: startX, y: startY, path: [{x: startX, y: startY}]}];
-            const visited = new Set();
-            visited.add(`${startX},${startY}`);
-            
-            const directions = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
-            
-            while (queue.length > 0) {
-                const current = queue.shift();
-                
-                // Check if we found a path cell (that's not our starting cell)
-                if (maze[current.y][current.x] === 0 && (current.x !== startX || current.y !== startY)) {
-                    // Carve the path
-                    for (const cell of current.path) {
-                        maze[cell.y][cell.x] = 0;
-                    }
-                    return;
-                }
-                
-                for (const dir of directions) {
-                    const nx = current.x + dir.dx;
-                    const ny = current.y + dir.dy;
-                    const key = `${nx},${ny}`;
-                    
-                    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited.has(key)) {
-                        visited.add(key);
-                        queue.push({
-                            x: nx, 
-                            y: ny, 
-                            path: [...current.path, {x: nx, y: ny}]
-                        });
-                    }
-                }
+        while (stack.length > 0) {
+          const current = stack[stack.length - 1];
+          cx = current.x;
+          cy = current.y;
+
+          // Get unvisited neighbors (2 cells away)
+          const neighbors = [];
+          const directions = [
+            { dx: 0, dy: -2 }, // up
+            { dx: 0, dy: 2 }, // down
+            { dx: -2, dy: 0 }, // left
+            { dx: 2, dy: 0 }, // right
+          ];
+
+          for (const dir of directions) {
+            const nx = cx + dir.dx;
+            const ny = cy + dir.dy;
+
+            if (
+              nx >= x1 &&
+              nx <= x2 &&
+              ny >= y1 &&
+              ny <= y2 &&
+              nx < cols &&
+              ny < rows &&
+              !visited.has(`${nx},${ny}`)
+            ) {
+              neighbors.push({
+                x: nx,
+                y: ny,
+                wx: cx + dir.dx / 2,
+                wy: cy + dir.dy / 2,
+              });
             }
-        }
+          }
 
-        function findPath(startX, startY, endX, endY, canUseSecretPassages = false) {
-            // BFS pathfinding
-            const queue = [{x: startX, y: startY, path: [{x: startX, y: startY}]}];
-            const visited = new Set();
-            visited.add(`${startX},${startY}`);
-            
-            const directions = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
-            
-            while (queue.length > 0) {
-                const current = queue.shift();
-                
-                if (current.x === endX && current.y === endY) {
-                    return current.path;
-                }
-                
-                for (const dir of directions) {
-                    const nx = current.x + dir.dx;
-                    const ny = current.y + dir.dy;
-                    const key = `${nx},${ny}`;
-                    
-                    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited.has(key)) {
-                        const cell = maze[ny][nx];
-                        if (cell === 0 || cell === 3 || (cell === 2 && canUseSecretPassages)) {
-                            visited.add(key);
-                            queue.push({
-                                x: nx, 
-                                y: ny, 
-                                path: [...current.path, {x: nx, y: ny}]
-                            });
-                        }
-                    }
-                }
+          if (neighbors.length > 0) {
+            // Choose random neighbor
+            const next =
+              neighbors[Math.floor(Math.random() * neighbors.length)];
+
+            // Remove wall between current and next
+            if (
+              next.wy >= 0 &&
+              next.wy < rows &&
+              next.wx >= 0 &&
+              next.wx < cols
+            ) {
+              maze[next.wy][next.wx] = 0;
             }
-            
-            return null; // No path found
-        }
-
-        function ensureSolvable(startX, startY, endX, endY) {
-            const path = findPath(startX, startY, endX, endY);
-            
-            if (!path) {
-                // No path exists, carve one directly
-                carvePath(startX, startY, endX, endY);
-            }
-        }
-
-        function carvePath(x1, y1, x2, y2) {
-            // Carve a winding path between two points
-            let x = x1;
-            let y = y1;
-            
-            while (x !== x2 || y !== y2) {
-                maze[y][x] = 0;
-                
-                // Randomly choose to move horizontally or vertically
-                if (Math.random() < 0.5 && x !== x2) {
-                    x += x < x2 ? 1 : -1;
-                } else if (y !== y2) {
-                    y += y < y2 ? 1 : -1;
-                } else {
-                    x += x < x2 ? 1 : -1;
-                }
-            }
-            maze[y2][x2] = 0;
-        }
-
-        function addSecretPassages() {
-            // Find wall cells that would create shortcuts and mark them as secret passages
-            let passagesAdded = 0;
-            const maxPassages = 8;
-            
-            // Try to find good locations for secret passages
-            for (let attempts = 0; attempts < 200 && passagesAdded < maxPassages; attempts++) {
-                const x = 2 + Math.floor(Math.random() * (cols - 4));
-                const y = 2 + Math.floor(Math.random() * (rows - 4));
-                
-                if (maze[y][x] === 1) {
-                    // Check if this wall separates two path cells
-                    const hasPathAboveBelow = (maze[y-1] && maze[y-1][x] === 0) && (maze[y+1] && maze[y+1][x] === 0);
-                    const hasPathLeftRight = (maze[y][x-1] === 0) && (maze[y][x+1] === 0);
-                    
-                    if (hasPathAboveBelow || hasPathLeftRight) {
-                        maze[y][x] = 2; // Secret passage
-                        passagesAdded++;
-                    }
-                }
-            }
-        }
-
-        function addLowWalls() {
-            // Convert some walls to low walls that Leo can see over
-            for (let y = 1; y < rows - 1; y++) {
-                for (let x = 1; x < cols - 1; x++) {
-                    if (maze[y][x] === 1 && Math.random() < 0.08) {
-                        // Only convert if adjacent to paths
-                        const adjacentPaths = 
-                            (maze[y-1] && maze[y-1][x] === 0 ? 1 : 0) +
-                            (maze[y+1] && maze[y+1][x] === 0 ? 1 : 0) +
-                            (maze[y][x-1] === 0 ? 1 : 0) +
-                            (maze[y][x+1] === 0 ? 1 : 0);
-                        
-                        if (adjacentPaths >= 2) {
-                            maze[y][x] = 3; // Low wall
-                        }
-                    }
-                }
-            }
-        }
-
-        function drawMaze() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw background
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw labyrinth sections with different tints
-            drawLabyrinthSection(0, 0, 10, 10, 'rgba(255, 107, 157, 0.1)');    // Maya's pink
-            drawLabyrinthSection(20, 0, 10, 10, 'rgba(78, 205, 196, 0.1)');   // Sam's teal
-            drawLabyrinthSection(10, 10, 10, 10, 'rgba(255, 230, 109, 0.1)'); // Leo's yellow
-
-            // Draw cells
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    const cell = maze[y][x];
-                    const px = x * cellSize;
-                    const py = y * cellSize;
-
-                    if (cell === 1) {
-                        // Wall
-                        ctx.fillStyle = '#2c3e50';
-                        ctx.fillRect(px, py, cellSize, cellSize);
-                        ctx.strokeStyle = '#34495e';
-                        ctx.strokeRect(px, py, cellSize, cellSize);
-                    } else if (cell === 2) {
-                        // Secret passage
-                        ctx.fillStyle = '#8b4513';
-                        ctx.fillRect(px, py, cellSize, cellSize);
-                        ctx.fillStyle = '#654321';
-                        ctx.font = '12px Arial';
-                        ctx.fillText('🕳️', px + 5, py + 20);
-                    } else if (cell === 3) {
-                        // Low wall
-                        ctx.fillStyle = '#1a1a2e';
-                        ctx.fillRect(px, py, cellSize, cellSize);
-                        ctx.fillStyle = 'rgba(44, 62, 80, 0.5)';
-                        ctx.fillRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
-                    } else {
-                        // Path
-                        ctx.fillStyle = '#1a1a2e';
-                        ctx.fillRect(px, py, cellSize, cellSize);
-                    }
-                }
+            if (next.y >= 0 && next.y < rows && next.x >= 0 && next.x < cols) {
+              maze[next.y][next.x] = 0;
             }
 
-            // Draw exit
-            ctx.fillStyle = '#ffd700';
-            ctx.fillRect(exitPos.x * cellSize, exitPos.y * cellSize, cellSize, cellSize);
-            ctx.font = '20px Arial';
-            ctx.fillText('🚪', exitPos.x * cellSize + 3, exitPos.y * cellSize + 22);
+            visited.add(`${next.x},${next.y}`);
+            stack.push({ x: next.x, y: next.y });
+          } else {
+            stack.pop();
+          }
+        }
+      }
 
-            // Draw entrance markers
-            ctx.font = '16px Arial';
-            ctx.fillStyle = '#ff6b9d';
-            ctx.fillText('①', entrances.maya.x * cellSize + 5, entrances.maya.y * cellSize + 20);
-            ctx.fillStyle = '#4ecdc4';
-            ctx.fillText('②', entrances.sam.x * cellSize + 5, entrances.sam.y * cellSize + 20);
-            ctx.fillStyle = '#ffe66d';
-            ctx.fillText('③', entrances.leo.x * cellSize + 5, entrances.leo.y * cellSize + 20);
+      function createConnectionCorridor(x1, y1, x2, y2) {
+        // Carve a corridor between two points
+        let x = x1;
+        let y = y1;
 
-            // Draw children paths
-            children.forEach(child => {
-                if (child.path.length > 1) {
-                    ctx.strokeStyle = child.color;
-                    ctx.lineWidth = 3;
-                    ctx.globalAlpha = 0.4;
-                    ctx.beginPath();
-                    ctx.moveTo(child.path[0].x * cellSize + cellSize/2, child.path[0].y * cellSize + cellSize/2);
-                    for (let i = 1; i < child.path.length; i++) {
-                        ctx.lineTo(child.path[i].x * cellSize + cellSize/2, child.path[i].y * cellSize + cellSize/2);
-                    }
-                    ctx.stroke();
-                    ctx.globalAlpha = 1;
-                }
-            });
+        while (x !== x2 || y !== y2) {
+          if (y >= 0 && y < rows && x >= 0 && x < cols) {
+            maze[y][x] = 0;
+          }
 
-            // Draw children
-            children.forEach(child => {
-                const px = child.x * cellSize + cellSize/2;
-                const py = child.y * cellSize + cellSize/2;
-
-                // Glow effect
-                ctx.beginPath();
-                ctx.arc(px, py, 15, 0, Math.PI * 2);
-                ctx.fillStyle = child.color;
-                ctx.globalAlpha = 0.3;
-                ctx.fill();
-                ctx.globalAlpha = 1;
-
-                // Child circle
-                ctx.beginPath();
-                ctx.arc(px, py, 10, 0, Math.PI * 2);
-                ctx.fillStyle = child.color;
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Child emoji
-                ctx.font = '14px Arial';
-                ctx.fillStyle = '#000';
-                const emoji = child.name === 'Maya' ? '👧' : (child.name === 'Sam' ? '👦' : '🧒');
-                ctx.fillText(emoji, px - 7, py + 5);
-
-                // Finished indicator
-                if (child.finished) {
-                    ctx.font = '20px Arial';
-                    ctx.fillText('🏆', px - 10, py - 15);
-                }
-            });
+          if (x < x2) x++;
+          else if (x > x2) x--;
+          else if (y < y2) y++;
+          else if (y > y2) y--;
         }
 
-        function drawLabyrinthSection(startX, startY, width, height, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(startX * cellSize, startY * cellSize, width * cellSize, height * cellSize);
+        if (y2 >= 0 && y2 < rows && x2 >= 0 && x2 < cols) {
+          maze[y2][x2] = 0;
         }
+      }
 
-        function initChildren() {
-            children = [
-                new Child('Maya', '#ff6b9d', entrances.maya.x, entrances.maya.y, 'deaf'),
-                new Child('Sam', '#4ecdc4', entrances.sam.x, entrances.sam.y, 'short'),
-                new Child('Leo', '#ffe66d', entrances.leo.x, entrances.leo.y, 'tall')
-            ];
+      function clearCell(x, y) {
+        if (y >= 0 && y < rows && x >= 0 && x < cols) {
+          maze[y][x] = 0;
         }
+      }
 
-        function updateStatus() {
-            children.forEach(child => {
-                const status = document.getElementById(`${child.name.toLowerCase()}-status`);
-                if (child.finished) {
-                    status.textContent = `🏆 Finished! (${child.steps} steps)`;
-                } else {
-                    const dist = Math.abs(child.x - exitPos.x) + Math.abs(child.y - exitPos.y);
-                    status.textContent = `Steps: ${child.steps} | Distance: ${dist}`;
-                }
-            });
-        }
+      function connectToMaze(startX, startY) {
+        // BFS to find nearest path cell and carve to it
+        const queue = [
+          { x: startX, y: startY, path: [{ x: startX, y: startY }] },
+        ];
+        const visited = new Set();
+        visited.add(`${startX},${startY}`);
 
-        function addLog(message, childName = '') {
-            const logBox = document.getElementById('logBox');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${childName.toLowerCase()}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logBox.appendChild(entry);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
+        const directions = [
+          { dx: 1, dy: 0 },
+          { dx: -1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: 0, dy: -1 },
+        ];
 
-        function gameLoop() {
-            if (!gameRunning) return;
+        while (queue.length > 0) {
+          const current = queue.shift();
 
-            const speed = parseInt(document.getElementById('speedSlider').value);
-            
-            children.forEach(child => {
-                if (!child.finished) {
-                    child.move();
-                    
-                    if (child.finished && !winner) {
-                        winner = child;
-                        addLog(`${child.name} reached the exit first with ${child.steps} steps!`, child.name);
-                        showWinner(child);
-                    }
-                }
-            });
-
-            updateStatus();
-            drawMaze();
-
-            // Check if all finished
-            if (children.every(c => c.finished)) {
-                gameRunning = false;
-                addLog('Race complete! All children have reached the exit.');
-                return;
+          // Check if we found a path cell (that's not our starting cell)
+          if (
+            maze[current.y][current.x] === 0 &&
+            (current.x !== startX || current.y !== startY)
+          ) {
+            // Carve the path
+            for (const cell of current.path) {
+              maze[cell.y][cell.x] = 0;
             }
+            return;
+          }
 
-            setTimeout(() => {
-                animationId = requestAnimationFrame(gameLoop);
-            }, 200 - speed * 15);
+          for (const dir of directions) {
+            const nx = current.x + dir.dx;
+            const ny = current.y + dir.dy;
+            const key = `${nx},${ny}`;
+
+            if (
+              nx >= 0 &&
+              nx < cols &&
+              ny >= 0 &&
+              ny < rows &&
+              !visited.has(key)
+            ) {
+              visited.add(key);
+              queue.push({
+                x: nx,
+                y: ny,
+                path: [...current.path, { x: nx, y: ny }],
+              });
+            }
+          }
+        }
+      }
+
+      function findPath(
+        startX,
+        startY,
+        endX,
+        endY,
+        canUseSecretPassages = false,
+      ) {
+        // BFS pathfinding
+        const queue = [
+          { x: startX, y: startY, path: [{ x: startX, y: startY }] },
+        ];
+        const visited = new Set();
+        visited.add(`${startX},${startY}`);
+
+        const directions = [
+          { dx: 1, dy: 0 },
+          { dx: -1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: 0, dy: -1 },
+        ];
+
+        while (queue.length > 0) {
+          const current = queue.shift();
+
+          if (current.x === endX && current.y === endY) {
+            return current.path;
+          }
+
+          for (const dir of directions) {
+            const nx = current.x + dir.dx;
+            const ny = current.y + dir.dy;
+            const key = `${nx},${ny}`;
+
+            if (
+              nx >= 0 &&
+              nx < cols &&
+              ny >= 0 &&
+              ny < rows &&
+              !visited.has(key)
+            ) {
+              const cell = maze[ny][nx];
+              if (
+                cell === 0 ||
+                cell === 3 ||
+                (cell === 2 && canUseSecretPassages)
+              ) {
+                visited.add(key);
+                queue.push({
+                  x: nx,
+                  y: ny,
+                  path: [...current.path, { x: nx, y: ny }],
+                });
+              }
+            }
+          }
         }
 
-        function showWinner(child) {
-            const announcement = document.getElementById('winnerAnnouncement');
-            const winnerName = document.getElementById('winnerName');
-            const winnerMessage = document.getElementById('winnerMessage');
-            
-            winnerName.textContent = `${child.name} Wins!`;
-            winnerName.style.color = child.color;
-            
-            let traitMessage = '';
-            if (child.trait === 'deaf') {
-                traitMessage = "Maya's incredible observation skills helped her notice patterns others missed!";
-            } else if (child.trait === 'short') {
-                traitMessage = "Sam's ability to squeeze through secret passages gave him the edge!";
+        return null; // No path found
+      }
+
+      function ensureSolvable(startX, startY, endX, endY) {
+        const path = findPath(startX, startY, endX, endY);
+
+        if (!path) {
+          // No path exists, carve one directly
+          carvePath(startX, startY, endX, endY);
+        }
+      }
+
+      function carvePath(x1, y1, x2, y2) {
+        // Carve a winding path between two points
+        let x = x1;
+        let y = y1;
+
+        while (x !== x2 || y !== y2) {
+          maze[y][x] = 0;
+
+          // Randomly choose to move horizontally or vertically
+          if (Math.random() < 0.5 && x !== x2) {
+            x += x < x2 ? 1 : -1;
+          } else if (y !== y2) {
+            y += y < y2 ? 1 : -1;
+          } else {
+            x += x < x2 ? 1 : -1;
+          }
+        }
+        maze[y2][x2] = 0;
+      }
+
+      function addSecretPassages() {
+        // Find wall cells that would create shortcuts and mark them as secret passages
+        let passagesAdded = 0;
+        const maxPassages = 8;
+
+        // Try to find good locations for secret passages
+        for (
+          let attempts = 0;
+          attempts < 200 && passagesAdded < maxPassages;
+          attempts++
+        ) {
+          const x = 2 + Math.floor(Math.random() * (cols - 4));
+          const y = 2 + Math.floor(Math.random() * (rows - 4));
+
+          if (maze[y][x] === 1) {
+            // Check if this wall separates two path cells
+            const hasPathAboveBelow =
+              maze[y - 1] &&
+              maze[y - 1][x] === 0 &&
+              maze[y + 1] &&
+              maze[y + 1][x] === 0;
+            const hasPathLeftRight =
+              maze[y][x - 1] === 0 && maze[y][x + 1] === 0;
+
+            if (hasPathAboveBelow || hasPathLeftRight) {
+              maze[y][x] = 2; // Secret passage
+              passagesAdded++;
+            }
+          }
+        }
+      }
+
+      function addLowWalls() {
+        // Convert some walls to low walls that Leo can see over
+        for (let y = 1; y < rows - 1; y++) {
+          for (let x = 1; x < cols - 1; x++) {
+            if (maze[y][x] === 1 && Math.random() < 0.08) {
+              // Only convert if adjacent to paths
+              const adjacentPaths =
+                (maze[y - 1] && maze[y - 1][x] === 0 ? 1 : 0) +
+                (maze[y + 1] && maze[y + 1][x] === 0 ? 1 : 0) +
+                (maze[y][x - 1] === 0 ? 1 : 0) +
+                (maze[y][x + 1] === 0 ? 1 : 0);
+
+              if (adjacentPaths >= 2) {
+                maze[y][x] = 3; // Low wall
+              }
+            }
+          }
+        }
+      }
+
+      function drawMaze() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw background
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw labyrinth sections with different tints
+        drawLabyrinthSection(0, 0, 10, 10, 'rgba(255, 107, 157, 0.1)'); // Maya's pink
+        drawLabyrinthSection(20, 0, 10, 10, 'rgba(78, 205, 196, 0.1)'); // Sam's teal
+        drawLabyrinthSection(10, 10, 10, 10, 'rgba(255, 230, 109, 0.1)'); // Leo's yellow
+
+        // Draw cells
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            const cell = maze[y][x];
+            const px = x * cellSize;
+            const py = y * cellSize;
+
+            if (cell === 1) {
+              // Wall
+              ctx.fillStyle = '#2c3e50';
+              ctx.fillRect(px, py, cellSize, cellSize);
+              ctx.strokeStyle = '#34495e';
+              ctx.strokeRect(px, py, cellSize, cellSize);
+            } else if (cell === 2) {
+              // Secret passage
+              ctx.fillStyle = '#8b4513';
+              ctx.fillRect(px, py, cellSize, cellSize);
+              ctx.fillStyle = '#654321';
+              ctx.font = '12px Arial';
+              ctx.fillText('🕳️', px + 5, py + 20);
+            } else if (cell === 3) {
+              // Low wall
+              ctx.fillStyle = '#1a1a2e';
+              ctx.fillRect(px, py, cellSize, cellSize);
+              ctx.fillStyle = 'rgba(44, 62, 80, 0.5)';
+              ctx.fillRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
             } else {
-                traitMessage = "Leo's height let him see over walls and plan the best route!";
+              // Path
+              ctx.fillStyle = '#1a1a2e';
+              ctx.fillRect(px, py, cellSize, cellSize);
             }
-            
-            winnerMessage.textContent = `Completed in ${child.steps} steps! ${traitMessage}`;
-            announcement.style.display = 'block';
-            
-            document.getElementById(`${child.name.toLowerCase()}-card`).classList.add('winner');
+          }
         }
 
-        function closeAnnouncement() {
-            document.getElementById('winnerAnnouncement').style.display = 'none';
-        }
+        // Draw exit
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(
+          exitPos.x * cellSize,
+          exitPos.y * cellSize,
+          cellSize,
+          cellSize,
+        );
+        ctx.font = '20px Arial';
+        ctx.fillText('🚪', exitPos.x * cellSize + 3, exitPos.y * cellSize + 22);
 
-        function startRace() {
-            if (gameRunning) return;
-            
-            gameRunning = true;
-            document.getElementById('startBtn').disabled = true;
-            addLog('🏁 Race started! Good luck to all children!');
-            
-            children.forEach(child => {
-                addLog(`${child.name} enters from Gate at position (${child.x}, ${child.y})`, child.name);
-            });
-            
-            gameLoop();
-        }
+        // Draw entrance markers
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#ff6b9d';
+        ctx.fillText(
+          '①',
+          entrances.maya.x * cellSize + 5,
+          entrances.maya.y * cellSize + 20,
+        );
+        ctx.fillStyle = '#4ecdc4';
+        ctx.fillText(
+          '②',
+          entrances.sam.x * cellSize + 5,
+          entrances.sam.y * cellSize + 20,
+        );
+        ctx.fillStyle = '#ffe66d';
+        ctx.fillText(
+          '③',
+          entrances.leo.x * cellSize + 5,
+          entrances.leo.y * cellSize + 20,
+        );
 
-        function resetGame() {
-            gameRunning = false;
-            winner = null;
-            if (animationId) {
-                cancelAnimationFrame(animationId);
+        // Draw children paths
+        children.forEach((child) => {
+          if (child.path.length > 1) {
+            ctx.strokeStyle = child.color;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath();
+            ctx.moveTo(
+              child.path[0].x * cellSize + cellSize / 2,
+              child.path[0].y * cellSize + cellSize / 2,
+            );
+            for (let i = 1; i < child.path.length; i++) {
+              ctx.lineTo(
+                child.path[i].x * cellSize + cellSize / 2,
+                child.path[i].y * cellSize + cellSize / 2,
+              );
             }
-            
-            generateMaze();
-            initChildren();
-            drawMaze();
-            updateStatus();
-            
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('winnerAnnouncement').style.display = 'none';
-            document.getElementById('logBox').innerHTML = '<div class="log-entry">🎮 Game reset. Press Start to begin a new race!</div>';
-            
-            document.querySelectorAll('.child-card').forEach(card => {
-                card.classList.remove('winner');
-            });
-            
-            document.getElementById('maya-status').textContent = 'Ready at Gate 1';
-            document.getElementById('sam-status').textContent = 'Ready at Gate 2';
-            document.getElementById('leo-status').textContent = 'Ready at Gate 3';
-        }
-
-        // Speed slider
-        document.getElementById('speedSlider').addEventListener('input', function() {
-            document.getElementById('speedValue').textContent = this.value;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
         });
 
-        // Initialize game
+        // Draw children
+        children.forEach((child) => {
+          const px = child.x * cellSize + cellSize / 2;
+          const py = child.y * cellSize + cellSize / 2;
+
+          // Glow effect
+          ctx.beginPath();
+          ctx.arc(px, py, 15, 0, Math.PI * 2);
+          ctx.fillStyle = child.color;
+          ctx.globalAlpha = 0.3;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // Child circle
+          ctx.beginPath();
+          ctx.arc(px, py, 10, 0, Math.PI * 2);
+          ctx.fillStyle = child.color;
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Child emoji
+          ctx.font = '14px Arial';
+          ctx.fillStyle = '#000';
+          const emoji =
+            child.name === 'Maya' ? '👧' : child.name === 'Sam' ? '👦' : '🧒';
+          ctx.fillText(emoji, px - 7, py + 5);
+
+          // Finished indicator
+          if (child.finished) {
+            ctx.font = '20px Arial';
+            ctx.fillText('🏆', px - 10, py - 15);
+          }
+        });
+      }
+
+      function drawLabyrinthSection(startX, startY, width, height, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(
+          startX * cellSize,
+          startY * cellSize,
+          width * cellSize,
+          height * cellSize,
+        );
+      }
+
+      function initChildren() {
+        children = [
+          new Child(
+            'Maya',
+            '#ff6b9d',
+            entrances.maya.x,
+            entrances.maya.y,
+            'deaf',
+          ),
+          new Child(
+            'Sam',
+            '#4ecdc4',
+            entrances.sam.x,
+            entrances.sam.y,
+            'short',
+          ),
+          new Child('Leo', '#ffe66d', entrances.leo.x, entrances.leo.y, 'tall'),
+        ];
+      }
+
+      function updateStatus() {
+        children.forEach((child) => {
+          const status = document.getElementById(
+            `${child.name.toLowerCase()}-status`,
+          );
+          if (child.finished) {
+            status.textContent = `🏆 Finished! (${child.steps} steps)`;
+          } else {
+            const dist =
+              Math.abs(child.x - exitPos.x) + Math.abs(child.y - exitPos.y);
+            status.textContent = `Steps: ${child.steps} | Distance: ${dist}`;
+          }
+        });
+      }
+
+      function addLog(message, childName = '') {
+        const logBox = document.getElementById('logBox');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${childName.toLowerCase()}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logBox.appendChild(entry);
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      function gameLoop() {
+        if (!gameRunning) return;
+
+        const speed = parseInt(document.getElementById('speedSlider').value);
+
+        children.forEach((child) => {
+          if (!child.finished) {
+            child.move();
+
+            if (child.finished && !winner) {
+              winner = child;
+              addLog(
+                `${child.name} reached the exit first with ${child.steps} steps!`,
+                child.name,
+              );
+              showWinner(child);
+            }
+          }
+        });
+
+        updateStatus();
+        drawMaze();
+
+        // Check if all finished
+        if (children.every((c) => c.finished)) {
+          gameRunning = false;
+          addLog('Race complete! All children have reached the exit.');
+          return;
+        }
+
+        setTimeout(
+          () => {
+            animationId = requestAnimationFrame(gameLoop);
+          },
+          200 - speed * 15,
+        );
+      }
+
+      function showWinner(child) {
+        const announcement = document.getElementById('winnerAnnouncement');
+        const winnerName = document.getElementById('winnerName');
+        const winnerMessage = document.getElementById('winnerMessage');
+
+        winnerName.textContent = `${child.name} Wins!`;
+        winnerName.style.color = child.color;
+
+        let traitMessage = '';
+        if (child.trait === 'deaf') {
+          traitMessage =
+            "Maya's incredible observation skills helped her notice patterns others missed!";
+        } else if (child.trait === 'short') {
+          traitMessage =
+            "Sam's ability to squeeze through secret passages gave him the edge!";
+        } else {
+          traitMessage =
+            "Leo's height let him see over walls and plan the best route!";
+        }
+
+        winnerMessage.textContent = `Completed in ${child.steps} steps! ${traitMessage}`;
+        announcement.style.display = 'block';
+
+        document
+          .getElementById(`${child.name.toLowerCase()}-card`)
+          .classList.add('winner');
+      }
+
+      function closeAnnouncement() {
+        document.getElementById('winnerAnnouncement').style.display = 'none';
+      }
+
+      function startRace() {
+        if (gameRunning) return;
+
+        gameRunning = true;
+        document.getElementById('startBtn').disabled = true;
+        addLog('🏁 Race started! Good luck to all children!');
+
+        children.forEach((child) => {
+          addLog(
+            `${child.name} enters from Gate at position (${child.x}, ${child.y})`,
+            child.name,
+          );
+        });
+
+        gameLoop();
+      }
+
+      function resetGame() {
+        gameRunning = false;
+        winner = null;
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+        }
+
         generateMaze();
         initChildren();
         drawMaze();
+        updateStatus();
+
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('winnerAnnouncement').style.display = 'none';
+        document.getElementById('logBox').innerHTML =
+          '<div class="log-entry">🎮 Game reset. Press Start to begin a new race!</div>';
+
+        document.querySelectorAll('.child-card').forEach((card) => {
+          card.classList.remove('winner');
+        });
+
+        document.getElementById('maya-status').textContent = 'Ready at Gate 1';
+        document.getElementById('sam-status').textContent = 'Ready at Gate 2';
+        document.getElementById('leo-status').textContent = 'Ready at Gate 3';
+      }
+
+      // Speed slider
+      document
+        .getElementById('speedSlider')
+        .addEventListener('input', function () {
+          document.getElementById('speedValue').textContent = this.value;
+        });
+
+      // Initialize game
+      generateMaze();
+      initChildren();
+      drawMaze();
     </script>
-</body>
+  </body>
 </html>

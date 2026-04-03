@@ -1,112 +1,162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Drift Rivals: Contact Edition</title>
     <style>
-        html, body {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: #000;
-            overflow: hidden;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        canvas { display: block; }
-        
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex;
-            z-index: 10;
-        }
-        .p1-ui, .p2-ui {
-            width: 50%; padding: 20px; box-sizing: border-box;
-            text-shadow: 2px 2px 4px #000;
-        }
-        .p1-ui { color: #ff5555; text-align: left; }
-        .p2-ui { color: #5555ff; text-align: right; }
-        h2 { margin: 0; font-style: italic; }
-        .controls { font-size: 12px; color: #ddd; margin-top: 5px; }
-    </style>
-</head>
-<body>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        overflow: hidden;
+        font-family: 'Segoe UI', sans-serif;
+      }
+      canvas {
+        display: block;
+      }
 
+      #ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        display: flex;
+        z-index: 10;
+      }
+      .p1-ui,
+      .p2-ui {
+        width: 50%;
+        padding: 20px;
+        box-sizing: border-box;
+        text-shadow: 2px 2px 4px #000;
+      }
+      .p1-ui {
+        color: #ff5555;
+        text-align: left;
+      }
+      .p2-ui {
+        color: #5555ff;
+        text-align: right;
+      }
+      h2 {
+        margin: 0;
+        font-style: italic;
+      }
+      .controls {
+        font-size: 12px;
+        color: #ddd;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
     <div id="ui-layer">
-        <div class="p1-ui">
-            <h2>P1</h2><p>TIME: <span id="t1">0.00</span></p>
-            <div class="controls">WASD</div>
-        </div>
-        <div class="p2-ui">
-            <h2>P2</h2><p>TIME: <span id="t2">0.00</span></p>
-            <div class="controls">ARROWS</div>
-        </div>
+      <div class="p1-ui">
+        <h2>P1</h2>
+        <p>TIME: <span id="t1">0.00</span></p>
+        <div class="controls">WASD</div>
+      </div>
+      <div class="p2-ui">
+        <h2>P2</h2>
+        <p>TIME: <span id="t2">0.00</span></p>
+        <div class="controls">ARROWS</div>
+      </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-<script>
-window.onload = initGame;
+    <script>
+      window.onload = initGame;
 
-function initGame() {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const t1El = document.getElementById('t1');
-    const t2El = document.getElementById('t2');
+      function initGame() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const t1El = document.getElementById('t1');
+        const t2El = document.getElementById('t2');
 
-    // --- CONFIG ---
-    const ZOOM = 1.3;
-    const TRACK_SCALE = 3.5;
-    const TRACK_WIDTH = 220;
-    const ACCEL = 0.20;
-    // Collision radius approx half car length
-    const CAR_RADIUS = 25; 
-    
-    let width, height;
+        // --- CONFIG ---
+        const ZOOM = 1.3;
+        const TRACK_SCALE = 3.5;
+        const TRACK_WIDTH = 220;
+        const ACCEL = 0.2;
+        // Collision radius approx half car length
+        const CAR_RADIUS = 25;
 
-    function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+        let width, height;
 
-    // --- TRACK ---
-    const rawMap = [
-        [0,0], [200,0], [350,80], [250,200], [100,250], [50,400], [150,550],
-        [450,600], [650,450], [800,600], [900,900], [600,1000], [400,950],
-        [200,1100], [0,1000], [-250,850], [-350,600], [-300,350], [-450,250],
-        [-300,100], [-100,0]
-    ];
-    const track = rawMap.map(pt => ({ x: pt[0] * TRACK_SCALE, y: pt[1] * TRACK_SCALE }));
-    track.push(track[0]);
+        function resize() {
+          width = window.innerWidth;
+          height = window.innerHeight;
+          canvas.width = width;
+          canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-    // --- CAR CLASS ---
-    class Car {
-        constructor(color, xOffset) {
-            this.x = xOffset; this.y = 0;
-            this.angle = 0; this.angVel = 0;
-            this.vx = 0; this.vy = 0; this.speed = 0;
+        // --- TRACK ---
+        const rawMap = [
+          [0, 0],
+          [200, 0],
+          [350, 80],
+          [250, 200],
+          [100, 250],
+          [50, 400],
+          [150, 550],
+          [450, 600],
+          [650, 450],
+          [800, 600],
+          [900, 900],
+          [600, 1000],
+          [400, 950],
+          [200, 1100],
+          [0, 1000],
+          [-250, 850],
+          [-350, 600],
+          [-300, 350],
+          [-450, 250],
+          [-300, 100],
+          [-100, 0],
+        ];
+        const track = rawMap.map((pt) => ({
+          x: pt[0] * TRACK_SCALE,
+          y: pt[1] * TRACK_SCALE,
+        }));
+        track.push(track[0]);
+
+        // --- CAR CLASS ---
+        class Car {
+          constructor(color, xOffset) {
+            this.x = xOffset;
+            this.y = 0;
+            this.angle = 0;
+            this.angVel = 0;
+            this.vx = 0;
+            this.vy = 0;
+            this.speed = 0;
             this.color = color;
             this.skids = [];
-            this.lapTime = 0; this.startTime = Date.now();
+            this.lapTime = 0;
+            this.startTime = Date.now();
             this.checkpoint = false;
-        }
+          }
 
-        update(input) {
+          update(input) {
             // Steering inertia
             let targetAngVel = 0;
-            if(input.left) targetAngVel = -0.04;
-            if(input.right) targetAngVel = 0.04;
+            if (input.left) targetAngVel = -0.04;
+            if (input.right) targetAngVel = 0.04;
             this.angVel += (targetAngVel - this.angVel) * 0.1;
             this.angle += this.angVel;
 
             // Gas/Brake
             let thrust = 0;
-            if(input.gas) thrust = ACCEL;
-            if(input.brake) thrust = -ACCEL * 0.6;
+            if (input.gas) thrust = ACCEL;
+            if (input.brake) thrust = -ACCEL * 0.6;
 
             this.vx += Math.cos(this.angle) * thrust;
             this.vy += Math.sin(this.angle) * thrust;
@@ -115,14 +165,14 @@ function initGame() {
             // Track Collision check
             let safe = false;
             let minDist = 99999;
-            for(let i=0; i<track.length-1; i++) {
-                const d = distToSeg(this, track[i], track[i+1]);
-                if(d < minDist) minDist = d;
+            for (let i = 0; i < track.length - 1; i++) {
+              const d = distToSeg(this, track[i], track[i + 1]);
+              if (d < minDist) minDist = d;
             }
-            if(minDist < TRACK_WIDTH/2) safe = true;
+            if (minDist < TRACK_WIDTH / 2) safe = true;
 
             // Surface Friction
-            const drag = safe ? 0.96 : 0.88; 
+            const drag = safe ? 0.96 : 0.88;
             this.vx *= drag;
             this.vy *= drag;
 
@@ -130,56 +180,64 @@ function initGame() {
             this.y += this.vy;
 
             // Skids
-            if(this.speed > 3 && (Math.abs(this.angVel) > 0.01 || !safe)) {
-                if(Date.now() % 5 === 0) {
-                    this.skids.push({x:this.x, y:this.y});
-                    if(this.skids.length > 400) this.skids.shift();
-                }
+            if (this.speed > 3 && (Math.abs(this.angVel) > 0.01 || !safe)) {
+              if (Date.now() % 5 === 0) {
+                this.skids.push({ x: this.x, y: this.y });
+                if (this.skids.length > 400) this.skids.shift();
+              }
             }
 
             // Lap Timing
             this.lapTime = (Date.now() - this.startTime) / 1000;
-            if(this.y > 1500) this.checkpoint = true;
-            
-            if(input.reset) {
-                this.x=0; this.y=0; this.vx=0; this.vy=0; this.angle=0;
-                this.startTime = Date.now(); this.checkpoint = false;
+            if (this.y > 1500) this.checkpoint = true;
+
+            if (input.reset) {
+              this.x = 0;
+              this.y = 0;
+              this.vx = 0;
+              this.vy = 0;
+              this.angle = 0;
+              this.startTime = Date.now();
+              this.checkpoint = false;
             }
+          }
         }
-    }
 
-    const p1 = new Car('#ff5555', -40);
-    const p2 = new Car('#5555ff', 40);
+        const p1 = new Car('#ff5555', -40);
+        const p2 = new Car('#5555ff', 40);
 
-    // --- INPUT ---
-    const keys = {};
-    window.addEventListener('keydown', e => keys[e.code] = true);
-    window.addEventListener('keyup', e => keys[e.code] = false);
-    window.addEventListener('click', () => window.focus());
+        // --- INPUT ---
+        const keys = {};
+        window.addEventListener('keydown', (e) => (keys[e.code] = true));
+        window.addEventListener('keyup', (e) => (keys[e.code] = false));
+        window.addEventListener('click', () => window.focus());
 
-    // --- PHYSICS HELPERS ---
-    function distToSeg(p, v, w) {
-        const l2 = (v.x - w.x)**2 + (v.y - w.y)**2;
-        if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
-        let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
-        t = Math.max(0, Math.min(1, t));
-        return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
-    }
+        // --- PHYSICS HELPERS ---
+        function distToSeg(p, v, w) {
+          const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
+          if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+          let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+          t = Math.max(0, Math.min(1, t));
+          return Math.hypot(
+            p.x - (v.x + t * (w.x - v.x)),
+            p.y - (v.y + t * (w.y - v.y)),
+          );
+        }
 
-    // NEW: Handle Car-vs-Car Collision
-    function handleCollisions() {
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        const dist = Math.hypot(dx, dy);
-        const minDist = CAR_RADIUS * 2;
+        // NEW: Handle Car-vs-Car Collision
+        function handleCollisions() {
+          const dx = p2.x - p1.x;
+          const dy = p2.y - p1.y;
+          const dist = Math.hypot(dx, dy);
+          const minDist = CAR_RADIUS * 2;
 
-        if (dist < minDist) {
+          if (dist < minDist) {
             // Calculate push vector normal
             const nx = dx / dist;
             const ny = dy / dist;
             // Amount to push apart
             const overlap = (minDist - dist) * 0.51; // 0.51 ensures separation
-            
+
             // Displace cars apart instantly
             p1.x -= nx * overlap;
             p1.y -= ny * overlap;
@@ -188,136 +246,191 @@ function initGame() {
 
             // Apply "bounce" and friction stun
             const bounce = 5;
-            p1.vx -= nx * bounce; p1.vy -= ny * bounce;
-            p2.vx += nx * bounce; p2.vy += ny * bounce;
-            
+            p1.vx -= nx * bounce;
+            p1.vy -= ny * bounce;
+            p2.vx += nx * bounce;
+            p2.vy += ny * bounce;
+
             // Stun effect (slow them down on impact)
-            p1.vx *= 0.7; p1.vy *= 0.7;
-            p2.vx *= 0.7; p2.vy *= 0.7;
+            p1.vx *= 0.7;
+            p1.vy *= 0.7;
+            p2.vx *= 0.7;
+            p2.vy *= 0.7;
+          }
         }
-    }
 
-    // --- MAIN LOOP ---
-    function loop() {
-        // 1. Run Physics
-        handleCollisions();
+        // --- MAIN LOOP ---
+        function loop() {
+          // 1. Run Physics
+          handleCollisions();
 
-        p1.update({
-            gas: keys['KeyW'], brake: keys['KeyS'], 
-            left: keys['KeyA'], right: keys['KeyD'], reset: keys['Space']
-        });
-        p2.update({
-            gas: keys['ArrowUp'], brake: keys['ArrowDown'], 
-            left: keys['ArrowLeft'], right: keys['ArrowRight'], reset: keys['Space']
-        });
+          p1.update({
+            gas: keys['KeyW'],
+            brake: keys['KeyS'],
+            left: keys['KeyA'],
+            right: keys['KeyD'],
+            reset: keys['Space'],
+          });
+          p2.update({
+            gas: keys['ArrowUp'],
+            brake: keys['ArrowDown'],
+            left: keys['ArrowLeft'],
+            right: keys['ArrowRight'],
+            reset: keys['Space'],
+          });
 
-        t1El.innerText = p1.lapTime.toFixed(2);
-        t2El.innerText = p2.lapTime.toFixed(2);
+          t1El.innerText = p1.lapTime.toFixed(2);
+          t2El.innerText = p2.lapTime.toFixed(2);
 
-        // 2. Clear & Draw Split Screen
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, width, height);
-        renderView(p1, 0, 0, width/2, height);
-        renderView(p2, width/2, 0, width/2, height);
+          // 2. Clear & Draw Split Screen
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, width, height);
+          renderView(p1, 0, 0, width / 2, height);
+          renderView(p2, width / 2, 0, width / 2, height);
 
-        // 3. Draw Divider
-        ctx.beginPath();
-        ctx.moveTo(width/2, 0); ctx.lineTo(width/2, height);
-        ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.stroke();
+          // 3. Draw Divider
+          ctx.beginPath();
+          ctx.moveTo(width / 2, 0);
+          ctx.lineTo(width / 2, height);
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#000';
+          ctx.stroke();
 
-        // 4. Draw Center Minimap
-        drawMinimap();
+          // 4. Draw Center Minimap
+          drawMinimap();
 
-        requestAnimationFrame(loop);
-    }
+          requestAnimationFrame(loop);
+        }
 
-    // --- RENDERING ---
-    function renderView(focusCar, vx, vy, vw, vh) {
-        ctx.save();
-        ctx.beginPath(); ctx.rect(vx, vy, vw, vh); ctx.clip();
-        ctx.fillStyle = '#1a261a'; ctx.fillRect(vx, vy, vw, vh);
+        // --- RENDERING ---
+        function renderView(focusCar, vx, vy, vw, vh) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(vx, vy, vw, vh);
+          ctx.clip();
+          ctx.fillStyle = '#1a261a';
+          ctx.fillRect(vx, vy, vw, vh);
 
-        ctx.translate(vx + vw/2, vy + vh/2);
-        ctx.scale(ZOOM, ZOOM);
-        ctx.rotate(-focusCar.angle - Math.PI/2);
-        ctx.translate(-focusCar.x, -focusCar.y);
+          ctx.translate(vx + vw / 2, vy + vh / 2);
+          ctx.scale(ZOOM, ZOOM);
+          ctx.rotate(-focusCar.angle - Math.PI / 2);
+          ctx.translate(-focusCar.x, -focusCar.y);
 
-        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        // Border
-        ctx.beginPath(); track.forEach((p,i)=>i==0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
-        ctx.lineWidth = TRACK_WIDTH+30; ctx.strokeStyle='#2d2d2d'; ctx.stroke();
-        // Asphalt
-        ctx.beginPath(); track.forEach((p,i)=>i==0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
-        ctx.lineWidth = TRACK_WIDTH; ctx.strokeStyle='#555'; ctx.stroke();
-        // Start Line
-        ctx.save(); ctx.translate(-10, -TRACK_WIDTH/2); ctx.fillStyle='#fff';
-        ctx.fillRect(0,0,20,TRACK_WIDTH); ctx.restore();
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          // Border
+          ctx.beginPath();
+          track.forEach((p, i) =>
+            i == 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y),
+          );
+          ctx.lineWidth = TRACK_WIDTH + 30;
+          ctx.strokeStyle = '#2d2d2d';
+          ctx.stroke();
+          // Asphalt
+          ctx.beginPath();
+          track.forEach((p, i) =>
+            i == 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y),
+          );
+          ctx.lineWidth = TRACK_WIDTH;
+          ctx.strokeStyle = '#555';
+          ctx.stroke();
+          // Start Line
+          ctx.save();
+          ctx.translate(-10, -TRACK_WIDTH / 2);
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, 20, TRACK_WIDTH);
+          ctx.restore();
 
-        [p1, p2].forEach(c => {
-            if(c.skids.length>1) {
-                ctx.beginPath(); c.skids.forEach((s,i)=>i==0?ctx.moveTo(s.x,s.y):ctx.lineTo(s.x,s.y));
-                ctx.lineWidth=12; ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.stroke();
+          [p1, p2].forEach((c) => {
+            if (c.skids.length > 1) {
+              ctx.beginPath();
+              c.skids.forEach((s, i) =>
+                i == 0 ? ctx.moveTo(s.x, s.y) : ctx.lineTo(s.x, s.y),
+              );
+              ctx.lineWidth = 12;
+              ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+              ctx.stroke();
             }
-        });
-        drawCar(ctx, p1); drawCar(ctx, p2);
-        ctx.restore();
-    }
+          });
+          drawCar(ctx, p1);
+          drawCar(ctx, p2);
+          ctx.restore();
+        }
 
-    function drawCar(ctx, c) {
-        ctx.save();
-        ctx.translate(c.x, c.y); ctx.rotate(c.angle);
-        ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(-14,-8,32,24); // Shadow
-        ctx.fillStyle='#ccc'; ctx.fillRect(-16,-10,32,20); // Body
-        ctx.fillStyle=c.color; ctx.fillRect(-16,-4,32,8); // Stripe
-        ctx.fillStyle='#111'; ctx.fillRect(-6,-9,14,18); // Roof
-        ctx.fillStyle='yellow'; ctx.fillRect(14,-8,2,4); ctx.fillRect(14,4,2,4); // Lights
-        ctx.restore();
-    }
+        function drawCar(ctx, c) {
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(c.angle);
+          ctx.fillStyle = 'rgba(0,0,0,0.5)';
+          ctx.fillRect(-14, -8, 32, 24); // Shadow
+          ctx.fillStyle = '#ccc';
+          ctx.fillRect(-16, -10, 32, 20); // Body
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-16, -4, 32, 8); // Stripe
+          ctx.fillStyle = '#111';
+          ctx.fillRect(-6, -9, 14, 18); // Roof
+          ctx.fillStyle = 'yellow';
+          ctx.fillRect(14, -8, 2, 4);
+          ctx.fillRect(14, 4, 2, 4); // Lights
+          ctx.restore();
+        }
 
-    // NEW: Center Minimap Function
-    function drawMinimap() {
-        const mapSize = 200;
-        const mapScale = 0.03; // Needs to be tiny to fit huge track
-        const mx = width/2 - mapSize/2;
-        const my = height/2 - mapSize/2;
+        // NEW: Center Minimap Function
+        function drawMinimap() {
+          const mapSize = 200;
+          const mapScale = 0.03; // Needs to be tiny to fit huge track
+          const mx = width / 2 - mapSize / 2;
+          const my = height / 2 - mapSize / 2;
 
-        ctx.save();
-        // Background box
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(mx, my, mapSize, mapSize);
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-        ctx.strokeRect(mx, my, mapSize, mapSize);
+          ctx.save();
+          // Background box
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(mx, my, mapSize, mapSize);
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(mx, my, mapSize, mapSize);
 
-        // Clip to box
-        ctx.beginPath(); ctx.rect(mx, my, mapSize, mapSize); ctx.clip();
+          // Clip to box
+          ctx.beginPath();
+          ctx.rect(mx, my, mapSize, mapSize);
+          ctx.clip();
 
-        // Center map view
-        ctx.translate(width/2, height/2);
-        ctx.scale(mapScale, mapScale);
-        ctx.translate(-200, -1500); // Offset to center the track shape
+          // Center map view
+          ctx.translate(width / 2, height / 2);
+          ctx.scale(mapScale, mapScale);
+          ctx.translate(-200, -1500); // Offset to center the track shape
 
-        // Draw Track Lines
-        ctx.beginPath(); track.forEach((p,i)=>i==0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
-        ctx.lineWidth = TRACK_WIDTH; ctx.strokeStyle = '#555'; ctx.stroke();
-        ctx.lineWidth = 20; ctx.strokeStyle = '#fff'; ctx.stroke();
+          // Draw Track Lines
+          ctx.beginPath();
+          track.forEach((p, i) =>
+            i == 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y),
+          );
+          ctx.lineWidth = TRACK_WIDTH;
+          ctx.strokeStyle = '#555';
+          ctx.stroke();
+          ctx.lineWidth = 20;
+          ctx.strokeStyle = '#fff';
+          ctx.stroke();
 
-        // Draw Player Dots
-        drawPlayerDot(p1);
-        drawPlayerDot(p2);
-        ctx.restore();
-    }
+          // Draw Player Dots
+          drawPlayerDot(p1);
+          drawPlayerDot(p2);
+          ctx.restore();
+        }
 
-    function drawPlayerDot(c) {
-        ctx.fillStyle = c.color;
-        ctx.beginPath();
-        // Dots need to be huge in world scale to show up on tiny map
-        ctx.arc(c.x, c.y, 150, 0, Math.PI*2); 
-        ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 30; ctx.stroke();
-    }
+        function drawPlayerDot(c) {
+          ctx.fillStyle = c.color;
+          ctx.beginPath();
+          // Dots need to be huge in world scale to show up on tiny map
+          ctx.arc(c.x, c.y, 150, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 30;
+          ctx.stroke();
+        }
 
-    loop();
-}
-</script>
-</body>
+        loop();
+      }
+    </script>
+  </body>
 </html>

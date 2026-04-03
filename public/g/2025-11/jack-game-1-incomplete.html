@@ -1,512 +1,628 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>🦃 Thanksgiving Go-Kart Showdown! 🏎️🦃</title>
-<style>
-  body { margin:0; padding:0; overflow:hidden; background:#111; font-family: Arial, sans-serif; color:#fff; }
-  canvas { display:block; margin:auto; background:#2E8B57; border:10px solid #1F5F3A; border-radius:20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); touch-action: none; }
-  #ui {
-    position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.7); padding:15px; border-radius:10px;
-    font-size:22px; font-weight:bold;
-  }
-  #startScreen, #gameOverScreen {
-    position:absolute; inset:0; background:rgba(0,0,0,0.9); display:flex; flex-direction:column;
-    justify-content:center; align-items:center; font-size:40px; text-align:center;
-  }
-  button { margin-top:30px; padding:20px 50px; font-size:30px; cursor:pointer; background:#FF4500; color:white; border:none; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
-  button:hover { background:#FF6347; transform: scale(1.05); }
-  button:active { transform: scale(0.98); }
-</style>
-</head>
-<body>
-
-<div id="startScreen">
-  <h1>🦃 Thanksgiving Go-Kart Showdown! 🏎️🦃</h1>
-  <p>RED pilgrim kart vs BLUE turkey bot<br>
-  ARROW KEYS or LEFT JOYSTICK to drive<br>
-  First to 3 laps WINS!<br><small>BOUNCE off uncrossable walls • Pass through bot • Wide track!</small></p>
-  <button onclick="startGame()">START RACE 🏁</button>
-</div>
-
-<div id="ui" style="display:none">
-  Lap: <span style="color:#CC0000">P<span id="pLap">1</span></span>/3 &nbsp; <span style="color:#0066CC">B<span id="bLap">1</span></span>/3 &nbsp;&nbsp;&nbsp;
-  Speed: <span id="speed">0</span>
-</div>
-
-<div id="gameOverScreen" style="display:none">
-  <h1 id="winText" style="font-size:60px; margin:20px;"></h1>
-  <button onclick="location.reload()">Race Again 🏎️🦃</button>
-</div>
-
-<canvas id="game" width="900" height="600"></canvas>
-
-<script>
-// ================ GAME CODE =================
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const W = canvas.width, H = canvas.height;
-
-const CX = 450, CY = 300;
-const WALL_OUTER_RX = 370;
-const WALL_OUTER_RY = 225;
-const WALL_INNER_RX = 295;
-const WALL_INNER_RY = 145;
-
-// Track checkpoints (clockwise: top0, right1, bottom2, left3)
-const checkpoints = [
-  {x:450, y:110, w:360, h:90},   // 0: top
-  {x:760, y:300, w:120, h:240},  // 1: right
-  {x:450, y:490, w:360, h:60},   // 2: bottom
-  {x:130, y:300, w:120, h:240}   // 3: left
-];
-
-// Waypoints for bot AI (clockwise)
-const waypoints = [
-  {x:450, y:150},
-  {x:810, y:200},
-  {x:820, y:300},
-  {x:810, y:400},
-  {x:450, y:500},
-  {x:140, y:400},
-  {x:120, y:300},
-  {x:120, y:200},
-  {x:450, y:150}
-];
-
-// Player (red pilgrim kart)
-const player = {
-  x: 390, y: 490,
-  angle: -Math.PI / 2,
-  speed: 0,
-  maxSpeed: 7.2,
-  turnSpeed: 0.055,
-  radius: 28,
-  lap: 1,
-  nextCheckpoint: 0
-};
-
-// Bot (blue turkey kart)
-const bot = {
-  x: 510, y: 490,
-  angle: -Math.PI / 2,
-  speed: 0,
-  maxSpeed: 6.8,
-  turnSpeed: 0.05,
-  radius: 28,
-  lap: 1,
-  nextCheckpoint: 0,
-  nextWaypoint: 0
-};
-
-let gameRunning = false;
-let leaves = [];
-const joystick = {active: false, pointerId: -1, dx: 0, dy: 0, cx: 140, cy: 520, maxR: 70};
-
-// Input
-const keys = {};
-window.onkeydown = e => keys[e.key] = true;
-window.onkeyup = e => keys[e.key] = false;
-
-// Pointer events for joystick
-canvas.addEventListener('pointerdown', handlePointerDown);
-canvas.addEventListener('pointermove', handlePointerMove);
-canvas.addEventListener('pointerup', handlePointerUp);
-canvas.addEventListener('pointerleave', handlePointerUp);
-canvas.addEventListener('pointercancel', handlePointerUp);
-
-function handlePointerDown(e) {
-  e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = W / rect.width;
-  const scaleY = H / rect.height;
-  const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top) * scaleY;
-  const dist = Math.hypot(x - joystick.cx, y - joystick.cy);
-  if (dist < joystick.maxR * 1.5 && joystick.pointerId === -1) {
-    joystick.pointerId = e.pointerId;
-    joystick.active = true;
-    updateJoystick(x, y);
-  }
-}
-
-function handlePointerMove(e) {
-  if (e.pointerId === joystick.pointerId) {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-    if (joystick.active) updateJoystick(x, y);
-  }
-}
-
-function handlePointerUp(e) {
-  if (e.pointerId === joystick.pointerId) {
-    joystick.active = false;
-    joystick.pointerId = -1;
-    joystick.dx = 0;
-    joystick.dy = 0;
-  }
-}
-
-function updateJoystick(x, y) {
-  let dx = (x - joystick.cx) / joystick.maxR;
-  let dy = (y - joystick.cy) / joystick.maxR;
-  const mag = Math.hypot(dx, dy);
-  if (mag > 1) {
-    dx /= mag;
-    dy /= mag;
-  }
-  joystick.dx = dx;
-  joystick.dy = dy;
-}
-
-function bounceOffWalls(racer) {
-  // Outer wall
-  let ex = (racer.x - CX) / WALL_OUTER_RX;
-  let ey = (racer.y - CY) / WALL_OUTER_RY;
-  let dsq = ex * ex + ey * ey;
-  if (dsq > 1) {
-    let nx = ex / WALL_OUTER_RX;
-    let ny = ey / WALL_OUTER_RY;
-    let nlen = Math.hypot(nx, ny);
-    if (nlen > 0) {
-      nx /= nlen;
-      ny /= nlen;
-      nx = -nx; // point inward
-      ny = -ny;
-    }
-    let sqrt_d = Math.sqrt(dsq);
-    let avg_r = (WALL_OUTER_RX + WALL_OUTER_RY) / 4;
-    let pen = (sqrt_d - 1) * avg_r;
-    racer.x += nx * pen * 1.1;
-    racer.y += ny * pen * 1.1;
-    let vx = Math.cos(racer.angle) * racer.speed;
-    let vy = Math.sin(racer.angle) * racer.speed;
-    let vdotn = vx * nx + vy * ny;
-    vx -= 2 * vdotn * nx;
-    vy -= 2 * vdotn * ny;
-    racer.speed = Math.hypot(vx, vy) * 0.75;
-    racer.angle = Math.atan2(vy, vx);
-  }
-
-  // Inner wall
-  ex = (racer.x - CX) / WALL_INNER_RX;
-  ey = (racer.y - CY) / WALL_INNER_RY;
-  dsq = ex * ex + ey * ey;
-  if (dsq < 1) {
-    let nx = ex / WALL_INNER_RX;
-    let ny = ey / WALL_INNER_RY;
-    let nlen = Math.hypot(nx, ny);
-    if (nlen > 0) {
-      nx /= nlen;
-      ny /= nlen;
-      // points outward (into track)
-    }
-    let avg_r = (WALL_INNER_RX + WALL_INNER_RY) / 4;
-    let pen = (1 - Math.sqrt(dsq)) * avg_r;
-    racer.x += nx * pen * 1.1;
-    racer.y += ny * pen * 1.1;
-    let vx = Math.cos(racer.angle) * racer.speed;
-    let vy = Math.sin(racer.angle) * racer.speed;
-    let vdotn = vx * nx + vy * ny;
-    vx -= 2 * vdotn * nx;
-    vy -= 2 * vdotn * ny;
-    racer.speed = Math.hypot(vx, vy) * 0.75;
-    racer.angle = Math.atan2(vy, vx);
-  }
-}
-
-function startGame() {
-  document.getElementById('startScreen').style.display = 'none';
-  document.getElementById('ui').style.display = 'block';
-  gameRunning = true;
-  
-  // Reset
-  Object.assign(player, {x:390, y:490, angle:-Math.PI/2, speed:0, lap:1, nextCheckpoint:0});
-  Object.assign(bot, {x:510, y:490, angle:-Math.PI/2, speed:0, lap:1, nextCheckpoint:0, nextWaypoint:0});
-  document.getElementById('pLap').textContent = '1';
-  document.getElementById('bLap').textContent = '1';
-  document.getElementById('speed').textContent = '0';
-  leaves = [];
-  
-  gameLoop();
-}
-
-function gameOver(win) {
-  gameRunning = false;
-  const winText = document.getElementById('winText');
-  if (win) {
-    winText.innerHTML = '🦃 Happy Thanksgiving!<br><span style="color:#CC0000; font-size:80px;">🏆 PLAYER WINS! 🏆</span>';
-  } else {
-    winText.innerHTML = '💙<br><span style="color:#0066CC; font-size:80px;">BOT WINS!</span><br>🦃 Better luck next Turkey Day!';
-  }
-  document.getElementById('gameOverScreen').style.display = 'flex';
-}
-
-// Check checkpoint
-function checkCheckpoints(racer, isPlayer) {
-  const cp = checkpoints[racer.nextCheckpoint];
-  if (racer.x > cp.x - cp.w/2 && racer.x < cp.x + cp.w/2 &&
-      racer.y > cp.y - cp.h/2 && racer.y < cp.y + cp.h/2) {
-    racer.nextCheckpoint = (racer.nextCheckpoint + 1) % checkpoints.length;
-    if (racer.nextCheckpoint === 0) {
-      racer.lap++;
-      if (isPlayer) {
-        document.getElementById('pLap').textContent = racer.lap;
-      } else {
-        document.getElementById('bLap').textContent = racer.lap;
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <title>🦃 Thanksgiving Go-Kart Showdown! 🏎️🦃</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #111;
+        font-family: Arial, sans-serif;
+        color: #fff;
       }
-    }
-  }
-}
+      canvas {
+        display: block;
+        margin: auto;
+        background: #2e8b57;
+        border: 10px solid #1f5f3a;
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        touch-action: none;
+      }
+      #ui {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 22px;
+        font-weight: bold;
+      }
+      #startScreen,
+      #gameOverScreen {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-size: 40px;
+        text-align: center;
+      }
+      button {
+        margin-top: 30px;
+        padding: 20px 50px;
+        font-size: 30px;
+        cursor: pointer;
+        background: #ff4500;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      button:hover {
+        background: #ff6347;
+        transform: scale(1.05);
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="startScreen">
+      <h1>🦃 Thanksgiving Go-Kart Showdown! 🏎️🦃</h1>
+      <p>
+        RED pilgrim kart vs BLUE turkey bot<br />
+        ARROW KEYS or LEFT JOYSTICK to drive<br />
+        First to 3 laps WINS!<br /><small
+          >BOUNCE off uncrossable walls • Pass through bot • Wide track!</small
+        >
+      </p>
+      <button onclick="startGame()">START RACE 🏁</button>
+    </div>
 
-// Draw themed kart
-function drawKart(x, y, angle, color, isPlayer) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle + Math.PI / 2);
-  
-  // Chassis
-  ctx.fillStyle = color;
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 15;
-  ctx.fillRect(-28, -12, 56, 24);
-  ctx.fillRect(-28, -20, 56, 8);
-  ctx.shadowBlur = 0;
-  
-  // Cockpit
-  ctx.fillStyle = '#FFF';
-  ctx.fillRect(-18, -14, 36, 20);
-  ctx.fillStyle = '#DDD';
-  ctx.fillRect(-16, -12, 32, 16);
-  
-  // Wheels
-  ctx.fillStyle = '#222';
-  ctx.beginPath();
-  ctx.arc(-22, 2, 9, 0, Math.PI * 2);
-  ctx.arc(22, 2, 9, 0, Math.PI * 2);
-  ctx.arc(-22, -18, 8, 0, Math.PI * 2);
-  ctx.arc(22, -18, 8, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Wheel rims
-  ctx.fillStyle = '#666';
-  ctx.beginPath();
-  ctx.arc(-22, 2, 4, 0, Math.PI * 2);
-  ctx.arc(22, 2, 4, 0, Math.PI * 2);
-  ctx.arc(-22, -18, 3.5, 0, Math.PI * 2);
-  ctx.arc(22, -18, 3.5, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Thanksgiving theme!
-  if (isPlayer) {
-    // Pilgrim hat
-    ctx.fillStyle = '#111';
-    ctx.beginPath();
-    ctx.moveTo(-20, -32);
-    ctx.lineTo(20, -32);
-    ctx.lineTo(0, -52);
-    ctx.closePath();
-    ctx.fill();
-    // Buckle
-    ctx.fillStyle = '#FFD700';
-    ctx.fillRect(-4, -35, 8, 5);
-  } else {
-    // Turkey tail feathers
-    ctx.fillStyle = '#8B4513';
-    ctx.strokeStyle = '#654321';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(-15, -32, 12, 20, 0.3, 0, Math.PI);
-    ctx.ellipse(0, -34, 18, 22, 0, 0, Math.PI);
-    ctx.ellipse(15, -32, 12, 20, -0.3, 0, Math.PI);
-    ctx.fill();
-    ctx.stroke();
-  }
-  
-  ctx.restore();
-}
+    <div id="ui" style="display: none">
+      Lap: <span style="color: #cc0000">P<span id="pLap">1</span></span
+      >/3 &nbsp; <span style="color: #0066cc">B<span id="bLap">1</span></span
+      >/3 &nbsp;&nbsp;&nbsp; Speed: <span id="speed">0</span>
+    </div>
 
-// Main game loop
-function gameLoop() {
-  if (!gameRunning) return;
+    <div id="gameOverScreen" style="display: none">
+      <h1 id="winText" style="font-size: 60px; margin: 20px"></h1>
+      <button onclick="location.reload()">Race Again 🏎️🦃</button>
+    </div>
 
-  // Player input & physics
-  const turnFactor = 1 + Math.abs(player.speed) / 5;
-  let turnInput = joystick.dx;
-  if (keys['ArrowLeft']) turnInput = Math.min(turnInput, -1);
-  if (keys['ArrowRight']) turnInput = Math.max(turnInput, 1);
-  player.angle += turnInput * player.turnSpeed * turnFactor;
+    <canvas id="game" width="900" height="600"></canvas>
 
-  let throttleInput = -joystick.dy;
-  if (keys['ArrowUp']) throttleInput = Math.max(throttleInput, 1);
-  if (keys['ArrowDown']) throttleInput = Math.min(throttleInput, -1);
-  if (throttleInput > 0) {
-    player.speed = Math.min(player.speed + 0.45 * throttleInput, player.maxSpeed);
-  } else {
-    player.speed = Math.max(player.speed - 0.7 * -throttleInput, -3.5);
-  }
-  player.speed *= 0.965; // friction
+    <script>
+      // ================ GAME CODE =================
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width,
+        H = canvas.height;
 
-  // Move player
-  player.x += Math.cos(player.angle) * player.speed;
-  player.y += Math.sin(player.angle) * player.speed;
+      const CX = 450,
+        CY = 300;
+      const WALL_OUTER_RX = 370;
+      const WALL_OUTER_RY = 225;
+      const WALL_INNER_RX = 295;
+      const WALL_INNER_RY = 145;
 
-  // Bounce walls
-  bounceOffWalls(player);
+      // Track checkpoints (clockwise: top0, right1, bottom2, left3)
+      const checkpoints = [
+        { x: 450, y: 110, w: 360, h: 90 }, // 0: top
+        { x: 760, y: 300, w: 120, h: 240 }, // 1: right
+        { x: 450, y: 490, w: 360, h: 60 }, // 2: bottom
+        { x: 130, y: 300, w: 120, h: 240 }, // 3: left
+      ];
 
-  // Bot AI
-  const wp = waypoints[bot.nextWaypoint];
-  const bdx = wp.x - bot.x;
-  const bdy = wp.y - bot.y;
-  const bdist = Math.hypot(bdx, bdy);
-  if (bdist < 70) {
-    bot.nextWaypoint = (bot.nextWaypoint + 1) % waypoints.length;
-  }
-  const targetAngle = Math.atan2(bdy, bdx);
-  let angleDiff = targetAngle - bot.angle;
-  angleDiff = ((angleDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-  const botTurnFactor = 1 + Math.abs(bot.speed) / 5;
-  bot.angle += angleDiff * bot.turnSpeed * botTurnFactor;
-  bot.speed = Math.min(bot.speed + 0.35, bot.maxSpeed);
-  bot.speed *= 0.965;
+      // Waypoints for bot AI (clockwise)
+      const waypoints = [
+        { x: 450, y: 150 },
+        { x: 810, y: 200 },
+        { x: 820, y: 300 },
+        { x: 810, y: 400 },
+        { x: 450, y: 500 },
+        { x: 140, y: 400 },
+        { x: 120, y: 300 },
+        { x: 120, y: 200 },
+        { x: 450, y: 150 },
+      ];
 
-  // Move bot
-  bot.x += Math.cos(bot.angle) * bot.speed;
-  bot.y += Math.sin(bot.angle) * bot.speed;
+      // Player (red pilgrim kart)
+      const player = {
+        x: 390,
+        y: 490,
+        angle: -Math.PI / 2,
+        speed: 0,
+        maxSpeed: 7.2,
+        turnSpeed: 0.055,
+        radius: 28,
+        lap: 1,
+        nextCheckpoint: 0,
+      };
 
-  // Bounce walls
-  bounceOffWalls(bot);
+      // Bot (blue turkey kart)
+      const bot = {
+        x: 510,
+        y: 490,
+        angle: -Math.PI / 2,
+        speed: 0,
+        maxSpeed: 6.8,
+        turnSpeed: 0.05,
+        radius: 28,
+        lap: 1,
+        nextCheckpoint: 0,
+        nextWaypoint: 0,
+      };
 
-  // NO kart collision - pass through bot!
+      let gameRunning = false;
+      let leaves = [];
+      const joystick = {
+        active: false,
+        pointerId: -1,
+        dx: 0,
+        dy: 0,
+        cx: 140,
+        cy: 520,
+        maxR: 70,
+      };
 
-  // Checkpoints
-  checkCheckpoints(player, true);
-  checkCheckpoints(bot, false);
+      // Input
+      const keys = {};
+      window.onkeydown = (e) => (keys[e.key] = true);
+      window.onkeyup = (e) => (keys[e.key] = false);
 
-  // Win check
-  if (player.lap > 3) { gameOver(true); return; }
-  if (bot.lap > 3) { gameOver(false); return; }
+      // Pointer events for joystick
+      canvas.addEventListener('pointerdown', handlePointerDown);
+      canvas.addEventListener('pointermove', handlePointerMove);
+      canvas.addEventListener('pointerup', handlePointerUp);
+      canvas.addEventListener('pointerleave', handlePointerUp);
+      canvas.addEventListener('pointercancel', handlePointerUp);
 
-  // === DRAW ===
-  ctx.clearRect(0, 0, W, H);
+      function handlePointerDown(e) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = W / rect.width;
+        const scaleY = H / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        const dist = Math.hypot(x - joystick.cx, y - joystick.cy);
+        if (dist < joystick.maxR * 1.5 && joystick.pointerId === -1) {
+          joystick.pointerId = e.pointerId;
+          joystick.active = true;
+          updateJoystick(x, y);
+        }
+      }
 
-  // Fall foliage background gradient
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#FF8C00');
-  grad.addColorStop(0.3, '#DAA520');
-  grad.addColorStop(0.7, '#8B4513');
-  grad.addColorStop(1, '#654321');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+      function handlePointerMove(e) {
+        if (e.pointerId === joystick.pointerId) {
+          e.preventDefault();
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = W / rect.width;
+          const scaleY = H / rect.height;
+          const x = (e.clientX - rect.left) * scaleX;
+          const y = (e.clientY - rect.top) * scaleY;
+          if (joystick.active) updateJoystick(x, y);
+        }
+      }
 
-  // Falling leaves
-  leaves.forEach(leaf => {
-    leaf.y += 0.8 + Math.sin(leaf.phase += 0.08) * 0.3;
-    if (leaf.y > H + 20) {
-      leaf.y = -20;
-      leaf.x = Math.random() * W;
-      leaf.phase = Math.random() * Math.PI * 2;
-    }
-  });
-  if (leaves.length < 50 && Math.random() < 0.2) {
-    leaves.push({x: Math.random() * W, y: -20, phase: Math.random() * Math.PI * 2});
-  }
-  if (leaves.length > 60) leaves.shift();
-  ctx.save();
-  ctx.font = 'bold 26px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  leaves.forEach(leaf => {
-    ctx.fillStyle = `hsl(${20 + (leaf.phase * 10) % 60}, 80%, 55%)`;
-    ctx.fillText('🍁', leaf.x, leaf.y);
-  });
-  ctx.restore();
+      function handlePointerUp(e) {
+        if (e.pointerId === joystick.pointerId) {
+          joystick.active = false;
+          joystick.pointerId = -1;
+          joystick.dx = 0;
+          joystick.dy = 0;
+        }
+      }
 
-  // Inner grass
-  ctx.fillStyle = '#4A5D23';
-  ctx.beginPath();
-  ctx.ellipse(CX, CY, WALL_INNER_RX, WALL_INNER_RY, 0, 0, Math.PI * 2);
-  ctx.fill();
+      function updateJoystick(x, y) {
+        let dx = (x - joystick.cx) / joystick.maxR;
+        let dy = (y - joystick.cy) / joystick.maxR;
+        const mag = Math.hypot(dx, dy);
+        if (mag > 1) {
+          dx /= mag;
+          dy /= mag;
+        }
+        joystick.dx = dx;
+        joystick.dy = dy;
+      }
 
-  // Asphalt ring (wide track!)
-  ctx.fillStyle = '#383838';
-  ctx.save();
-  ctx.fillRule = 'evenodd';
-  ctx.beginPath();
-  ctx.ellipse(CX, CY, WALL_OUTER_RX, WALL_OUTER_RY, 0, 0, Math.PI * 2);
-  ctx.ellipse(CX, CY, WALL_INNER_RX, WALL_INNER_RY, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+      function bounceOffWalls(racer) {
+        // Outer wall
+        let ex = (racer.x - CX) / WALL_OUTER_RX;
+        let ey = (racer.y - CY) / WALL_OUTER_RY;
+        let dsq = ex * ex + ey * ey;
+        if (dsq > 1) {
+          let nx = ex / WALL_OUTER_RX;
+          let ny = ey / WALL_OUTER_RY;
+          let nlen = Math.hypot(nx, ny);
+          if (nlen > 0) {
+            nx /= nlen;
+            ny /= nlen;
+            nx = -nx; // point inward
+            ny = -ny;
+          }
+          let sqrt_d = Math.sqrt(dsq);
+          let avg_r = (WALL_OUTER_RX + WALL_OUTER_RY) / 4;
+          let pen = (sqrt_d - 1) * avg_r;
+          racer.x += nx * pen * 1.1;
+          racer.y += ny * pen * 1.1;
+          let vx = Math.cos(racer.angle) * racer.speed;
+          let vy = Math.sin(racer.angle) * racer.speed;
+          let vdotn = vx * nx + vy * ny;
+          vx -= 2 * vdotn * nx;
+          vy -= 2 * vdotn * ny;
+          racer.speed = Math.hypot(vx, vy) * 0.75;
+          racer.angle = Math.atan2(vy, vx);
+        }
 
-  // Uncrossable wall borders (thick white)
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 25;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.ellipse(CX, CY, WALL_OUTER_RX, WALL_OUTER_RY, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(CX, CY, WALL_INNER_RX, WALL_INNER_RY, 0, 0, Math.PI * 2);
-  ctx.stroke();
+        // Inner wall
+        ex = (racer.x - CX) / WALL_INNER_RX;
+        ey = (racer.y - CY) / WALL_INNER_RY;
+        dsq = ex * ex + ey * ey;
+        if (dsq < 1) {
+          let nx = ex / WALL_INNER_RX;
+          let ny = ey / WALL_INNER_RY;
+          let nlen = Math.hypot(nx, ny);
+          if (nlen > 0) {
+            nx /= nlen;
+            ny /= nlen;
+            // points outward (into track)
+          }
+          let avg_r = (WALL_INNER_RX + WALL_INNER_RY) / 4;
+          let pen = (1 - Math.sqrt(dsq)) * avg_r;
+          racer.x += nx * pen * 1.1;
+          racer.y += ny * pen * 1.1;
+          let vx = Math.cos(racer.angle) * racer.speed;
+          let vy = Math.sin(racer.angle) * racer.speed;
+          let vdotn = vx * nx + vy * ny;
+          vx -= 2 * vdotn * nx;
+          vy -= 2 * vdotn * ny;
+          racer.speed = Math.hypot(vx, vy) * 0.75;
+          racer.angle = Math.atan2(vy, vx);
+        }
+      }
 
-  // Rumble strips
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 8;
-  ctx.setLineDash([15, 15]);
-  ctx.lineCap = 'butt';
-  ctx.beginPath();
-  ctx.ellipse(CX, CY, WALL_OUTER_RX - 12, WALL_OUTER_RY - 12, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(CX, CY, WALL_INNER_RX + 12, WALL_INNER_RY + 12, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.lineCap = 'round';
+      function startGame() {
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('ui').style.display = 'block';
+        gameRunning = true;
 
-  // Start/finish line
-  ctx.strokeStyle = '#FFD700';
-  ctx.lineWidth = 12;
-  ctx.setLineDash([30, 30]);
-  ctx.lineCap = 'butt';
-  ctx.beginPath();
-  ctx.moveTo(330, 505);
-  ctx.lineTo(570, 505);
-  ctx.stroke();
-  ctx.setLineDash([]);
+        // Reset
+        Object.assign(player, {
+          x: 390,
+          y: 490,
+          angle: -Math.PI / 2,
+          speed: 0,
+          lap: 1,
+          nextCheckpoint: 0,
+        });
+        Object.assign(bot, {
+          x: 510,
+          y: 490,
+          angle: -Math.PI / 2,
+          speed: 0,
+          lap: 1,
+          nextCheckpoint: 0,
+          nextWaypoint: 0,
+        });
+        document.getElementById('pLap').textContent = '1';
+        document.getElementById('bLap').textContent = '1';
+        document.getElementById('speed').textContent = '0';
+        leaves = [];
 
-  // Draw karts
-  drawKart(player.x, player.y, player.angle, '#CC0000', true);
-  drawKart(bot.x, bot.y, bot.angle, '#0066CC', false);
+        gameLoop();
+      }
 
-  // Joystick
-  ctx.save();
-  ctx.translate(joystick.cx, joystick.cy);
-  ctx.fillStyle = 'rgba(255,255,255,0.2)';
-  ctx.beginPath();
-  ctx.arc(0, 0, joystick.maxR, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#FFF';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  ctx.fillStyle = joystick.active ? '#FFF' : 'rgba(255,255,255,0.6)';
-  ctx.beginPath();
-  ctx.arc(joystick.dx * 40, joystick.dy * 40, 25, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = joystick.active ? '#000' : '#CCC';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  ctx.restore();
+      function gameOver(win) {
+        gameRunning = false;
+        const winText = document.getElementById('winText');
+        if (win) {
+          winText.innerHTML =
+            '🦃 Happy Thanksgiving!<br><span style="color:#CC0000; font-size:80px;">🏆 PLAYER WINS! 🏆</span>';
+        } else {
+          winText.innerHTML =
+            '💙<br><span style="color:#0066CC; font-size:80px;">BOT WINS!</span><br>🦃 Better luck next Turkey Day!';
+        }
+        document.getElementById('gameOverScreen').style.display = 'flex';
+      }
 
-  // UI
-  document.getElementById('speed').textContent = Math.round(Math.abs(player.speed) * 12);
+      // Check checkpoint
+      function checkCheckpoints(racer, isPlayer) {
+        const cp = checkpoints[racer.nextCheckpoint];
+        if (
+          racer.x > cp.x - cp.w / 2 &&
+          racer.x < cp.x + cp.w / 2 &&
+          racer.y > cp.y - cp.h / 2 &&
+          racer.y < cp.y + cp.h / 2
+        ) {
+          racer.nextCheckpoint =
+            (racer.nextCheckpoint + 1) % checkpoints.length;
+          if (racer.nextCheckpoint === 0) {
+            racer.lap++;
+            if (isPlayer) {
+              document.getElementById('pLap').textContent = racer.lap;
+            } else {
+              document.getElementById('bLap').textContent = racer.lap;
+            }
+          }
+        }
+      }
 
-  requestAnimationFrame(gameLoop);
-}
-</script>
-</body>
+      // Draw themed kart
+      function drawKart(x, y, angle, color, isPlayer) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle + Math.PI / 2);
+
+        // Chassis
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 15;
+        ctx.fillRect(-28, -12, 56, 24);
+        ctx.fillRect(-28, -20, 56, 8);
+        ctx.shadowBlur = 0;
+
+        // Cockpit
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(-18, -14, 36, 20);
+        ctx.fillStyle = '#DDD';
+        ctx.fillRect(-16, -12, 32, 16);
+
+        // Wheels
+        ctx.fillStyle = '#222';
+        ctx.beginPath();
+        ctx.arc(-22, 2, 9, 0, Math.PI * 2);
+        ctx.arc(22, 2, 9, 0, Math.PI * 2);
+        ctx.arc(-22, -18, 8, 0, Math.PI * 2);
+        ctx.arc(22, -18, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wheel rims
+        ctx.fillStyle = '#666';
+        ctx.beginPath();
+        ctx.arc(-22, 2, 4, 0, Math.PI * 2);
+        ctx.arc(22, 2, 4, 0, Math.PI * 2);
+        ctx.arc(-22, -18, 3.5, 0, Math.PI * 2);
+        ctx.arc(22, -18, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thanksgiving theme!
+        if (isPlayer) {
+          // Pilgrim hat
+          ctx.fillStyle = '#111';
+          ctx.beginPath();
+          ctx.moveTo(-20, -32);
+          ctx.lineTo(20, -32);
+          ctx.lineTo(0, -52);
+          ctx.closePath();
+          ctx.fill();
+          // Buckle
+          ctx.fillStyle = '#FFD700';
+          ctx.fillRect(-4, -35, 8, 5);
+        } else {
+          // Turkey tail feathers
+          ctx.fillStyle = '#8B4513';
+          ctx.strokeStyle = '#654321';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(-15, -32, 12, 20, 0.3, 0, Math.PI);
+          ctx.ellipse(0, -34, 18, 22, 0, 0, Math.PI);
+          ctx.ellipse(15, -32, 12, 20, -0.3, 0, Math.PI);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      // Main game loop
+      function gameLoop() {
+        if (!gameRunning) return;
+
+        // Player input & physics
+        const turnFactor = 1 + Math.abs(player.speed) / 5;
+        let turnInput = joystick.dx;
+        if (keys['ArrowLeft']) turnInput = Math.min(turnInput, -1);
+        if (keys['ArrowRight']) turnInput = Math.max(turnInput, 1);
+        player.angle += turnInput * player.turnSpeed * turnFactor;
+
+        let throttleInput = -joystick.dy;
+        if (keys['ArrowUp']) throttleInput = Math.max(throttleInput, 1);
+        if (keys['ArrowDown']) throttleInput = Math.min(throttleInput, -1);
+        if (throttleInput > 0) {
+          player.speed = Math.min(
+            player.speed + 0.45 * throttleInput,
+            player.maxSpeed,
+          );
+        } else {
+          player.speed = Math.max(player.speed - 0.7 * -throttleInput, -3.5);
+        }
+        player.speed *= 0.965; // friction
+
+        // Move player
+        player.x += Math.cos(player.angle) * player.speed;
+        player.y += Math.sin(player.angle) * player.speed;
+
+        // Bounce walls
+        bounceOffWalls(player);
+
+        // Bot AI
+        const wp = waypoints[bot.nextWaypoint];
+        const bdx = wp.x - bot.x;
+        const bdy = wp.y - bot.y;
+        const bdist = Math.hypot(bdx, bdy);
+        if (bdist < 70) {
+          bot.nextWaypoint = (bot.nextWaypoint + 1) % waypoints.length;
+        }
+        const targetAngle = Math.atan2(bdy, bdx);
+        let angleDiff = targetAngle - bot.angle;
+        angleDiff = ((angleDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+        const botTurnFactor = 1 + Math.abs(bot.speed) / 5;
+        bot.angle += angleDiff * bot.turnSpeed * botTurnFactor;
+        bot.speed = Math.min(bot.speed + 0.35, bot.maxSpeed);
+        bot.speed *= 0.965;
+
+        // Move bot
+        bot.x += Math.cos(bot.angle) * bot.speed;
+        bot.y += Math.sin(bot.angle) * bot.speed;
+
+        // Bounce walls
+        bounceOffWalls(bot);
+
+        // NO kart collision - pass through bot!
+
+        // Checkpoints
+        checkCheckpoints(player, true);
+        checkCheckpoints(bot, false);
+
+        // Win check
+        if (player.lap > 3) {
+          gameOver(true);
+          return;
+        }
+        if (bot.lap > 3) {
+          gameOver(false);
+          return;
+        }
+
+        // === DRAW ===
+        ctx.clearRect(0, 0, W, H);
+
+        // Fall foliage background gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#FF8C00');
+        grad.addColorStop(0.3, '#DAA520');
+        grad.addColorStop(0.7, '#8B4513');
+        grad.addColorStop(1, '#654321');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Falling leaves
+        leaves.forEach((leaf) => {
+          leaf.y += 0.8 + Math.sin((leaf.phase += 0.08)) * 0.3;
+          if (leaf.y > H + 20) {
+            leaf.y = -20;
+            leaf.x = Math.random() * W;
+            leaf.phase = Math.random() * Math.PI * 2;
+          }
+        });
+        if (leaves.length < 50 && Math.random() < 0.2) {
+          leaves.push({
+            x: Math.random() * W,
+            y: -20,
+            phase: Math.random() * Math.PI * 2,
+          });
+        }
+        if (leaves.length > 60) leaves.shift();
+        ctx.save();
+        ctx.font = 'bold 26px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        leaves.forEach((leaf) => {
+          ctx.fillStyle = `hsl(${20 + ((leaf.phase * 10) % 60)}, 80%, 55%)`;
+          ctx.fillText('🍁', leaf.x, leaf.y);
+        });
+        ctx.restore();
+
+        // Inner grass
+        ctx.fillStyle = '#4A5D23';
+        ctx.beginPath();
+        ctx.ellipse(CX, CY, WALL_INNER_RX, WALL_INNER_RY, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Asphalt ring (wide track!)
+        ctx.fillStyle = '#383838';
+        ctx.save();
+        ctx.fillRule = 'evenodd';
+        ctx.beginPath();
+        ctx.ellipse(CX, CY, WALL_OUTER_RX, WALL_OUTER_RY, 0, 0, Math.PI * 2);
+        ctx.ellipse(CX, CY, WALL_INNER_RX, WALL_INNER_RY, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Uncrossable wall borders (thick white)
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 25;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.ellipse(CX, CY, WALL_OUTER_RX, WALL_OUTER_RY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(CX, CY, WALL_INNER_RX, WALL_INNER_RY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Rumble strips
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 8;
+        ctx.setLineDash([15, 15]);
+        ctx.lineCap = 'butt';
+        ctx.beginPath();
+        ctx.ellipse(
+          CX,
+          CY,
+          WALL_OUTER_RX - 12,
+          WALL_OUTER_RY - 12,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(
+          CX,
+          CY,
+          WALL_INNER_RX + 12,
+          WALL_INNER_RY + 12,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineCap = 'round';
+
+        // Start/finish line
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 12;
+        ctx.setLineDash([30, 30]);
+        ctx.lineCap = 'butt';
+        ctx.beginPath();
+        ctx.moveTo(330, 505);
+        ctx.lineTo(570, 505);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw karts
+        drawKart(player.x, player.y, player.angle, '#CC0000', true);
+        drawKart(bot.x, bot.y, bot.angle, '#0066CC', false);
+
+        // Joystick
+        ctx.save();
+        ctx.translate(joystick.cx, joystick.cy);
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath();
+        ctx.arc(0, 0, joystick.maxR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFF';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.fillStyle = joystick.active ? '#FFF' : 'rgba(255,255,255,0.6)';
+        ctx.beginPath();
+        ctx.arc(joystick.dx * 40, joystick.dy * 40, 25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = joystick.active ? '#000' : '#CCC';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+
+        // UI
+        document.getElementById('speed').textContent = Math.round(
+          Math.abs(player.speed) * 12,
+        );
+
+        requestAnimationFrame(gameLoop);
+      }
+    </script>
+  </body>
 </html>

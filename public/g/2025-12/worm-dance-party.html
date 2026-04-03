@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -30,8 +30,14 @@
           #070b14 100%
         );
         color: var(--text);
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-          Arial, sans-serif;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
       }
       canvas {
         display: block;
@@ -90,7 +96,9 @@
         padding: 8px 12px;
         font-weight: 700;
         cursor: pointer;
-        transition: transform 0.06s ease, background 0.12s ease;
+        transition:
+          transform 0.06s ease,
+          background 0.12s ease;
         user-select: none;
       }
       .btn:hover {
@@ -233,7 +241,9 @@
         font-weight: 900;
         letter-spacing: 0.3px;
         color: var(--text);
-        transition: transform 0.08s ease, filter 0.12s ease;
+        transition:
+          transform 0.08s ease,
+          filter 0.12s ease;
         user-select: none;
       }
       .bigBtn:hover {
@@ -506,7 +516,7 @@
           elLastScore.textContent = String(last);
           elModeRead.textContent = mode[0].toUpperCase() + mode.slice(1);
           Object.entries(modeBtns).forEach(
-            ([k, el]) => (el.dataset.active = String(k === mode))
+            ([k, el]) => (el.dataset.active = String(k === mode)),
           );
         }
         syncStats();
@@ -572,7 +582,7 @@
             touchCount = e.touches.length;
             if (touchCount >= 2) dashPressed = true;
           },
-          { passive: true }
+          { passive: true },
         );
         window.addEventListener(
           'touchend',
@@ -580,7 +590,7 @@
             touchCount = e.touches.length;
             dashPressed = false;
           },
-          { passive: true }
+          { passive: true },
         );
 
         // ========= Audio (optional) =========
@@ -651,45 +661,48 @@
           function startMusic() {
             if (musicTimer) return;
             beat = 0;
-            musicTimer = setInterval(() => {
-              if (!soundOn) return;
-              const t = now();
-              // Kick on 1 & 3
-              if (beat % 4 === 0 || beat % 4 === 2) {
-                const o = ac.createOscillator();
-                const g = ac.createGain();
-                o.type = 'sine';
-                o.frequency.setValueAtTime(120, t);
-                o.frequency.exponentialRampToValueAtTime(45, t + 0.08);
-                g.gain.setValueAtTime(0.001, t);
-                g.gain.exponentialRampToValueAtTime(0.55, t + 0.01);
-                g.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-                o.connect(g);
-                g.connect(musicGain);
-                o.start(t);
-                o.stop(t + 0.15);
-              }
-              // Snare-ish on 2 & 4
-              if (beat % 4 === 1 || beat % 4 === 3) {
-                noise(0.09, 0.1);
-              }
-              // Bass note every beat
-              const bass = ac.createOscillator();
-              const bg = ac.createGain();
-              bass.type = 'triangle';
-              const notes = [55, 55, 73.4, 65.4, 55, 82.4, 73.4, 65.4];
-              const f = notes[beat % notes.length];
-              bass.frequency.setValueAtTime(f, t);
-              bg.gain.setValueAtTime(0.001, t);
-              bg.gain.exponentialRampToValueAtTime(0.09, t + 0.01);
-              bg.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-              bass.connect(bg);
-              bg.connect(musicGain);
-              bass.start(t);
-              bass.stop(t + 0.25);
+            musicTimer = setInterval(
+              () => {
+                if (!soundOn) return;
+                const t = now();
+                // Kick on 1 & 3
+                if (beat % 4 === 0 || beat % 4 === 2) {
+                  const o = ac.createOscillator();
+                  const g = ac.createGain();
+                  o.type = 'sine';
+                  o.frequency.setValueAtTime(120, t);
+                  o.frequency.exponentialRampToValueAtTime(45, t + 0.08);
+                  g.gain.setValueAtTime(0.001, t);
+                  g.gain.exponentialRampToValueAtTime(0.55, t + 0.01);
+                  g.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+                  o.connect(g);
+                  g.connect(musicGain);
+                  o.start(t);
+                  o.stop(t + 0.15);
+                }
+                // Snare-ish on 2 & 4
+                if (beat % 4 === 1 || beat % 4 === 3) {
+                  noise(0.09, 0.1);
+                }
+                // Bass note every beat
+                const bass = ac.createOscillator();
+                const bg = ac.createGain();
+                bass.type = 'triangle';
+                const notes = [55, 55, 73.4, 65.4, 55, 82.4, 73.4, 65.4];
+                const f = notes[beat % notes.length];
+                bass.frequency.setValueAtTime(f, t);
+                bg.gain.setValueAtTime(0.001, t);
+                bg.gain.exponentialRampToValueAtTime(0.09, t + 0.01);
+                bg.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+                bass.connect(bg);
+                bg.connect(musicGain);
+                bass.start(t);
+                bass.stop(t + 0.25);
 
-              beat++;
-            }, 60_000 / bpm / 2); // eighth-note grid
+                beat++;
+              },
+              60_000 / bpm / 2,
+            ); // eighth-note grid
           }
 
           function stopMusic() {
@@ -900,7 +913,7 @@
                 radius: rand(8.5, 10.5),
                 len: randi(18, 26),
                 dir: rand(0, Math.PI * 2),
-              })
+              }),
             );
           }
 
@@ -974,7 +987,7 @@
           const snacks = foods.filter((f) => f.t === 'snack').length;
           const confs = foods.filter((f) => f.t === 'confetti').length;
           const powers = foods.filter(
-            (f) => f.t === 'boost' || f.t === 'shrink'
+            (f) => f.t === 'boost' || f.t === 'shrink',
           ).length;
 
           // Snacks
@@ -1430,7 +1443,7 @@
                     player.radius * 0.85,
                     s.x,
                     s.y,
-                    w.radius * 0.65
+                    w.radius * 0.65,
                   )
                 ) {
                   gameOver();
@@ -1480,7 +1493,7 @@
             Math.min(W, H) * 0.15,
             W / 2,
             H / 2,
-            Math.max(W, H) * 0.75
+            Math.max(W, H) * 0.75,
           );
           vg.addColorStop(0, 'rgba(0,0,0,0)');
           vg.addColorStop(1, 'rgba(0,0,0,.65)');
@@ -1567,7 +1580,7 @@
                 rand(-capR * 0.4, 0),
                 rand(2.5, 4.8),
                 0,
-                Math.PI * 2
+                Math.PI * 2,
               );
               ctx.fill();
             }
@@ -1733,14 +1746,14 @@
             head.y + ey * w.radius * 0.35 + ly * eyeOff,
             eyeR * 1.2,
             0,
-            Math.PI * 2
+            Math.PI * 2,
           );
           ctx.arc(
             head.x + ex * w.radius * 0.35 - lx * eyeOff,
             head.y + ey * w.radius * 0.35 - ly * eyeOff,
             eyeR * 1.2,
             0,
-            Math.PI * 2
+            Math.PI * 2,
           );
           ctx.fill();
 
@@ -1751,14 +1764,14 @@
             head.y + ey * w.radius * 0.55 + ly * eyeOff,
             eyeR,
             0,
-            Math.PI * 2
+            Math.PI * 2,
           );
           ctx.arc(
             head.x + ex * w.radius * 0.55 - lx * eyeOff,
             head.y + ey * w.radius * 0.55 - ly * eyeOff,
             eyeR,
             0,
-            Math.PI * 2
+            Math.PI * 2,
           );
           ctx.fill();
 
@@ -1772,7 +1785,7 @@
             head.y + ey * w.radius * 0.8,
             w.radius * 0.32,
             dir + 2.4,
-            dir + 3.9
+            dir + 3.9,
           );
           ctx.stroke();
 
@@ -1843,7 +1856,7 @@
                   .map((c) => c + c)
                   .join('')
               : s,
-            16
+            16,
           );
           return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
         }
@@ -1933,7 +1946,7 @@
                   player.y + rand(-14, 14),
                   'rgba(255,255,255,.35)',
                   2,
-                  60
+                  60,
                 );
               }
             }
@@ -1995,7 +2008,7 @@
             () => {
               if (soundOn) ensureAudio();
             },
-            { once: true, passive: true }
+            { once: true, passive: true },
           );
         });
       })();

@@ -1,196 +1,209 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Santa's Flight - Easy Mode</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #001529;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        canvas {
-            border: 4px solid #fff;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-            background: linear-gradient(to bottom, #001529 0%, #003366 100%);
-        }
-        #ui {
-            position: absolute;
-            color: white;
-            text-align: center;
-            pointer-events: none;
-            user-select: none;
-        }
-        .message { font-size: 24px; text-shadow: 2px 2px #000; }
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #001529;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      canvas {
+        border: 4px solid #fff;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        background: linear-gradient(to bottom, #001529 0%, #003366 100%);
+      }
+      #ui {
+        position: absolute;
+        color: white;
+        text-align: center;
+        pointer-events: none;
+        user-select: none;
+      }
+      .message {
+        font-size: 24px;
+        text-shadow: 2px 2px #000;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div id="ui">
-        <div id="scoreDisplay" class="message" style="margin-top: 20px;">Score: 0</div>
-        <div id="startPrompt" class="message">Press SPACE or TAP to Fly!</div>
+      <div id="scoreDisplay" class="message" style="margin-top: 20px">
+        Score: 0
+      </div>
+      <div id="startPrompt" class="message">Press SPACE or TAP to Fly!</div>
     </div>
     <canvas id="gameCanvas"></canvas>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const startPrompt = document.getElementById('startPrompt');
+    <script>
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const startPrompt = document.getElementById('startPrompt');
 
-    // Game Constants (Easy Mode Settings)
-    canvas.width = 400;
-    canvas.height = 600;
-    const GRAVITY = 0.25;      // Lower gravity for easier control
-    const FLAP_STRENGTH = -5;  // Gentle jump
-    const PIPE_SPEED = 2;      // Slower movement
-    const PIPE_SPAWN_RATE = 100; // Frames between pipes
-    const PIPE_GAP = 190;      // Very wide gap for Santa
+      // Game Constants (Easy Mode Settings)
+      canvas.width = 400;
+      canvas.height = 600;
+      const GRAVITY = 0.25; // Lower gravity for easier control
+      const FLAP_STRENGTH = -5; // Gentle jump
+      const PIPE_SPEED = 2; // Slower movement
+      const PIPE_SPAWN_RATE = 100; // Frames between pipes
+      const PIPE_GAP = 190; // Very wide gap for Santa
 
-    // Game Variables
-    let santaY = canvas.height / 2;
-    let santaVelocity = 0;
-    let pipes = [];
-    let frameCount = 0;
-    let score = 0;
-    let gameActive = false;
+      // Game Variables
+      let santaY = canvas.height / 2;
+      let santaVelocity = 0;
+      let pipes = [];
+      let frameCount = 0;
+      let score = 0;
+      let gameActive = false;
 
-    // Snowflakes for atmosphere
-    const snowflakes = Array.from({ length: 50 }, () => ({
+      // Snowflakes for atmosphere
+      const snowflakes = Array.from({ length: 50 }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        speed: Math.random() * 1 + 0.5
-    }));
+        speed: Math.random() * 1 + 0.5,
+      }));
 
-    function drawSanta(y) {
+      function drawSanta(y) {
         // Simple Santa Sleigh Shape
-        ctx.fillStyle = "#D42426"; // Christmas Red
+        ctx.fillStyle = '#D42426'; // Christmas Red
         ctx.fillRect(50, y, 40, 25);
         // Sleigh Runners
-        ctx.fillStyle = "#FFD700"; // Gold
+        ctx.fillStyle = '#FFD700'; // Gold
         ctx.fillRect(45, y + 25, 50, 4);
         // Santa
-        ctx.fillStyle = "#FFF"; // Beard/Trim
+        ctx.fillStyle = '#FFF'; // Beard/Trim
         ctx.fillRect(65, y - 10, 15, 15);
-        ctx.fillStyle = "#D42426"; // Hat
+        ctx.fillStyle = '#D42426'; // Hat
         ctx.beginPath();
         ctx.moveTo(65, y - 10);
         ctx.lineTo(80, y - 10);
         ctx.lineTo(72, y - 25);
         ctx.fill();
-    }
+      }
 
-    function drawPipe(x, topHeight) {
-        ctx.fillStyle = "#2F5233"; // Christmas Tree Green
+      function drawPipe(x, topHeight) {
+        ctx.fillStyle = '#2F5233'; // Christmas Tree Green
         // Top Pipe
         ctx.fillRect(x, 0, 50, topHeight);
         // Bottom Pipe
         ctx.fillRect(x, topHeight + PIPE_GAP, 50, canvas.height);
         // "Snow" on pipes
-        ctx.fillStyle = "white";
+        ctx.fillStyle = 'white';
         ctx.fillRect(x - 5, topHeight - 10, 60, 10);
         ctx.fillRect(x - 5, topHeight + PIPE_GAP, 60, 10);
-    }
+      }
 
-    function updateSnow() {
-        snowflakes.forEach(s => {
-            s.y += s.speed;
-            if (s.y > canvas.height) s.y = -10;
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
-            ctx.fill();
+      function updateSnow() {
+        snowflakes.forEach((s) => {
+          s.y += s.speed;
+          if (s.y > canvas.height) s.y = -10;
+          ctx.fillStyle = 'white';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
+          ctx.fill();
         });
-    }
+      }
 
-    function resetGame() {
+      function resetGame() {
         santaY = canvas.height / 2;
         santaVelocity = 0;
         pipes = [];
         score = 0;
         frameCount = 0;
         gameActive = true;
-        scoreDisplay.innerText = "Score: 0";
-        startPrompt.style.display = "none";
-    }
+        scoreDisplay.innerText = 'Score: 0';
+        startPrompt.style.display = 'none';
+      }
 
-    function loop() {
+      function loop() {
         // Clear Canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         updateSnow();
 
         if (gameActive) {
-            // Santa Physics
-            santaVelocity += GRAVITY;
-            santaY += santaVelocity;
+          // Santa Physics
+          santaVelocity += GRAVITY;
+          santaY += santaVelocity;
 
-            // Spawn Pipes
-            if (frameCount % PIPE_SPAWN_RATE === 0) {
-                const height = Math.random() * (canvas.height - PIPE_GAP - 100) + 50;
-                pipes.push({ x: canvas.width, topHeight: height });
+          // Spawn Pipes
+          if (frameCount % PIPE_SPAWN_RATE === 0) {
+            const height =
+              Math.random() * (canvas.height - PIPE_GAP - 100) + 50;
+            pipes.push({ x: canvas.width, topHeight: height });
+          }
+
+          // Update Pipes
+          for (let i = pipes.length - 1; i >= 0; i--) {
+            pipes[i].x -= PIPE_SPEED;
+
+            drawPipe(pipes[i].x, pipes[i].topHeight);
+
+            // Collision Detection
+            if (
+              50 + 40 > pipes[i].x &&
+              50 < pipes[i].x + 50 &&
+              (santaY < pipes[i].topHeight ||
+                santaY + 25 > pipes[i].topHeight + PIPE_GAP)
+            ) {
+              gameActive = false;
+              startPrompt.style.display = 'block';
+              startPrompt.innerHTML =
+                'GAME OVER<br>Score: ' + score + '<br>Press to Try Again';
             }
 
-            // Update Pipes
-            for (let i = pipes.length - 1; i >= 0; i--) {
-                pipes[i].x -= PIPE_SPEED;
-
-                drawPipe(pipes[i].x, pipes[i].topHeight);
-
-                // Collision Detection
-                if (
-                    50 + 40 > pipes[i].x && 50 < pipes[i].x + 50 &&
-                    (santaY < pipes[i].topHeight || santaY + 25 > pipes[i].topHeight + PIPE_GAP)
-                ) {
-                    gameActive = false;
-                    startPrompt.style.display = "block";
-                    startPrompt.innerHTML = "GAME OVER<br>Score: " + score + "<br>Press to Try Again";
-                }
-
-                // Scoring
-                if (pipes[i].x === 50) {
-                    score++;
-                    scoreDisplay.innerText = "Score: " + score;
-                }
-
-                // Remove off-screen pipes
-                if (pipes[i].x < -50) pipes.splice(i, 1);
+            // Scoring
+            if (pipes[i].x === 50) {
+              score++;
+              scoreDisplay.innerText = 'Score: ' + score;
             }
 
-            // Boundary Check
-            if (santaY > canvas.height || santaY < -50) {
-                gameActive = false;
-                startPrompt.style.display = "block";
-                startPrompt.innerText = "Don't fly away! Click to Restart";
-            }
+            // Remove off-screen pipes
+            if (pipes[i].x < -50) pipes.splice(i, 1);
+          }
 
-            frameCount++;
+          // Boundary Check
+          if (santaY > canvas.height || santaY < -50) {
+            gameActive = false;
+            startPrompt.style.display = 'block';
+            startPrompt.innerText = "Don't fly away! Click to Restart";
+          }
+
+          frameCount++;
         }
 
         drawSanta(santaY);
         requestAnimationFrame(loop);
-    }
+      }
 
-    // Controls
-    function handleAction() {
+      // Controls
+      function handleAction() {
         if (!gameActive) {
-            resetGame();
+          resetGame();
         } else {
-            santaVelocity = FLAP_STRENGTH;
+          santaVelocity = FLAP_STRENGTH;
         }
-    }
+      }
 
-    window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleAction(); });
-    canvas.addEventListener('mousedown', handleAction);
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleAction(); });
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') handleAction();
+      });
+      canvas.addEventListener('mousedown', handleAction);
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleAction();
+      });
 
-    loop();
-</script>
-</body>
+      loop();
+    </script>
+  </body>
 </html>
