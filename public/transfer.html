@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecureSend — Peer-to-Peer Encrypted Transfer</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: #111;
+        color: #e5e5e5;
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 16px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f5f5f5;
+      }
+
+      .card {
+        background: #1a1a1a;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        padding: 32px;
+        width: 100%;
+        max-width: 560px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      header p {
+        color: #999;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      .how-it-works {
+        font-size: 0.82rem;
+        color: #999;
+        line-height: 1.6;
+        background: #222;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+      }
+      .how-it-works strong {
+        color: #ccc;
+      }
+
+      .step {
+        margin-top: 24px;
+      }
+      .step[hidden] {
+        display: none;
+      }
+
+      .step-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #777;
+        margin-bottom: 8px;
+      }
+
+      .mode-toggle {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .mode-toggle button {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        background: #222;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        color: #999;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .mode-toggle button.active {
+        background: #2563eb;
+        color: #fff;
+        font-weight: 600;
+      }
+      .mode-toggle button:not(.active):hover {
+        background: #2a2a2a;
+      }
+
+      .drop-zone {
+        border: 2px dashed #444;
+        border-radius: 8px;
+        padding: 40px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        color: #999;
+      }
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: #3b82f6;
+        background: rgba(37, 99, 235, 0.1);
+      }
+      .drop-zone input {
+        display: none;
+      }
+
+      .text-input {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        resize: vertical;
+        line-height: 1.5;
+        background: #222;
+        color: #e5e5e5;
+      }
+      .text-input:focus {
+        outline: 2px solid #2563eb;
+        outline-offset: -1px;
+        border-color: transparent;
+      }
+
+      .file-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(22, 163, 74, 0.1);
+        border-radius: 8px;
+        margin-top: 12px;
+        font-size: 0.9rem;
+      }
+      .file-info .name {
+        font-weight: 600;
+        word-break: break-all;
+      }
+      .file-info .size {
+        color: #999;
+        white-space: nowrap;
+      }
+
+      .text-preview {
+        padding: 12px 16px;
+        background: rgba(22, 163, 74, 0.1);
+        border-radius: 8px;
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #ccc;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+
+      .received-text {
+        padding: 16px;
+        background: #222;
+        border: 1px solid #333;
+        border-radius: 8px;
+        margin-top: 12px;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 400px;
+        overflow-y: auto;
+        line-height: 1.6;
+        user-select: text;
+        color: #e5e5e5;
+      }
+
+      .code-box {
+        width: 100%;
+        min-height: 80px;
+        max-height: 160px;
+        padding: 12px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        font-size: 0.8rem;
+        resize: vertical;
+        word-break: break-all;
+        line-height: 1.4;
+        color: #e5e5e5;
+      }
+      textarea.code-box {
+        background: #222;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          opacity 0.15s;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: #3b82f6;
+      }
+      .btn-secondary {
+        background: #333;
+        color: #e5e5e5;
+      }
+      .btn-secondary:hover:not(:disabled) {
+        background: #444;
+      }
+      .btn-success {
+        background: #16a34a;
+        color: #fff;
+      }
+      .btn-success:hover:not(:disabled) {
+        background: #22c55e;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+
+      .progress-wrap {
+        margin-top: 16px;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #333;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: #2563eb;
+        border-radius: 4px;
+        transition: width 0.2s;
+        width: 0%;
+      }
+      .progress-text {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 6px;
+      }
+
+      .status {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-top: 12px;
+      }
+      .status-info {
+        background: rgba(37, 99, 235, 0.15);
+        color: #93c5fd;
+      }
+      .status-success {
+        background: rgba(22, 163, 74, 0.15);
+        color: #86efac;
+      }
+      .status-error {
+        background: rgba(220, 38, 38, 0.15);
+        color: #fca5a5;
+      }
+
+      .privacy-notice {
+        margin-top: 24px;
+        font-size: 0.8rem;
+        color: #777;
+        line-height: 1.6;
+      }
+      .privacy-notice summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #999;
+      }
+      .privacy-notice p {
+        margin-top: 8px;
+      }
+      .privacy-notice code {
+        color: #93c5fd;
+      }
+
+      footer {
+        margin-top: 32px;
+        font-size: 0.75rem;
+        color: #555;
+        text-align: center;
+      }
+
+      .instructions {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 8px;
+      }
+
+      .char-count {
+        font-size: 0.8rem;
+        color: #666;
+        text-align: right;
+        margin-top: 4px;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 16px 8px;
+        }
+        .card {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <header>
+        <h1>SecureSend</h1>
+        <p>Peer-to-peer encrypted transfer</p>
+      </header>
+
+      <div id="error-view" hidden>
+        <div class="status status-error" id="error-message"></div>
+      </div>
+
+      <!-- ==================== SENDER VIEW ==================== -->
+      <div id="sender-view" hidden>
+        <div class="how-it-works">
+          <strong>How it works:</strong> This page creates a direct, encrypted
+          connection between your browser and the recipient's browser. Nothing
+          passes through any server. You'll generate a link, send it to one
+          person, and they'll send back a short response code to complete the
+          connection.
+        </div>
+
+        <div class="step" id="s-pick">
+          <div class="step-label">Step 1 &mdash; What do you want to send?</div>
+
+          <div class="mode-toggle">
+            <button id="mode-file" class="active">File</button>
+            <button id="mode-text">Text</button>
+          </div>
+
+          <div id="s-file-mode">
+            <div class="drop-zone" id="drop-zone">
+              Click or drag a file here
+              <input type="file" id="file-input" />
+            </div>
+            <div id="s-file-info" hidden></div>
+          </div>
+
+          <div id="s-text-mode" hidden>
+            <textarea
+              class="text-input"
+              id="text-input"
+              placeholder="Type or paste the text you want to send&hellip;"
+            ></textarea>
+            <div class="char-count" id="text-char-count"></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-generate">
+              Generate secure link
+            </button>
+          </div>
+        </div>
+
+        <div class="step" id="s-link" hidden>
+          <div class="step-label">
+            Step 2 &mdash; Send this link to your recipient
+          </div>
+          <textarea class="code-box" id="s-link-box" readonly></textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-copy-link">
+              Copy link
+            </button>
+          </div>
+          <p class="instructions">
+            Send this link through a channel you trust (e.g. Slack, Signal, text
+            message). Only share it with <strong>one person</strong> &mdash;
+            anyone with this link holds the encryption key.
+          </p>
+        </div>
+
+        <div class="step" id="s-response" hidden>
+          <div class="step-label">
+            Step 3 &mdash; Paste your recipient's response code
+          </div>
+          <p class="instructions" style="margin-top: 0; margin-bottom: 8px">
+            Your recipient will see a response code after opening the link. Ask
+            them to copy it and send it back to you. Paste it below.
+          </p>
+          <textarea
+            class="code-box"
+            id="s-response-box"
+            placeholder="Paste response code here&hellip;"
+          ></textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-connect" disabled>
+              Connect &amp; send
+            </button>
+          </div>
+        </div>
+
+        <div class="step" id="s-transfer" hidden>
+          <div class="step-label">Sending&hellip;</div>
+          <div class="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" id="s-progress-fill"></div>
+            </div>
+            <div class="progress-text" id="s-progress-text">0%</div>
+          </div>
+        </div>
+
+        <div class="step" id="s-done" hidden>
+          <div class="status status-success">
+            Sent successfully. You can close this page.
+          </div>
+        </div>
+
+        <div id="s-status"></div>
+      </div>
+
+      <!-- ==================== RECEIVER VIEW ==================== -->
+      <div id="receiver-view" hidden>
+        <div class="how-it-works">
+          <strong>How it works:</strong> Someone wants to send you something
+          through a direct, encrypted browser-to-browser connection. No server
+          ever touches the data. Copy the response code below and send it back
+          to the sender to complete the connection.
+        </div>
+
+        <div class="step" id="r-info">
+          <div class="step-label" id="r-info-label">Incoming file</div>
+          <div id="r-file-info"></div>
+        </div>
+
+        <div class="step" id="r-code" hidden>
+          <div class="step-label">
+            Step 1 &mdash; Send this response code back to the sender
+          </div>
+          <textarea class="code-box" id="r-code-box" readonly></textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-copy-response">
+              Copy response code
+            </button>
+          </div>
+          <p class="instructions">
+            Copy this code and send it back to the person who gave you the link.
+            Once they paste it, the transfer will begin automatically.
+          </p>
+        </div>
+
+        <div class="step" id="r-waiting" hidden>
+          <div class="status status-info">
+            Waiting for sender to connect&hellip;
+          </div>
+        </div>
+
+        <div class="step" id="r-transfer" hidden>
+          <div class="step-label">Receiving&hellip;</div>
+          <div class="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" id="r-progress-fill"></div>
+            </div>
+            <div class="progress-text" id="r-progress-text">0%</div>
+          </div>
+        </div>
+
+        <div class="step" id="r-done" hidden>
+          <div class="status status-success" id="r-done-message">
+            Received and verified.
+          </div>
+          <div id="r-done-content"></div>
+        </div>
+
+        <div id="r-status"></div>
+      </div>
+
+      <!-- ==================== PRIVACY NOTICE ==================== -->
+      <details class="privacy-notice">
+        <summary>Privacy &amp; technical details</summary>
+        <p>
+          Data is encrypted with <strong>AES-256-GCM</strong> and sent directly
+          between browsers over a <strong>WebRTC</strong> peer-to-peer
+          connection. The encryption key is embedded in the link's
+          <code>#fragment</code>, which browsers never send to any server. As of
+          2026, AES-256 is believed to provide strong resistance against both
+          classical and quantum computing attacks.
+        </p>
+        <p>
+          A <strong>Google STUN server</strong> (<code>stun.l.google.com</code>)
+          is used solely to help each browser discover its own public IP address
+          so a direct connection can be established. The STUN server never sees,
+          relays, or has access to your data or encryption key. Google may
+          observe the IP addresses and timing of the connection request, but
+          nothing else.
+        </p>
+        <p>
+          No data is stored anywhere. Once both parties close the page, nothing
+          remains.
+        </p>
+      </details>
+    </div>
+
+    <footer>
+      This page was created by David Ludlow — free to use, copy, and modify
+    </footer>
+
+    <script type="module">
+      // =================================================================
+      //  Constants
+      // =================================================================
+
+      const STUN_SERVERS = [
+        'stun.l.google.com:19302',
+        'stun1.l.google.com:19302',
+        'stun2.l.google.com:19302',
+        'stun3.l.google.com:19302',
+        'stun4.l.google.com:19302',
+      ];
+      const CHUNK_SIZE = 64 * 1024; // 64 KB per chunk
+      const BUFFER_HIGH = 1024 * 1024; // 1 MB — pause sending above this
+      const ICE_TIMEOUT_MS = 15_000; // max wait for ICE gathering (increased for gathering)
+
+      // =================================================================
+      //  Compatibility check
+      // =================================================================
+
+      if (
+        !globalThis.RTCPeerConnection ||
+        !globalThis.crypto?.subtle ||
+        !globalThis.CompressionStream
+      ) {
+        fatal(
+          'This page requires a modern browser over HTTPS (for WebRTC, Web Crypto, and CompressionStream).',
+        );
+        throw new Error('Missing required browser APIs');
+      }
+
+      // =================================================================
+      //  Encoding helpers
+      // =================================================================
+
+      function toBase64url(bytes) {
+        let bin = '';
+        for (const b of bytes) bin += String.fromCharCode(b);
+        return btoa(bin)
+          .replaceAll('+', '-')
+          .replaceAll('/', '_')
+          .replace(/=+$/, '');
+      }
+
+      function fromBase64url(str) {
+        const b64 = str.replaceAll('-', '+').replaceAll('_', '/');
+        const pad = (4 - (b64.length % 4)) % 4;
+        return Uint8Array.from(atob(b64 + '='.repeat(pad)), (c) =>
+          c.charCodeAt(0),
+        );
+      }
+
+      async function compress(text) {
+        const stream = new Blob([new TextEncoder().encode(text)])
+          .stream()
+          .pipeThrough(new CompressionStream('deflate-raw'));
+        return new Uint8Array(await new Response(stream).arrayBuffer());
+      }
+
+      async function decompress(bytes) {
+        const stream = new Blob([bytes])
+          .stream()
+          .pipeThrough(new DecompressionStream('deflate-raw'));
+        return new TextDecoder().decode(
+          await new Response(stream).arrayBuffer(),
+        );
+      }
+
+      function formatSize(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+        if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+        return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+      }
+
+      // =================================================================
+      //  Crypto helpers  (AES-256-GCM, quantum-resistant symmetric key)
+      // =================================================================
+
+      function generateRawKey() {
+        return crypto.getRandomValues(new Uint8Array(32));
+      }
+
+      function importKey(raw) {
+        return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, [
+          'encrypt',
+          'decrypt',
+        ]);
+      }
+
+      function makeIV(chunkIndex) {
+        const iv = new Uint8Array(12);
+        new DataView(iv.buffer).setUint32(8, chunkIndex, false);
+        return iv;
+      }
+
+      async function encryptChunk(key, index, plaintext) {
+        const iv = makeIV(index);
+        const ciphertext = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          plaintext,
+        );
+        const out = new Uint8Array(12 + ciphertext.byteLength);
+        out.set(iv);
+        out.set(new Uint8Array(ciphertext), 12);
+        return out;
+      }
+
+      async function decryptChunk(key, expectedIndex, message) {
+        const iv = message.slice(0, 12);
+        const receivedIndex = new DataView(iv.buffer, iv.byteOffset).getUint32(
+          8,
+          false,
+        );
+        if (receivedIndex !== expectedIndex) {
+          throw new Error(
+            `Chunk out of order: expected ${expectedIndex}, got ${receivedIndex}`,
+          );
+        }
+        const ciphertext = message.slice(12);
+        return new Uint8Array(
+          await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext),
+        );
+      }
+
+      // =================================================================
+      //  SDP encoding  (compress + base64url)
+      // =================================================================
+
+      async function encodePayload(obj) {
+        return toBase64url(await compress(JSON.stringify(obj)));
+      }
+
+      async function decodePayload(str) {
+        return JSON.parse(await decompress(fromBase64url(str)));
+      }
+
+      // =================================================================
+      //  WebRTC helpers
+      // =================================================================
+
+      function createPC() {
+        return new RTCPeerConnection({
+          iceServers: [{ urls: STUN_SERVERS.map((s) => `stun:${s}`) }],
+        });
+      }
+
+      function waitForIceGathering(pc) {
+        return new Promise((resolve) => {
+          if (pc.iceGatheringState === 'complete') return resolve();
+          const timer = setTimeout(resolve, ICE_TIMEOUT_MS);
+          pc.addEventListener('icegatheringstatechange', () => {
+            if (pc.iceGatheringState === 'complete') {
+              clearTimeout(timer);
+              resolve();
+            }
+          });
+        });
+      }
+
+      function waitForBufferDrain(dc) {
+        return new Promise((resolve) => {
+          dc.bufferedAmountLowThreshold = CHUNK_SIZE;
+          dc.addEventListener('bufferedamountlow', resolve, { once: true });
+        });
+      }
+
+      // =================================================================
+      //  UI helpers
+      // =================================================================
+
+      const $ = (id) => document.getElementById(id);
+
+      function show(id) {
+        $(id).hidden = false;
+      }
+      function hide(id) {
+        $(id).hidden = true;
+      }
+
+      function fatal(msg) {
+        show('error-view');
+        $('error-message').textContent = msg;
+      }
+
+      function statusEl(prefix, msg, type = 'info') {
+        const el = $(`${prefix}-status`);
+        el.innerHTML = `<div class="status status-${type}">${escapeHtml(
+          msg,
+        )}</div>`;
+      }
+
+      async function copyText(text, btnId) {
+        await navigator.clipboard.writeText(text);
+        const btn = $(btnId);
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-primary');
+        }, 1500);
+      }
+
+      function updateProgress(prefix, sent, total, totalBytes) {
+        const pct = Math.round((sent / total) * 100);
+        $(`${prefix}-progress-fill`).style.width = `${pct}%`;
+        const doneBytes = Math.min(sent * CHUNK_SIZE, totalBytes);
+        $(`${prefix}-progress-text`).textContent = `${pct}% — ${formatSize(
+          doneBytes,
+        )} of ${formatSize(totalBytes)}`;
+      }
+
+      function renderFileInfo(containerId, name, size) {
+        $(
+          containerId,
+        ).innerHTML = `<div class="file-info"><span class="name">${escapeHtml(
+          name,
+        )}</span><span class="size">${formatSize(size)}</span></div>`;
+        show(containerId);
+      }
+
+      function renderTextPreview(containerId, text) {
+        const preview = text.length > 200 ? text.slice(0, 200) + '…' : text;
+        $(containerId).innerHTML = `<div class="text-preview">${escapeHtml(
+          preview,
+        )}</div>`;
+        show(containerId);
+      }
+
+      function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+      }
+
+      // =================================================================
+      //  MODE DETECTION
+      // =================================================================
+
+      const fragment = location.hash.slice(1);
+      if (fragment) {
+        initReceiver(fragment);
+      } else {
+        initSender();
+      }
+
+      // =================================================================
+      //  SENDER
+      // =================================================================
+
+      function initSender() {
+        show('sender-view');
+
+        let sendMode = 'file'; // "file" or "text"
+        let file = null;
+        let connected = false;
+
+        const dropZone = $('drop-zone');
+        const fileInput = $('file-input');
+        const textInput = $('text-input');
+        const btnGenerate = $('btn-generate');
+        const btnCopyLink = $('btn-copy-link');
+        const btnConnect = $('btn-connect');
+        const responseBox = $('s-response-box');
+
+        // --- Mode toggle ---
+
+        $('mode-file').addEventListener('click', () => {
+          sendMode = 'file';
+          $('mode-file').classList.add('active');
+          $('mode-text').classList.remove('active');
+          show('s-file-mode');
+          hide('s-text-mode');
+        });
+
+        $('mode-text').addEventListener('click', () => {
+          sendMode = 'text';
+          $('mode-text').classList.add('active');
+          $('mode-file').classList.remove('active');
+          hide('s-file-mode');
+          show('s-text-mode');
+        });
+
+        textInput.addEventListener('input', () => {
+          const len = textInput.value.length;
+          $('text-char-count').textContent = len
+            ? `${len.toLocaleString()} characters`
+            : '';
+        });
+
+        // --- File selection ---
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () =>
+          dropZone.classList.remove('dragover'),
+        );
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('dragover');
+          if (e.dataTransfer.files.length) selectFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', () => {
+          if (fileInput.files.length) selectFile(fileInput.files[0]);
+        });
+
+        function selectFile(f) {
+          file = f;
+          renderFileInfo('s-file-info', file.name, file.size);
+        }
+
+        // --- Link generation ---
+
+        btnGenerate.addEventListener('click', async () => {
+          btnGenerate.disabled = true;
+          btnGenerate.textContent = 'Generating…';
+
+          try {
+            // Generate key and offer (file/text selection happens after)
+            const rawKey = generateRawKey();
+            const cryptoKey = await importKey(rawKey);
+
+            const pc = createPC();
+            const dc = pc.createDataChannel('transfer', { ordered: true });
+            dc.binaryType = 'arraybuffer';
+
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            await waitForIceGathering(pc);
+
+            // Link contains only the offer and key — metadata sent over data channel
+            const payload = await encodePayload({
+              o: pc.localDescription.sdp,
+            });
+
+            const keyStr = toBase64url(rawKey);
+            const link = `${location.origin}${location.pathname}#${keyStr}.${payload}`;
+
+            $('s-link-box').value = link;
+            show('s-link');
+            show('s-response');
+            btnGenerate.textContent = 'Link generated';
+
+            btnCopyLink.addEventListener('click', () =>
+              copyText(link, 'btn-copy-link'),
+            );
+
+            // --- Response handling ---
+
+            responseBox.addEventListener('input', () => {
+              btnConnect.disabled = !responseBox.value.trim();
+            });
+
+            btnConnect.addEventListener(
+              'click',
+              async () => {
+                if (connected) return;
+                btnConnect.disabled = true;
+                btnConnect.textContent = 'Connecting…';
+
+                try {
+                  const answerSdp = await decompress(
+                    fromBase64url(responseBox.value.trim()),
+                  );
+                  await pc.setRemoteDescription({
+                    type: 'answer',
+                    sdp: answerSdp,
+                  });
+                } catch {
+                  statusEl(
+                    's',
+                    'Invalid response code. Please check and try again.',
+                    'error',
+                  );
+                  btnConnect.disabled = false;
+                  btnConnect.textContent = 'Connect & send';
+                  return;
+                }
+              },
+              { once: true },
+            );
+
+            // --- Data channel open → send data ---
+
+            dc.addEventListener('open', async () => {
+              connected = true;
+              hide('s-pick');
+              hide('s-link');
+              hide('s-response');
+              show('s-transfer');
+
+              // Prepare data now (file/text selected after link generation)
+              let dataBlob, meta;
+              if (sendMode === 'text') {
+                const textBytes = new TextEncoder().encode(textInput.value);
+                dataBlob = new Blob([textBytes]);
+                meta = { m: 'text', s: textBytes.byteLength };
+              } else {
+                if (!file) {
+                  statusEl(
+                    's',
+                    'No file selected. Please pick a file before connecting.',
+                    'error',
+                  );
+                  return;
+                }
+                dataBlob = file;
+                meta = { m: 'file', n: file.name, s: file.size, t: file.type };
+              }
+
+              const totalBytes = dataBlob.size;
+              const totalChunks = Math.ceil(totalBytes / CHUNK_SIZE);
+
+              dc.send(JSON.stringify({ t: 'meta', ...meta, c: totalChunks }));
+
+              for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, totalBytes);
+                const raw = new Uint8Array(
+                  await dataBlob.slice(start, end).arrayBuffer(),
+                );
+                const encrypted = await encryptChunk(cryptoKey, i, raw);
+
+                if (dc.bufferedAmount > BUFFER_HIGH) {
+                  await waitForBufferDrain(dc);
+                }
+                dc.send(encrypted);
+                updateProgress('s', i + 1, totalChunks, totalBytes);
+              }
+
+              dc.send(JSON.stringify({ t: 'done' }));
+              hide('s-transfer');
+              show('s-done');
+            });
+
+            // --- Connection state monitoring ---
+
+            pc.addEventListener('iceconnectionstatechange', () => {
+              const s = pc.iceConnectionState;
+              if (s === 'failed' || s === 'disconnected') {
+                statusEl(
+                  's',
+                  'Connection lost. The recipient may have closed the page.',
+                  'error',
+                );
+              }
+            });
+          } catch (err) {
+            statusEl('s', `Error: ${err.message}`, 'error');
+            btnGenerate.disabled = false;
+            btnGenerate.textContent = 'Generate secure link';
+          }
+        });
+      }
+
+      // =================================================================
+      //  RECEIVER
+      // =================================================================
+
+      async function initReceiver(fragment) {
+        show('receiver-view');
+
+        const dotIndex = fragment.indexOf('.');
+        if (dotIndex === -1) {
+          statusEl(
+            'r',
+            'Invalid link — the URL appears to be malformed.',
+            'error',
+          );
+          return;
+        }
+
+        let rawKey, payload;
+        try {
+          rawKey = fromBase64url(fragment.slice(0, dotIndex));
+          payload = await decodePayload(fragment.slice(dotIndex + 1));
+        } catch {
+          statusEl(
+            'r',
+            'Could not decode the link. It may be incomplete or corrupted.',
+            'error',
+          );
+          return;
+        }
+
+        if (rawKey.length !== 32 || !payload.o) {
+          statusEl(
+            'r',
+            'Invalid link — missing encryption key or connection information.',
+            'error',
+          );
+          return;
+        }
+
+        const cryptoKey = await importKey(rawKey);
+        const { o: offerSdp } = payload;
+
+        // Show what's incoming (generic — no details until connected)
+        $('r-info-label').textContent = 'Incoming transfer';
+        $(
+          'r-file-info',
+        ).innerHTML = `<div class="file-info"><span class="name">Encrypted content</span><span class="size">Size unknown</span></div>`;
+        show('r-file-info');
+
+        // --- Create answer ---
+
+        try {
+          const pc = createPC();
+          pc.addEventListener('iceconnectionstatechange', () => {
+            const s = pc.iceConnectionState;
+            if (s === 'failed' || s === 'disconnected') {
+              statusEl(
+                'r',
+                'Connection lost. The sender may have closed the page.',
+                'error',
+              );
+            }
+          });
+
+          await pc.setRemoteDescription({ type: 'offer', sdp: offerSdp });
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          await waitForIceGathering(pc);
+
+          const answerCode = toBase64url(
+            await compress(pc.localDescription.sdp),
+          );
+
+          $('r-code-box').value = answerCode;
+          show('r-code');
+          show('r-waiting');
+
+          $('btn-copy-response').addEventListener('click', () =>
+            copyText(answerCode, 'btn-copy-response'),
+          );
+
+          // --- Receive data over data channel ---
+
+          const receivedChunks = [];
+          let expectedChunks = 0;
+          let chunkIndex = 0;
+          let receivedMeta = null;
+
+          pc.addEventListener('datachannel', (event) => {
+            const dc = event.channel;
+            dc.binaryType = 'arraybuffer';
+
+            dc.addEventListener('message', async (msg) => {
+              if (typeof msg.data === 'string') {
+                const parsed = JSON.parse(msg.data);
+
+                if (parsed.t === 'meta') {
+                  receivedMeta = parsed;
+                  expectedChunks = parsed.c;
+                  // Update the size display now that we know it
+                  const totalBytes = receivedMeta.s;
+                  $(
+                    'r-file-info',
+                  ).innerHTML = `<div class="file-info"><span class="name">Encrypted content</span><span class="size">${formatSize(
+                    totalBytes,
+                  )}</span></div>`;
+                  hide('r-code');
+                  hide('r-waiting');
+                  show('r-transfer');
+                  return;
+                }
+
+                if (parsed.t === 'done') {
+                  if (chunkIndex !== expectedChunks) {
+                    statusEl(
+                      'r',
+                      `Chunk count mismatch: expected ${expectedChunks}, got ${chunkIndex}.`,
+                      'error',
+                    );
+                    return;
+                  }
+                  hide('r-transfer');
+                  show('r-done');
+
+                  const mode = receivedMeta.m;
+                  const blob = new Blob(receivedChunks, {
+                    type:
+                      mode === 'text'
+                        ? 'text/plain'
+                        : receivedMeta.t || 'application/octet-stream',
+                  });
+
+                  if (mode === 'text') {
+                    const text = await blob.text();
+                    $('r-done-message').textContent =
+                      'Text received and verified.';
+                    $('r-done-content').innerHTML =
+                      `<div class="received-text">${escapeHtml(text)}</div>` +
+                      `<div class="btn-row"><button class="btn btn-secondary" id="btn-copy-text">Copy text</button></div>`;
+                    $('btn-copy-text').addEventListener('click', () =>
+                      copyText(text, 'btn-copy-text'),
+                    );
+                  } else {
+                    const fileName = receivedMeta.n;
+                    $('r-done-message').textContent =
+                      'File received and verified.';
+                    $(
+                      'r-done-content',
+                    ).innerHTML = `<div class="btn-row"><button class="btn btn-success" id="btn-download">Download ${escapeHtml(
+                      fileName,
+                    )}</button></div>`;
+                    $('btn-download').addEventListener('click', () => {
+                      const a = document.createElement('a');
+                      a.href = URL.createObjectURL(blob);
+                      a.download = fileName;
+                      a.click();
+                      setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+                    });
+                  }
+                  return;
+                }
+              }
+
+              // Binary chunk
+              try {
+                const data = new Uint8Array(msg.data);
+                const plaintext = await decryptChunk(
+                  cryptoKey,
+                  chunkIndex,
+                  data,
+                );
+                receivedChunks.push(plaintext);
+                chunkIndex++;
+                const totalBytes = receivedMeta.s;
+                updateProgress('r', chunkIndex, expectedChunks, totalBytes);
+              } catch (err) {
+                statusEl(
+                  'r',
+                  `Decryption failed on chunk ${chunkIndex}: ${err.message}`,
+                  'error',
+                );
+                dc.close();
+              }
+            });
+          });
+        } catch (err) {
+          statusEl('r', `Connection setup failed: ${err.message}`, 'error');
+        }
+      }
+    </script>
+  </body>
+</html>

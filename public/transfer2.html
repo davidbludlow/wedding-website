@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P2P Send — Private File Transfer</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      button,
+      input,
+      textarea {
+        margin: 10px 0;
+        padding: 12px;
+        font-size: 16px;
+        width: 100%;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 15px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border-radius: 6px;
+      }
+      .step {
+        margin: 30px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        background: #fafafa;
+      }
+      .status {
+        margin-top: 20px;
+        padding: 15px;
+        background: #e6f7e6;
+        border-radius: 8px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔒 Private P2P File Send</h1>
+    <p>
+      Send any small file (like .env) directly browser-to-browser. No servers,
+      fully private.
+    </p>
+
+    <div class="step">
+      <h2>1. Choose your file (you are the sender)</h2>
+      <input type="file" id="fileInput" />
+      <button onclick="createOffer()">Generate Share Link</button>
+    </div>
+
+    <div class="step" id="offerStep" style="display: none">
+      <h2>2. Send this ONE link to your colleague</h2>
+      <pre id="shareLink"></pre>
+      <p>
+        <small>They just click it — no extra steps for them at first.</small>
+      </p>
+    </div>
+
+    <div class="step" id="answerStep" style="display: none">
+      <h2>3. Paste the answer text they send you back here</h2>
+      <textarea
+        id="answerInput"
+        rows="5"
+        placeholder="Paste the answer text your colleague sends you..."
+      ></textarea>
+      <button onclick="handleAnswer()">Connect &amp; Send File</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <script>
+      let pc, file, dataChannel;
+      const fileInput = document.getElementById('fileInput');
+      const status = document.getElementById('status');
+
+      const config = {}; // Zero external dependencies (STUN-free). Works best on same Wi-Fi.
+
+      async function createOffer() {
+        file = fileInput.files[0];
+        if (!file) return alert('Please select a file first.');
+
+        pc = new RTCPeerConnection(config);
+        dataChannel = pc.createDataChannel('file');
+        setupDataChannel();
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        const base = window.location.href.split('?')[0];
+        const offerStr = btoa(JSON.stringify(offer));
+        const link = `${base}?offer=${encodeURIComponent(offerStr)}`;
+
+        document.getElementById('shareLink').textContent = link;
+        document.getElementById('offerStep').style.display = 'block';
+        document.getElementById('answerStep').style.display = 'block'; // ← This was missing before!
+
+        status.textContent =
+          '✅ Link generated. Send the link above, then wait for their answer text.';
+      }
+
+      function setupDataChannel() {
+        dataChannel.onopen = () => {
+          status.textContent = '✅ Connected! Sending file...';
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            dataChannel.send(e.target.result);
+            status.innerHTML =
+              '✅ File sent successfully! You can close this tab.';
+          };
+          reader.readAsArrayBuffer(file);
+        };
+      }
+
+      async function handleAnswer() {
+        const answerStr = document.getElementById('answerInput').value.trim();
+        if (!answerStr) return alert('Please paste the answer text first.');
+
+        try {
+          const answer = JSON.parse(atob(answerStr));
+          await pc.setRemoteDescription(answer);
+        } catch (e) {
+          alert('Invalid answer text. Make sure you copied the entire block.');
+        }
+      }
+
+      // Receiver flow (when they click the link)
+      window.onload = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const offerParam = params.get('offer');
+        if (offerParam) {
+          try {
+            const offer = JSON.parse(atob(decodeURIComponent(offerParam)));
+            pc = new RTCPeerConnection(config);
+            pc.ondatachannel = (e) => {
+              dataChannel = e.channel;
+              dataChannel.onmessage = (msg) => {
+                const blob = new Blob([msg.data]);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'received-file.env'; // you can change this default name if you want
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                status.innerHTML =
+                  '✅ File received and downloaded automatically!';
+              };
+            };
+
+            await pc.setRemoteDescription(offer);
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+
+            const answerStr = btoa(JSON.stringify(answer));
+            status.innerHTML = `
+                        <h2>✅ Copy this answer text and send it back to the sender:</h2>
+                        <pre id="answerPre">${answerStr}</pre>
+                        <button onclick="copyAnswer()">Copy Answer to Clipboard</button>
+                        <p>Just paste it into Slack, email, or text and send it.</p>
+                    `;
+          } catch (e) {
+            status.textContent =
+              'Error loading offer. Try again or ask sender for a fresh link.';
+          }
+        }
+      };
+
+      function copyAnswer() {
+        const pre = document.getElementById('answerPre');
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+          alert('✅ Answer copied to clipboard!');
+        });
+      }
+    </script>
+  </body>
+</html>
