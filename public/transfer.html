@@ -398,6 +398,7 @@
               class="text-input"
               id="text-input"
               placeholder="Type or paste the text you want to send&hellip;"
+              autocomplete="off"
             ></textarea>
             <div class="char-count" id="text-char-count"></div>
           </div>
@@ -413,7 +414,12 @@
           <div class="step-label">
             Step 2 &mdash; Send this link to your recipient
           </div>
-          <textarea class="code-box" id="s-link-box" readonly></textarea>
+          <textarea
+            class="code-box"
+            id="s-link-box"
+            readonly
+            autocomplete="off"
+          ></textarea>
           <div class="btn-row">
             <button class="btn btn-primary" id="btn-copy-link">
               Copy link
@@ -438,6 +444,7 @@
             class="code-box"
             id="s-response-box"
             placeholder="Paste response code here&hellip;"
+            autocomplete="off"
           ></textarea>
           <div class="btn-row">
             <button class="btn btn-primary" id="btn-connect" disabled>
@@ -483,7 +490,12 @@
           <div class="step-label">
             Step 1 &mdash; Send this response code back to the sender
           </div>
-          <textarea class="code-box" id="r-code-box" readonly></textarea>
+          <textarea
+            class="code-box"
+            id="r-code-box"
+            readonly
+            autocomplete="off"
+          ></textarea>
           <div class="btn-row">
             <button class="btn btn-primary" id="btn-copy-response">
               Copy response code
@@ -793,6 +805,9 @@
       // =================================================================
       //  MODE DETECTION
       // =================================================================
+
+      // Clear any browser-restored textarea values on load
+      for (const ta of document.querySelectorAll('textarea')) ta.value = '';
 
       const fragment = location.hash.slice(1);
       if (fragment) {
