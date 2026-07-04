@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nugget Defense</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(circle at 30% 10%, #38506b, #1b2436 70%);
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 12px 14px 26px;
+  }
+  h1.title {
+    text-align: center;
+    margin: 4px 0 10px;
+    font-size: clamp(24px, 5vw, 42px);
+    letter-spacing: 1px;
+    text-shadow: 0 3px 0 #b9541c, 0 6px 10px rgba(0,0,0,.4);
+    color: #ffd479;
+  }
+  .topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .shopbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 14px;
+    color: #23331c;
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    line-height: 1.15;
+    text-align: left;
+    border: 3px solid #8a5a12;
+    box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 6px 12px rgba(0,0,0,.3);
+    transition: transform .06s ease, box-shadow .06s ease, filter .1s ease;
+  }
+  .btn small { display: block; font-weight: normal; font-size: 11px; opacity: .8; }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+  .btn.cant { filter: grayscale(.65) brightness(.85); cursor: not-allowed; }
+  .btn.active { outline: 3px solid #fff; outline-offset: 1px; filter: brightness(1.12); }
+
+  .btn.fork    { background: linear-gradient(#ffe08a, #ffbf3a); border-color: #b9791c; }
+  .btn.ketchup { background: linear-gradient(#ff9a8a, #e8402f); border-color: #a11f14; color: #3a0d08; }
+  .btn.upg     { position: relative; }
+  .btn.upg::after {
+    content: "▲"; position: absolute; top: -8px; right: -6px;
+    background: #4fb83a; color: #fff; font-size: 10px;
+    border: 2px solid #256415; border-radius: 8px; padding: 1px 4px;
+  }
+
+  .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stat {
+    background: rgba(0,0,0,.30);
+    border: 2px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    padding: 6px 11px;
+    font-weight: bold;
+    font-size: 16px;
+    min-width: 70px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .stat span { display: block; font-size: 10px; font-weight: normal; opacity: .7; letter-spacing: .5px; }
+
+  .stage {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,.45);
+    border: 4px solid #2c3b25;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #57a94d;
+    touch-action: manipulation;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    padding: 24px;
+    background: rgba(15,20,30,.72);
+    backdrop-filter: blur(2px);
+  }
+  .overlay.hidden { display: none; }
+  .overlay h2 { margin: 0; font-size: clamp(28px, 6vw, 52px); color: #ffd479; text-shadow: 0 3px 0 #b9541c; }
+  .overlay p { margin: 0; font-size: 17px; max-width: 500px; line-height: 1.4; opacity: .95; }
+  .overlay .legend { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; font-size: 15px; opacity: .9; }
+  .bigbtn {
+    font-family: inherit; font-weight: bold; font-size: 22px; color: #23331c;
+    background: linear-gradient(#9fe88a, #4fb83a);
+    border: 3px solid #2c7a1c; border-radius: 16px; padding: 14px 28px; cursor: pointer;
+    box-shadow: 0 5px 0 #256415, 0 8px 16px rgba(0,0,0,.35);
+    transition: transform .06s ease, box-shadow .06s ease;
+  }
+  .bigbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #256415; }
+  .modehint {
+    text-align: center; margin-top: 10px; font-size: 14px; opacity: .75;
+    min-height: 20px; transition: color .1s ease;
+  }
+  .modehint.on { opacity: 1; color: #a6ff9e; font-weight: bold; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">🍗 Nugget Defense 🍴</h1>
+
+    <div class="topbar">
+      <div class="shopbtns">
+        <button class="btn fork" id="newForkBtn">🍴 Fork Tower<small id="newForkCost">50 gold</small></button>
+        <button class="btn fork upg" id="upForkBtn">⬆ Upgrade Fork<small id="upForkCost">50 gold</small></button>
+        <button class="btn ketchup" id="newKetchupBtn">🍅 Ketchup Tower<small id="newKetchupCost">75 gold</small></button>
+        <button class="btn ketchup upg" id="upKetchupBtn">⬆ Upgrade Ketchup<small id="upKetchupCost">75 gold</small></button>
+      </div>
+      <div class="stats">
+        <div class="stat">❤️ <span>LIVES</span><b id="livesVal">3</b></div>
+        <div class="stat">🪙 <span>GOLD</span><b id="goldVal">0</b></div>
+        <div class="stat">🌊 <span>WAVE</span><b id="waveVal">1</b></div>
+        <div class="stat">🍗 <span>LEFT</span><b id="leftVal">0</b></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <canvas id="game" width="960" height="540"></canvas>
+
+      <div class="overlay" id="startScreen">
+        <h2>Nugget Defense</h2>
+        <p>Evil chicken nuggets march down the red road! Buy <b>fork towers</b>, then click the grass to place them. Stop the nuggets before they escape off the right side.</p>
+        <div class="legend">
+          <span>🍴 Fork = 1 dmg/s</span>
+          <span>🍅 Ketchup = 2 dmg/s</span>
+          <span>⬆ Upgrade = +1 dmg/s</span>
+        </div>
+        <p style="font-size:14px;opacity:.8">Kill nuggets → earn gold → build & upgrade towers. You have 3 lives. Good luck!</p>
+        <button class="bigbtn" id="startBtn">▶ Start Game</button>
+      </div>
+
+      <div class="overlay hidden" id="gameOverScreen">
+        <h2>Game Over!</h2>
+        <p id="gameOverText">The nuggets got past your defenses.</p>
+        <button class="bigbtn" id="restartBtn">↻ Play Again</button>
+      </div>
+    </div>
+
+    <p class="modehint" id="modeHint">Tip: buy a tower, then click a grassy spot to place it. Towers auto-aim at the nugget nearest the exit.</p>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Canvas ----------
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // ---------- Path (left -> right) ----------
+  const path = [
+    {x: -30, y: 270}, {x: 170, y: 270}, {x: 170, y: 120}, {x: 420, y: 120},
+    {x: 420, y: 420}, {x: 660, y: 420}, {x: 660, y: 270}, {x: 990, y: 270}
+  ];
+  const segLen = [];
+  let totalLen = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const L = Math.hypot(path[i+1].x - path[i].x, path[i+1].y - path[i].y);
+    segLen.push(L); totalLen += L;
+  }
+  function posAt(dist) {
+    if (dist <= 0) return { x: path[0].x, y: path[0].y };
+    let d = dist;
+    for (let i = 0; i < segLen.length; i++) {
+      if (d <= segLen[i]) {
+        const t = d / segLen[i];
+        return { x: path[i].x + (path[i+1].x - path[i].x) * t,
+                 y: path[i].y + (path[i+1].y - path[i].y) * t };
+      }
+      d -= segLen[i];
+    }
+    return { x: path[path.length-1].x, y: path[path.length-1].y };
+  }
+
+  // ---------- Constants ----------
+  const NUGGET_SPEED = 52;
+  const SPAWN_SPACING = 1.0;
+  const FIRE_INTERVAL = 1.0;
+  const BETWEEN_WAVES = 3.0;
+  const START_TOWER = { x: 110, y: 360 };
+
+  const FORK_BASE = 1, KETCHUP_BASE = 2;
+  const FORK_STEP = 50, KETCHUP_STEP = 75;
+
+  // ---------- State ----------
+  let gold, lives, wave, towers, nuggets, forks, pops;
+  let waveState, spawnLeft, spawnTimer, waveHealth, betweenTimer;
+  let forkUpgradeCount, ketchupUpgradeCount;
+  let pending;                 // null | {kind:'place'|'upgrade', type:'fork'|'ketchup'}
+  let running = false, gameOver = false;
+  let lastTime = 0;
+  let toastMsg = '', toastTimer = 0;
+  const mouse = { x: W/2, y: H/2, inside: false };
+
+  function resetGame() {
+    gold = 0; lives = 3; wave = 0;
+    towers = [ makeTower('fork', START_TOWER.x, START_TOWER.y) ];
+    nuggets = []; forks = []; pops = [];
+    forkUpgradeCount = 0; ketchupUpgradeCount = 0;
+    pending = null;
+    gameOver = false;
+    waveState = 'between'; betweenTimer = BETWEEN_WAVES;
+    spawnLeft = 0; spawnTimer = 0; waveHealth = 5;   // so the LEFT stat isn't NaN before wave 1
+    updateHint(); syncHUD();
+  }
+
+  function makeTower(type, x, y) {
+    return {
+      type, x, y,
+      damage: type === 'ketchup' ? KETCHUP_BASE : FORK_BASE,
+      upgrades: 0, cd: 0, aim: -Math.PI/2, recoil: 0
+    };
+  }
+
+  // ---------- Costs ----------
+  function forkTowerCount()    { return towers.filter(t => t.type === 'fork').length; }
+  function ketchupTowerCount() { return towers.filter(t => t.type === 'ketchup').length; }
+  function costFor(kind, type) {
+    if (kind === 'place'   && type === 'fork')    return FORK_STEP    * forkTowerCount();          // start 1 free -> 50,100,...
+    if (kind === 'place'   && type === 'ketchup') return KETCHUP_STEP * (ketchupTowerCount() + 1); // 75,150,...
+    if (kind === 'upgrade' && type === 'fork')    return FORK_STEP    * (forkUpgradeCount + 1);    // 50,100,...
+    if (kind === 'upgrade' && type === 'ketchup') return KETCHUP_STEP * (ketchupUpgradeCount + 1); // 75,150,...
+    return Infinity;
+  }
+
+  // ---------- Wave flow ----------
+  function startNextWave() {
+    wave++;
+    waveHealth = wave + 4;   // wave 1 -> 5 health
+    spawnLeft = wave + 4;    // wave 1 -> 5 nuggets
+    spawnTimer = 0;
+    waveState = 'spawning';
+    syncHUD();
+  }
+  function spawnNugget() {
+    nuggets.push({
+      progress: 0, health: waveHealth, maxHealth: waveHealth,
+      pos: posAt(0), wobble: (nuggets.length * 1.7) % (Math.PI * 2), hitFlash: 0
+    });
+  }
+  function frontmost() {
+    let best = null;
+    for (const n of nuggets) if (!best || n.progress > best.progress) best = n;
+    return best;
+  }
+  function killNugget(n) {
+    const idx = nuggets.indexOf(n);
+    if (idx === -1) return;
+    nuggets.splice(idx, 1);
+    const reward = wave + 5;
+    gold += reward;
+    pops.push({ x: n.pos.x, y: n.pos.y - 20, text: '+' + reward, life: 1.0, color: '#ffe27a' });
+    sound('kill');
+  }
+
+  // ---------- Placement / upgrade helpers ----------
+  function distToSeg(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx*dx + dy*dy;
+    let t = len2 ? ((px-ax)*dx + (py-ay)*dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (ax + dx*t), py - (ay + dy*t));
+  }
+  function distToPath(px, py) {
+    let m = Infinity;
+    for (let i = 0; i < path.length - 1; i++)
+      m = Math.min(m, distToSeg(px, py, path[i].x, path[i].y, path[i+1].x, path[i+1].y));
+    return m;
+  }
+  function isValidPlacement(pt) {
+    if (pt.x < 26 || pt.x > W - 26 || pt.y < 26 || pt.y > H - 26) return false;
+    if (distToPath(pt.x, pt.y) < 40) return false;
+    for (const t of towers) if (Math.hypot(t.x - pt.x, t.y - pt.y) < 42) return false;
+    return true;
+  }
+  function towerAt(pt, type) {
+    let best = null, bd = 26;
+    for (const t of towers) {
+      if (type && t.type !== type) continue;
+      const d = Math.hypot(t.x - pt.x, t.y - pt.y);
+      if (d < bd) { bd = d; best = t; }
+    }
+    return best;
+  }
+  function toast(m) { toastMsg = m; toastTimer = 1.5; }
+
+  // ---------- Shop buttons ----------
+  const newForkBtn    = document.getElementById('newForkBtn');
+  const upForkBtn     = document.getElementById('upForkBtn');
+  const newKetchupBtn = document.getElementById('newKetchupBtn');
+  const upKetchupBtn  = document.getElementById('upKetchupBtn');
+
+  function shakeBtn(el) {
+    el.animate(
+      [{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' },
+       { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }],
+      { duration: 220 }
+    );
+  }
+
+  function startAction(kind, type, btn) {
+    if (!running || gameOver) return;
+    const cost = costFor(kind, type);
+    if (gold < cost) { shakeBtn(btn); return; }                 // not enough gold -> nothing happens
+    if (kind === 'upgrade' && type === 'ketchup' && ketchupTowerCount() === 0) {
+      toast('Buy a Ketchup tower first!'); shakeBtn(btn); return;
+    }
+    // toggle off if the same action is already armed
+    if (pending && pending.kind === kind && pending.type === type) { cancelPending(); return; }
+    pending = { kind, type };
+    canvas.style.cursor = 'crosshair';
+    updateHint();
+  }
+  function cancelPending() {
+    pending = null;
+    canvas.style.cursor = 'default';
+    updateHint();
+  }
+
+  newForkBtn.addEventListener('click',    () => startAction('place',   'fork',    newForkBtn));
+  upForkBtn.addEventListener('click',     () => startAction('upgrade', 'fork',    upForkBtn));
+  newKetchupBtn.addEventListener('click', () => startAction('place',   'ketchup', newKetchupBtn));
+  upKetchupBtn.addEventListener('click',  () => startAction('upgrade', 'ketchup', upKetchupBtn));
+
+  // ---------- Canvas input ----------
+  function toCanvas(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) * (W / r.width),
+      y: (e.clientY - r.top)  * (H / r.height)
+    };
+  }
+  canvas.addEventListener('pointermove', e => {
+    const p = toCanvas(e); mouse.x = p.x; mouse.y = p.y; mouse.inside = true;
+  });
+  canvas.addEventListener('pointerleave', () => { mouse.inside = false; });
+  canvas.addEventListener('click', e => handleCanvasClick(toCanvas(e)));
+
+  function handleCanvasClick(pt) {
+    if (!running || gameOver || !pending) return;
+
+    if (pending.kind === 'place') {
+      if (!isValidPlacement(pt)) { toast("Can't build there!"); return; }
+      const cost = costFor('place', pending.type);
+      if (gold < cost) { cancelPending(); return; }
+      gold -= cost;
+      towers.push(makeTower(pending.type, pt.x, pt.y));
+      pops.push({ x: pt.x, y: pt.y - 26, text: 'Built!', life: 0.9, color: '#bfe8ff' });
+      sound('build');
+      cancelPending(); syncHUD();
+    } else { // upgrade
+      const t = towerAt(pt, pending.type);
+      if (!t) { toast('Click a ' + label(pending.type) + ' tower'); return; }
+      const cost = costFor('upgrade', pending.type);
+      if (gold < cost) { cancelPending(); return; }
+      gold -= cost;
+      t.damage += 1; t.upgrades += 1;
+      if (pending.type === 'fork') forkUpgradeCount++; else ketchupUpgradeCount++;
+      pops.push({ x: t.x, y: t.y - 30, text: '+1 dmg → ' + t.damage, life: 1.1, color: '#a6ff9e' });
+      sound('upgrade');
+      cancelPending(); syncHUD();
+    }
+  }
+
+  window.addEventListener('keydown', e => { if (e.key === 'Escape' && pending) cancelPending(); });
+
+  function label(type) { return type === 'fork' ? 'Fork' : 'Ketchup'; }
+
+  // ---------- Update ----------
+  function update(dt) {
+    if (gameOver) return;
+
+    if (toastTimer > 0) toastTimer -= dt;
+
+    if (waveState === 'between') {
+      betweenTimer -= dt;
+      if (betweenTimer <= 0) startNextWave();
+    } else if (waveState === 'spawning') {
+      if (spawnLeft > 0) {
+        spawnTimer -= dt;
+        if (spawnTimer <= 0) { spawnNugget(); spawnLeft--; spawnTimer = SPAWN_SPACING; }
+      }
+      if (spawnLeft === 0 && nuggets.length === 0) { waveState = 'between'; betweenTimer = BETWEEN_WAVES; }
+    }
+
+    // move nuggets
+    for (let i = nuggets.length - 1; i >= 0; i--) {
+      const n = nuggets[i];
+      n.progress += NUGGET_SPEED * dt;
+      n.wobble += dt * 6;
+      if (n.hitFlash > 0) n.hitFlash -= dt;
+      if (n.progress >= totalLen) {
+        nuggets.splice(i, 1);
+        lives--;
+        pops.push({ x: W - 60, y: 250, text: '-1 ❤️', life: 1.2, color: '#ff8080' });
+        sound('leak');
+        if (lives <= 0) { lives = 0; endGame(); }
+        continue;
+      }
+      n.pos = posAt(n.progress);
+    }
+
+    // towers fire at frontmost nugget, dealing their own damage
+    for (const t of towers) {
+      t.cd -= dt;
+      if (t.recoil > 0) t.recoil -= dt;
+      const tgt = frontmost();
+      if (tgt) {
+        t.aim = Math.atan2(tgt.pos.y - t.y, tgt.pos.x - t.x);
+        if (t.cd <= 0) {
+          tgt.health -= t.damage;
+          tgt.hitFlash = 0.12;
+          spawnFork(t, tgt);
+          t.cd = FIRE_INTERVAL; t.recoil = 0.12;
+          if (tgt.health <= 0) killNugget(tgt);
+        }
+      } else if (t.cd < 0) {
+        t.cd = 0;
+      }
+    }
+
+    // forks (cosmetic)
+    for (let i = forks.length - 1; i >= 0; i--) {
+      forks[i].t += dt / forks[i].dur;
+      if (forks[i].t >= 1) forks.splice(i, 1);
+    }
+    // popups
+    for (let i = pops.length - 1; i >= 0; i--) {
+      pops[i].y -= 22 * dt; pops[i].life -= dt;
+      if (pops[i].life <= 0) pops.splice(i, 1);
+    }
+    syncHUD();
+  }
+
+  function spawnFork(t, tgt) {
+    const dist = Math.hypot(tgt.pos.x - t.x, tgt.pos.y - t.y);
+    forks.push({
+      x0: t.x, y0: t.y - 8, x1: tgt.pos.x, y1: tgt.pos.y,
+      angle: Math.atan2(tgt.pos.y - (t.y - 8), tgt.pos.x - t.x),
+      ketchup: t.type === 'ketchup',
+      t: 0, dur: Math.max(0.12, dist / 720)
+    });
+  }
+
+  function endGame() {
+    gameOver = true; running = false; pending = null;
+    canvas.style.cursor = 'default';
+    document.getElementById('gameOverText').textContent =
+      'The nuggets broke through on wave ' + wave + '. You had ' + towers.length +
+      ' tower' + (towers.length === 1 ? '' : 's') + '. Try again!';
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+    sound('over');
+  }
+
+  // ---------- Render ----------
+  function render() {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#7bc96f'); g.addColorStop(1, '#4c9e43');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    drawGrassDetail();
+    drawPath();
+    drawSpawnAndBase();
+
+    for (const t of towers) drawTower(t);
+    for (const n of nuggets) drawNugget(n);
+    for (const f of forks) drawFork(f);
+    drawPendingUI();
+    for (const p of pops) drawPop(p);
+
+    if (running && !gameOver && waveState === 'between') {
+      const secs = Math.max(0, Math.ceil(betweenTimer));
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(0,0,0,.55)';
+      ctx.fillRect(0, H/2 - 46, W, 92);
+      ctx.fillStyle = '#ffd479';
+      ctx.font = 'bold 40px "Trebuchet MS", sans-serif';
+      ctx.fillText('Wave ' + (wave + 1) + ' incoming…', W/2, H/2 - 4);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px "Trebuchet MS", sans-serif';
+      ctx.fillText(secs + 's', W/2, H/2 + 30);
+      ctx.restore();
+    }
+
+    if (toastTimer > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, toastTimer * 2);
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 22px "Trebuchet MS", sans-serif';
+      const w = ctx.measureText(toastMsg).width + 40;
+      ctx.fillStyle = 'rgba(160,30,30,.9)';
+      roundRect(W/2 - w/2, 14, w, 38, 10); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.fillText(toastMsg, W/2, 39);
+      ctx.restore();
+    }
+  }
+
+  const tufts = [];
+  for (let i = 0; i < 90; i++) {
+    const a = (i * 9301 + 49297) % 233280;
+    const b = (i * 4021 + 7919) % 233280;
+    tufts.push({ x: (a / 233280) * W, y: (b / 233280) * H });
+  }
+  function drawGrassDetail() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 2;
+    for (const t of tufts) {
+      ctx.beginPath();
+      ctx.moveTo(t.x, t.y); ctx.lineTo(t.x - 3, t.y - 6);
+      ctx.moveTo(t.x, t.y); ctx.lineTo(t.x + 3, t.y - 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawPath() {
+    ctx.save();
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = '#7a1f1f'; ctx.lineWidth = 52; strokePath();
+    ctx.strokeStyle = '#e03b3b'; ctx.lineWidth = 42; strokePath();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 4;
+    ctx.setLineDash([14, 18]); strokePath(); ctx.setLineDash([]);
+    ctx.restore();
+  }
+  function strokePath() {
+    ctx.beginPath(); ctx.moveTo(path[0].x, path[0].y);
+    for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+    ctx.stroke();
+  }
+  function drawSpawnAndBase() {
+    const s = path[0];
+    ctx.save(); ctx.translate(s.x + 20, s.y);
+    ctx.fillStyle = 'rgba(120,40,40,.9)';
+    ctx.beginPath(); ctx.ellipse(0, 0, 16, 30, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3a0f0f';
+    ctx.beginPath(); ctx.ellipse(0, 0, 8, 20, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    const e = path[path.length - 1];
+    ctx.save(); ctx.translate(e.x - 40, e.y);
+    ctx.fillStyle = 'rgba(0,0,0,.15)';
+    ctx.beginPath(); ctx.ellipse(0, 26, 46, 12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#eef2f5';
+    ctx.beginPath(); ctx.ellipse(0, 0, 42, 30, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#cfd8de';
+    ctx.beginPath(); ctx.ellipse(0, 0, 28, 20, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#23331c'; ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('🏠', 0, 6);
+    ctx.restore();
+  }
+
+  function drawTower(t) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.beginPath(); ctx.ellipse(0, 16, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+
+    const bg = ctx.createLinearGradient(0, -18, 0, 18);
+    if (t.type === 'ketchup') { bg.addColorStop(0, '#e79a92'); bg.addColorStop(1, '#b5433a'); }
+    else                      { bg.addColorStop(0, '#9fb2c4'); bg.addColorStop(1, '#5c7488'); }
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = t.type === 'ketchup' ? '#7a241d' : '#33475a';
+    ctx.lineWidth = 3; ctx.stroke();
+
+    ctx.save();
+    ctx.rotate(t.aim);
+    if (t.recoil > 0) ctx.translate(-4, 0);
+    drawForkShape(ctx, 6, 0, 0, 1.0, '#dfe7ee', '#8fa2b2');
+    if (t.type === 'ketchup') {
+      // ketchup glob near the prongs
+      ctx.fillStyle = '#e2261c';
+      ctx.beginPath(); ctx.arc(16, 0, 5.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(22, 3, 2.4, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+    ctx.restore();
+
+    drawDamageBadge(t);
+  }
+
+  function drawDamageBadge(t) {
+    const bx = t.x + 15, by = t.y + 13;
+    ctx.save();
+    ctx.fillStyle = t.type === 'ketchup' ? '#c62828' : '#37474f';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(bx, by, 9, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px "Trebuchet MS", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(t.damage), bx, by + 0.5);
+    ctx.restore();
+  }
+
+  function drawForkShape(c, x, y, angle, scale, fill, stroke) {
+    c.save();
+    c.translate(x, y); c.rotate(angle); c.scale(scale, scale);
+    c.lineCap = 'round';
+    c.strokeStyle = stroke; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(-14, 0); c.lineTo(9, 0); c.stroke();
+    c.strokeStyle = fill; c.lineWidth = 2.4;
+    for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(8, i*4); c.lineTo(18, i*4); c.stroke(); }
+    c.restore();
+  }
+
+  function drawFork(f) {
+    const x = f.x0 + (f.x1 - f.x0) * f.t;
+    const y = f.y0 + (f.y1 - f.y0) * f.t;
+    drawForkShape(ctx, x, y, f.angle, 0.85, f.ketchup ? '#ffd9d4' : '#f2f6fa', f.ketchup ? '#e2261c' : '#aab8c6');
+    if (f.ketchup) {
+      ctx.save(); ctx.fillStyle = '#e2261c';
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    }
+  }
+
+  function drawNugget(n) {
+    const { x, y } = n.pos;
+    const bob = Math.sin(n.wobble) * 2;
+    ctx.save(); ctx.translate(x, y + bob);
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.beginPath(); ctx.ellipse(0, 20 - bob, 20, 7, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-18, -6);
+    ctx.bezierCurveTo(-23, -18, -6, -23, 2, -16);
+    ctx.bezierCurveTo(11, -25, 25, -14, 18, -4);
+    ctx.bezierCurveTo(27, 3, 20, 17, 8, 14);
+    ctx.bezierCurveTo(2, 23, -15, 21, -15, 10);
+    ctx.bezierCurveTo(-25, 8, -25, 0, -18, -6);
+    ctx.closePath();
+
+    const bodyGrad = ctx.createLinearGradient(0, -22, 0, 22);
+    if (n.hitFlash > 0) { bodyGrad.addColorStop(0, '#fff3c9'); bodyGrad.addColorStop(1, '#ffce6b'); }
+    else                { bodyGrad.addColorStop(0, '#f4c265'); bodyGrad.addColorStop(1, '#d99a35'); }
+    ctx.fillStyle = bodyGrad; ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = '#a86a1e'; ctx.stroke();
+
+    ctx.fillStyle = 'rgba(150,90,20,.45)';
+    const dots = [[-8,-8],[6,-10],[-12,4],[10,2],[0,8],[-3,-2],[13,-4]];
+    for (const d of dots) { ctx.beginPath(); ctx.arc(d[0], d[1], 1.4, 0, Math.PI*2); ctx.fill(); }
+
+    ctx.strokeStyle = '#5a3410'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(-11, -9); ctx.lineTo(-3, -6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(11, -9); ctx.lineTo(3, -6); ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-6, -2, 3.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, -2, 3.4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1c1c1c';
+    ctx.beginPath(); ctx.arc(-5.2, -1.4, 1.7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6.8, -1.4, 1.7, 0, Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle = '#5a3410'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 12, 5, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+    ctx.restore();
+
+    const bw = 40, bh = 6, bx = x - bw/2, by = y + bob - 34;
+    ctx.fillStyle = 'rgba(0,0,0,.55)';
+    ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+    const frac = Math.max(0, n.health) / n.maxHealth;
+    ctx.fillStyle = frac > 0.5 ? '#5ad15a' : frac > 0.25 ? '#e8c53a' : '#e8503a';
+    ctx.fillRect(bx, by, bw * frac, bh);
+  }
+
+  function drawPendingUI() {
+    if (!pending) return;
+    if (pending.kind === 'place' && mouse.inside) {
+      const ok = isValidPlacement(mouse);
+      ctx.save(); ctx.globalAlpha = 0.6;
+      const c = pending.type === 'ketchup' ? '#d9756f' : '#9fb2c4';
+      ctx.fillStyle = c;
+      ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 18, 0, Math.PI*2); ctx.fill();
+      drawForkShape(ctx, mouse.x, mouse.y, -Math.PI/2, 1, '#dfe7ee', '#8fa2b2');
+      if (pending.type === 'ketchup') {
+        ctx.fillStyle = '#e2261c';
+        ctx.beginPath(); ctx.arc(mouse.x, mouse.y - 18, 5, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = ok ? 'rgba(90,209,90,.95)' : 'rgba(233,80,58,.95)';
+      ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 25, 0, Math.PI*2); ctx.stroke();
+      if (!ok) {
+        ctx.beginPath();
+        ctx.moveTo(mouse.x - 8, mouse.y - 8); ctx.lineTo(mouse.x + 8, mouse.y + 8);
+        ctx.moveTo(mouse.x + 8, mouse.y - 8); ctx.lineTo(mouse.x - 8, mouse.y + 8);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (pending.kind === 'upgrade') {
+      const hovered = mouse.inside ? towerAt(mouse, pending.type) : null;
+      ctx.save(); ctx.lineWidth = 3;
+      const pulse = 24 + Math.sin(performance.now() / 150) * 2;
+      for (const t of towers) {
+        if (t.type !== pending.type) continue;
+        ctx.strokeStyle = (t === hovered) ? '#a6ff9e' : 'rgba(166,255,158,.55)';
+        ctx.beginPath(); ctx.arc(t.x, t.y, t === hovered ? pulse : 23, 0, Math.PI*2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawPop(p) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+    ctx.fillStyle = p.color;
+    ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3;
+    ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeText(p.text, p.x, p.y);
+    ctx.fillText(p.text, p.x, p.y);
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // ---------- HUD ----------
+  const el = id => document.getElementById(id);
+  function setBtn(btn, costEl, kind, type) {
+    const cost = costFor(kind, type);
+    costEl.textContent = cost + ' gold';
+    let cant = gold < cost;
+    if (kind === 'upgrade' && type === 'ketchup' && ketchupTowerCount() === 0) cant = true;
+    btn.classList.toggle('cant', cant);
+    btn.classList.toggle('active', !!pending && pending.kind === kind && pending.type === type);
+  }
+  function syncHUD() {
+    el('livesVal').textContent = lives;
+    el('goldVal').textContent = gold;
+    el('waveVal').textContent = Math.max(1, wave);
+    el('leftVal').textContent = nuggets.length + spawnLeft;
+    setBtn(newForkBtn,    el('newForkCost'),    'place',   'fork');
+    setBtn(upForkBtn,     el('upForkCost'),     'upgrade', 'fork');
+    setBtn(newKetchupBtn, el('newKetchupCost'), 'place',   'ketchup');
+    setBtn(upKetchupBtn,  el('upKetchupCost'),  'upgrade', 'ketchup');
+  }
+  function updateHint() {
+    const h = el('modeHint');
+    if (!pending) {
+      h.textContent = 'Tip: buy a tower, then click a grassy spot to place it. Towers auto-aim at the nugget nearest the exit.';
+      h.classList.remove('on');
+    } else if (pending.kind === 'place') {
+      h.textContent = 'Placing ' + label(pending.type) + ' Tower — click a grassy spot (Esc to cancel).';
+      h.classList.add('on');
+    } else {
+      h.textContent = 'Upgrading — click a ' + label(pending.type) + ' tower to give it +1 damage (Esc to cancel).';
+      h.classList.add('on');
+    }
+  }
+
+  // ---------- Main loop ----------
+  function frame(ts) {
+    if (!lastTime) lastTime = ts;
+    let dt = (ts - lastTime) / 1000;
+    lastTime = ts;
+    if (dt > 0.1) dt = 0.1;
+    if (running) update(dt);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Sound ----------
+  let actx = null;
+  function sound(kind) {
+    if (!actx) return;
+    const now = actx.currentTime;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    let f0 = 440, f1 = 440, dur = 0.12, type = 'triangle', vol = 0.14;
+    if (kind === 'kill')    { f0 = 660; f1 = 300; dur = 0.14; }
+    if (kind === 'build')   { f0 = 300; f1 = 720; dur = 0.18; type = 'square'; vol = 0.12; }
+    if (kind === 'upgrade') { f0 = 520; f1 = 990; dur = 0.20; type = 'triangle'; vol = 0.14; }
+    if (kind === 'leak')    { f0 = 200; f1 = 90;  dur = 0.30; type = 'sawtooth'; vol = 0.18; }
+    if (kind === 'over')    { f0 = 320; f1 = 70;  dur = 0.70; type = 'sawtooth'; vol = 0.2; }
+    o.type = type;
+    o.frequency.setValueAtTime(f0, now);
+    o.frequency.exponentialRampToValueAtTime(Math.max(40, f1), now + dur);
+    g.gain.setValueAtTime(vol, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    o.start(now); o.stop(now + dur + 0.02);
+  }
+  function initAudio() {
+    if (actx) return;
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; }
+  }
+
+  // ---------- Buttons ----------
+  const startScreen = document.getElementById('startScreen');
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  function beginPlay() {
+    initAudio();
+    resetGame();
+    startScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+    running = true;
+  }
+  document.getElementById('startBtn').addEventListener('click', beginPlay);
+  document.getElementById('restartBtn').addEventListener('click', beginPlay);
+
+  // ---------- Boot ----------
+  resetGame();
+  running = false;
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
