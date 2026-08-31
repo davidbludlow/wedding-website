@@ -1,0 +1,2045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antlers</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+:root{
+  --void:#05060A; --ink:#0D1016; --slate:#1B2130; --ash:#303848;
+  --bone:#D9CFBA; --candle:#FFC978; --ember:#E08D3C;
+  --duskSky:#33243E; --duskBlood:#7A3A33; --nightSky:#0A1322;
+  --eyeWhite:#EAF4FF; --eyeRed:#FF3B30; --redDeep:#6E1414; --fog:#26202E;
+  --textMain:#D8D3C6; --textDim:#8A8577; --accent:var(--candle);
+}
+html,body{margin:0;padding:0;height:100%;background:#05060A;color:var(--textMain)}
+[hidden]{display:none!important}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;
+  font-family:"Crimson Pro","Iowan Old Style",Georgia,"Times New Roman",serif;background:var(--void)}
+text{user-select:none;-webkit-user-select:none}
+[data-hs]{cursor:pointer}
+[data-hs]:hover{filter:drop-shadow(0 0 10px rgba(255,201,120,.55))}
+.redui [data-hs]:hover{filter:drop-shadow(0 0 10px rgba(255,59,48,.55))}
+.redui{--accent:var(--eyeRed)}
+[data-choice]{cursor:pointer}
+[data-choice] rect{fill:var(--slate);stroke:var(--textDim);stroke-width:1;transition:fill .15s,stroke .15s}
+[data-choice] text{fill:var(--textMain);font-weight:600}
+[data-choice]:hover rect{fill:var(--ash);stroke:var(--accent)}
+[data-choice]:hover text{fill:var(--accent)}
+
+.pair .halo{fill:url(#haloW)}
+.pair .core{fill:var(--eyeWhite)}
+.pair .pupil{fill:var(--void)}
+.redworld .pair .halo,.seye .halo{fill:url(#haloR)}
+.redworld .pair .core,.seye .core{fill:var(--eyeRed)}
+.seye .pupil,.redworld .pair .pupil{fill:var(--void)}
+.redworld .pupil{transform:scale(1.4)}
+.pupil,.lids,.pair,.seye{transform-box:fill-box;transform-origin:center}
+.lids{transition:transform .15s ease-in}
+
+.flame{transform-box:fill-box;transform-origin:center bottom;animation:flick 1.8s ease-in-out infinite}
+.flame.f2{animation-delay:.7s}
+@keyframes flick{0%,100%{opacity:1;transform:scale(1)}25%{opacity:.85;transform:scale(.97)}
+  55%{opacity:.95;transform:scale(1.03)}80%{opacity:.9;transform:scale(.98)}}
+.fogr{animation:fogdrift 40s ease-in-out infinite alternate}
+.fogr.f2{animation:fogdrift 55s ease-in-out infinite alternate-reverse}
+@keyframes fogdrift{from{transform:translateX(-80px)}to{transform:translateX(80px)}}
+.pulse{animation:pulsek 1.2s ease-in-out infinite}
+@keyframes pulsek{0%,100%{opacity:1}50%{opacity:.25}}
+.invglow{animation:invg 2s ease-in-out infinite}
+@keyframes invg{0%,100%{filter:drop-shadow(0 0 2px rgba(255,201,120,.2))}50%{filter:drop-shadow(0 0 12px rgba(255,201,120,.8))}}
+#deerBody{transform-box:view-box;transform-origin:800px 800px;animation:breathe 5.5s ease-in-out infinite alternate}
+#deerBody.still{animation:none}
+@keyframes breathe{from{transform:scale(1,1)}to{transform:scale(1.012,1.03)}}
+#skullG{transform-box:fill-box;transform-origin:center 90%;transition:transform 4s ease-in-out}
+#skullG.tilt{transform:rotate(3deg)}
+#fade{transition:opacity .35s ease}
+#fade.slow{transition-duration:1.2s}
+#fade.instant{transition:none}
+#white{transition:none}
+#white.fading{transition:opacity 3s ease}
+#sunset{transition:opacity 3.5s linear}
+.eyefade{transition:opacity .9s ease}
+.gfade{transition:opacity 2.5s ease}
+.glowfade{transition:opacity 4s ease}
+.tonefade{transition:opacity 2s ease}
+@media (prefers-reduced-motion: reduce){
+  .flame,.fogr,#deerBody,.invglow{animation:none}
+}
+#rotate{position:fixed;inset:0;display:none;place-items:center;text-align:center;
+  background:#05060A;color:#D8D3C6;z-index:10;padding:0 2rem;
+  font-family:"Crimson Pro","Iowan Old Style",Georgia,serif}
+#rotate p{max-width:22rem;font-size:1.25rem;line-height:1.6;letter-spacing:.02em}
+@media (orientation:portrait) and (max-height:820px){ #rotate{display:grid} }
+</style>
+</head>
+<body>
+<svg id="game" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="poolCandle"><stop offset="0%" stop-color="#FFC978" stop-opacity=".85"/><stop offset="45%" stop-color="#E08D3C" stop-opacity=".3"/><stop offset="100%" stop-color="#E08D3C" stop-opacity="0"/></radialGradient>
+  <radialGradient id="poolEmber"><stop offset="0%" stop-color="#E08D3C" stop-opacity=".5"/><stop offset="100%" stop-color="#E08D3C" stop-opacity="0"/></radialGradient>
+  <radialGradient id="poolEmberDim"><stop offset="0%" stop-color="#E08D3C" stop-opacity=".18"/><stop offset="100%" stop-color="#E08D3C" stop-opacity="0"/></radialGradient>
+  <radialGradient id="poolCold"><stop offset="0%" stop-color="#9FB4CE" stop-opacity=".22"/><stop offset="100%" stop-color="#9FB4CE" stop-opacity="0"/></radialGradient>
+  <radialGradient id="poolMoon"><stop offset="0%" stop-color="#D9CFBA" stop-opacity=".15"/><stop offset="100%" stop-color="#D9CFBA" stop-opacity="0"/></radialGradient>
+  <radialGradient id="haloW"><stop offset="0%" stop-color="#EAF4FF" stop-opacity=".35"/><stop offset="70%" stop-color="#EAF4FF" stop-opacity="0"/></radialGradient>
+  <radialGradient id="haloR"><stop offset="0%" stop-color="#FF3B30" stop-opacity=".45"/><stop offset="70%" stop-color="#FF3B30" stop-opacity="0"/></radialGradient>
+  <radialGradient id="groundRed"><stop offset="0%" stop-color="#6E1414" stop-opacity=".25"/><stop offset="100%" stop-color="#6E1414" stop-opacity="0"/></radialGradient>
+  <linearGradient id="skyDusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#33243E"/><stop offset="45%" stop-color="#7A3A33"/><stop offset="62%" stop-color="#05060A"/></linearGradient>
+  <linearGradient id="skyDay" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#33243E"/><stop offset="55%" stop-color="#5A5468"/><stop offset="62%" stop-color="#8A8577"/></linearGradient>
+  <linearGradient id="skyDawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D9CFBA"/><stop offset="55%" stop-color="#E8CE9C"/><stop offset="100%" stop-color="#C9A468"/></linearGradient>
+  <radialGradient id="vign" cx=".5" cy=".5" r=".75"><stop offset="55%" stop-color="#05060A" stop-opacity="0"/><stop offset="100%" stop-color="#05060A" stop-opacity="1"/></radialGradient>
+  <filter id="desat"><feColorMatrix type="saturate" values="0.78"/></filter>
+  <filter id="grainF" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.85  0 0 0 0 0.82  0 0 0 0 0.78  0 0 0 0.6 0"/>
+    <feComposite operator="in" in2="SourceGraphic"/>
+  </filter>
+</defs>
+<g id="scene"></g>
+<g id="fx">
+  <rect id="white" x="0" y="0" width="1600" height="900" fill="#F5EFE2" opacity="0" pointer-events="none"/>
+  <rect id="fade" x="0" y="0" width="1600" height="900" fill="#05060A" opacity="0" pointer-events="none"/>
+</g>
+<g id="ui"></g>
+</svg>
+<div id="rotate"><p>Turn your phone sideways.<br><br>Harrow House is wider than it is tall.</p></div>
+<script>
+'use strict';
+/* ============================================================
+   ANTLERS — a week at Harrow House
+   A point-and-click horror game in one file.
+   ============================================================ */
+
+/* ---------------- STRINGS (all copy) ---------------- */
+const S = {
+INTRO_1:[`Harrow House has more rooms than a family needs. Yours is the smallest and the highest, and you like it that way.`,
+`You are Elias Vane. You are nine. Your parents live here too, somewhere.`],
+INTRO_2:[`“A boy can’t live indoors,” your father says, mostly to his newspaper.`,
+`“Outside, Elias. Once a day. Once around the lawn,” your mother says. “Before dark, preferably.”`,
+`That’s the whole rule. Outside, once a day.`,
+`It has always seemed like a rule about you.`,
+`It isn’t.`],
+
+FRONTDOOR_D1_AM:[`Later. The lawn will keep.`],
+FRONTDOOR_DUSK:[`Dinner first. Then outside. You always go outside.`],
+FRONTDOOR_D7_DUSK:[`Not yet. The sun is still in the wood, and you want the light gone before you go out to it.`],
+FRONTDOOR_D1_EARLY:[`You have only just come out. Once around the lawn, she said. You can give it that long.`],
+NIGHT_REVISIT:[`They are where you left them. Every one of them, still looking.`],
+INVKEY_LOOK:[`A small brass key. It fits one door in this house, and you know which.`],
+FRONTDOOR_D1_LATE:[`Not again tonight.`],
+BED_D1_MOM:[`You can’t sleep without telling someone.`],
+BED_RULE:[`You haven’t been outside today. The rule is the rule.`],
+BED_CURIOUS:[`You’ve already been out today. But you lie there thinking about the treeline. Maybe you do want to see it. You won’t sleep until you look.`],
+BED_READ:[`You read until dinner.`],
+BED_WAIT:[`You wait for dark.`],
+TRAY_EAT:[`You eat on the stairs, listening to the house.`,
+`By the time you finish the plate, the windows have gone black.`],
+CLOCK_AM:[`You watch the light go long.`],
+CLOCK_DUSK:[`You wait for dark.`],
+CLOCK_N_EARLY:[`Past dark. Past late.`],
+CLOCK_N_MID:[`The hands say fourteen minutes past seven. They said that this morning.`],
+CLOCK_N_LATE:[`The hands are gone.`],
+
+D1_WAKE:[`You wake because the sun found the gap in the curtains. The house is quiet the way big houses are quiet — not empty, just far apart.`],
+D1_DINNER:[`Dinner is at six in the small dining room. Your mother asks what you did today. You say: reading. She says a boy can’t live on books, and looks at your father, and your father agrees from behind his newspaper.`,
+`The rule gets said again. Outside, once a day. Before dark, preferably.`,
+`You haven’t been yet.`],
+N1_EYES:[`The sun is already sliding behind the Marrowood when you get to the lawn. You left it late. The grass goes grey while you stand on it.`,
+`At the treeline: two small lights.`,
+`Not lights. Eyes. One pair of eyes, white as the moon, not blinking.`,
+`They are looking at you.`,
+`They have maybe been looking at you for a while.`],
+N1_MOM:[`“Mom. Mom. There’s something outside. It has eyes. White eyes. It was looking at me.”`,
+`“Looking at you.”`,
+`“From the trees. It’s still there. Come and see.”`,
+`“All right. Show me.”`],
+N1_MOM_LAWN:[`She stands on the lawn a long time with the porch light behind her, looking where you point.`,
+`“There’s nothing there, Elias.”`,
+`And she’s right. You look and look. The treeline is only trees.`,
+`The white eyes aren’t there.`,
+`“It was probably a deer,” she says. “They come up to the lawn sometimes.”`,
+`She goes in. You look once more, just to be sure.`,
+`Nothing.`,
+`Nothing is sure.`],
+D1_SLEEP:[`In bed, you decide your mother is right. It was probably a deer. Probably you just saw something.`,
+`You believe it for almost the whole night.`],
+
+D2_WAKE:[`Morning again. The room is bright and reasonable, and everything that lives in the dark seems silly in it.`,
+`Almost everything.`,
+`You could go out now, in the light. Then you wouldn’t have to see whether it came back.`],
+D2_EARLY:[`You go out just after breakfast, into the flat safe middle of the day. The treeline is only trees.`,
+`You stand on the lawn exactly as long as counts as outside. Then you go in.`,
+`Rule kept. Nothing seen. That was the idea.`],
+DN_EARLY:[`You go out into the flat safe middle of the day. The treeline is only trees.`,
+`You stand on the lawn exactly as long as counts as outside. Then you go in.`],
+D2_DINNER:[`The tray is outside your door at six. Cold chicken, bread, an apple cut in quarters the way you like it. Your mother’s footsteps are already on the stairs, going away.`,
+`You eat at the window, watching the lawn stay empty.`],
+D2_DINNER_LATEHINT:[`You meant to go out early, before dark. You didn’t.`],
+N2_RETURN_EARLY:[`You went out early so you wouldn’t see it. Rule kept. That should be the end of it.`,
+`But you’re at the door again with your hand on the latch, and it isn’t the rule that put you there.`,
+`Maybe you did want to see it.`],
+N2_RETURN:[`You’re at the door with your hand on the latch. Maybe you did want to see it.`],
+N2_EYES:[`Two.`,
+`Two pairs of eyes at the treeline, white, side by side, not blinking. Twice as many as yesterday.`,
+`They don’t come closer. They don’t leave. They watch, and you watch back, until watching is the worst thing there is, and you go in.`],
+
+D3_WAKE:[`You wake up doing arithmetic.`],
+D3_LIBRARY_ENTRY:[`One book stands half-out from the shelf. It didn’t, yesterday.`],
+D3_DINNER:[`Dinner comes. You don’t hear it come. The tray is just there, steam still on the soup, the hallway empty in both directions.`],
+N3_EYES:[`Four pairs tonight. You count them twice.`,
+`One, then two, then four. You are nine and you know what doubling is.`,
+`You do the sum for tomorrow and put it away like a bad card.`],
+
+D4_WAKE:[`Four, last night. You dreamed about the treeline, except in the dream it was closer to the house. You wake and check. It isn’t.`,
+`You check twice.`],
+D4_DINNER:[`There’s a note on the tray, in your mother’s hand: “Your father is away to the city until week’s end. Be good. Outside once a day.”`,
+`His office door, when you pass it, seems to know he’s gone.`],
+N4_EYES:[`Eight. Spread along the treeline now, like the wood has put up lanterns for something.`,
+`None of them blink. You’ve watched for it. Not once. Not one.`],
+
+D5_WAKE:[`Eight, last night. Today the house feels like it’s listening for the same thing you are.`],
+D5_DINNER:[`You eat with your back to the window. It doesn’t help. A window has two sides, and you can feel which side you’re on.`],
+D5_NOTE:[`Under the plate, a second note: “Working late. Do NOT go in your father’s office. — Mom”`],
+N5_EYES:[`Sixteen.`,
+`Some are high in the branches. Some are low to the ground — at the height of something small. Or something lying down.`,
+`And one, far back, is above the trees. Higher than anything that stands on legs. You decide it’s the moon in a wet branch.`,
+`You decide it twice.`],
+N5_RHYME:[`You counted them twice. The rhyme says not to.`,
+`You wish you hadn’t.`],
+
+D6_WAKE:[`Sixteen. You wake with the number already in your mouth.`,
+`Thirty-two tonight. You know it like you know your own name.`],
+D6_DINNER:[`The tray is there at six exactly. You open the door fast, to catch whoever brings it. The hall is empty in both directions. The soup is hot. Somebody was just here.`,
+`You stand in the hall and call. The house swallows it.`],
+N6_EYES:[`You stop counting at thirty-two, because at thirty-two you ran out of treeline. They stand two deep in places now, white on white in the dark. Some of them are on the lawn. Your lawn.`,
+`The high one, the big one, is gone tonight. That is worse.`,
+`Tomorrow: sixty-four. You do the sum the way you’d press on a bruise.`,
+`Tomorrow there won’t be enough dark between them.`],
+
+D7_WAKE:[`The seventh morning.`,
+`The house is wrong in a way you can’t point at — quiet the way snow is quiet. You call for your mother and the hall takes your voice and doesn’t give anything back.`],
+D7_WAKE_DREAM:[`You dreamed of the long dark shape above your father’s fireplace, and a drawer full of thunder.`],
+D7_DINNER:[`Six o’clock. No tray.`,
+`Seven. No tray, no footsteps, no mother, no house-sounds at all. The hall lights are on. You don’t remember them coming on.`,
+`Through the window, the sun is lying down in the Marrowood.`,
+`You haven’t been outside yet today.`,
+`The rule is the rule.`],
+D7_GUT:[`Something in your stomach says: don’t go out there empty-handed.`],
+D7_WAVES:[`All of them. Everywhere. More than sixty-four.`,
+`Numbers were for the other nights.`],
+D7_RED:[`Red.`,
+`Every one of them is red.`,
+`They were never red before.`],
+D7_DOOR:[`You turn for the house, and the house is there — the steps, the windows, the ivy.`,
+`The door is not.`,
+`Where the door should be there is brick, old brick, laid like a door was never in the whole idea of the house. You put your hands on it.`,
+`The brick doesn’t care.`],
+D7_TURN:[`You turn back around, because there is nowhere else to face.`,
+`The lawn is gone. Harrow House is gone from behind you — you can feel it be gone, like a tooth.`,
+`You are somewhere else. Somewhere the sky doesn’t reach. Trees, or the memory of trees, going up forever into a dark with no stars in it.`,
+`And all around you: the Herd.`,
+`Their shapes won’t hold still. Like deer, if deer were a guess somebody made in the dark — too tall, legs with too many joints, backs like hills moving. You can’t make them out. You understand, calmly, the way you understand things in dreams, that you are not meant to.`],
+D7_MARROW:[`In front of you, something enormous is lying down, the way a hill is lying down.`,
+`A deer. It was a deer the way the county was once the sea.`,
+`Its body is flesh. Its head is not. Its head is a skull, clean and pale as the moon the eyes used to be, and its antlers go up and up until you lose them in the dark.`,
+`Set in the skull: seven eyes.`,
+`All of them red. All of them on you.`,
+`They have maybe been on you your whole life.`],
+
+CLR_RING:[`Their shapes won’t hold still. You are not meant to make them out.`],
+CLR_VOID:[`There is no direction that is back.`],
+CHOICE_ARMED:[`Your hands remember what they’re carrying.`],
+UNARMED_NONE:[`Your hands are empty. You put them in your pockets. Your pockets are empty too.`],
+UNARMED_GUN:[`You raise your father’s shotgun. Both barrels.`,
+`Click. Click.`,
+`The shells are in a green box, in his office, in a house that has no door.`],
+UNARMED_SHELLS:[`Your pocket is full of shells. They rattle like teeth.`,
+`There is nothing to put them in.`],
+ARMED_STOOD:[`The shotgun is in your hands. Your hands forget what it’s for.`],
+DEATH_1:[`The deer rises.`,
+`Rising takes a long time. There is a lot of it.`,
+`The red eyes come down toward you like weather. The Herd closes, shapes without shapes, and the dark of the wood goes over you like water over a stone.`,
+`It is very quiet, and then it is not anything.`],
+DEATH_RETRY:[`You are in your bed. It is the seventh morning.`,
+`You get one more.`],
+SHOOT_1:[`You break the gun open the way you watched him do it, thumb two shells home, snap it shut. The sound of it closing is small and hard and yours.`,
+`The seven eyes watch the barrels come up. Nothing in them is afraid. Nothing has ever needed them to be. That is what the eyes have been saying all week.`],
+SHOOT_2:[`Both barrels.`,
+`The sound is the biggest thing you have ever made.`],
+SHOOT_3:[`The skull goes like ice on a pond. The eyes go out one at a time — six, five, four — the dark getting darker each time — three, two —`,
+`The last eye stays on you a moment. Not angry. Interested.`,
+`Then it closes, and it isn’t there. Like it was never there.`],
+END_GOOD_1:[`When the last eye closes, the dark goes with it.`,
+`Grass. Cold, wet, ordinary grass. The lawn. The Marrowood, being trees. Behind you, Harrow House — and the door, exactly where doors are.`,
+`It’s dawn. The porch light is still on, and your mother is standing in it.`,
+`“Elias? Have you been outside all this time?”`],
+END_GOOD_2:[`You have. Once a day, every day. Just like you were told.`,
+`You look at the treeline one more time, just to be sure.`,
+`Nothing.`,
+`Nothing is sure.`],
+
+KEY_TAKE:[`“The Deer of the Northern Counties, Vol. II.” Hollowed out. Inside — a small brass key.`],
+OFFICE_UNLOCK:[`The brass key turns. The door has always been locked. Now it isn’t.`],
+OFFICE_LOCKED:[`Locked. It has always been locked.`],
+OFFICE_ENTER:[`Your father’s office smells of pipe smoke and gun oil. A green lamp, a desk of ledgers, a folded map of the estate. You are not allowed in here when he’s home.`,
+`He is not home.`],
+GUN_LOOK:[`Above the fireplace, a cabinet with a glass front. In it: his shotgun. Side-by-side, walnut and steel, older than your father, older maybe than the house’s name.`,
+`You have never been allowed to touch it. It has never needed saying.`],
+GUN_HESITATE:[`Your hand is on the glass.`,
+`If you take it down, there is no putting it back the same. Fathers know how a thing was left.`,
+`At the treeline, tonight, there will be more.`],
+GUN_TAKE:[`You take it down. It’s heavier than it looks. It doesn’t make you feel bigger. It makes you feel exactly the size you are.`],
+GUN_GONE:[`Two small hooks where it hung. The cabinet holds its shape of nothing.`],
+GUN_EXAMINE:[`You break it open the way you’ve watched him do. Empty. Both barrels, empty.`,
+`A shotgun with no shells is a stick.`],
+GUN_EXAMINE_FULL:[`Two shells, thumbed home. You snap it shut and hold it the way you’ve watched him hold it.`],
+SHELLS_LOOK:[`In the bottom drawer of the desk, under the folded map: a green cardboard box, its corners gone soft with age. BUCKSHOT — 12 BORE.`,
+`It’s heavier than it should be. It rattles.`],
+SHELLS_HESITATE:[`Taking the gun felt like borrowing. This feels like meaning it.`,
+`You stand there a while, being nine.`,
+`Then you think about the counting.`],
+SHELLS_TAKE:[`You take the box. The shells knock together inside, quietly, like something agreeing with you.`],
+SHELLS_GONE:[`The drawer holds the folded map and nothing else now.`],
+SHELLS_EXAMINE:[`Twelve shells. You will need two. You count them anyway. Counting is the only thing that’s yours.`],
+
+BOOK_7:[`You take down the field guide, because it is the most reasonable book you own.`,
+`It falls open to the deer. The page about eyeshine is gone — not torn out, just not there, like a door. In its place, soaked through four pages in a brown ink:`,
+`WELL COUNTED.`,
+`COME OUTSIDE.`]
+};
+
+const BOOKS = [null,
+{title:`A Field Guide to the Deer of the Northern Counties`,
+ text:`The red deer is the largest of our native beasts, and the shyest. It moves at dawn and dusk. At night its eye returns lanternlight and shines white — this is called eyeshine, and is no cause for alarm. A deer that stands and stares is only deciding whether to run.`},
+{title:`Harrow House: An Account of the Estate and Grounds`,
+ text:`…the wood has been called the Marrowood since at least 1734, when the third baronet’s men, cutting a boundary ditch, turned up bone in quantities “beyond any churchyard” — antler and skull, all of it deer, none of it whole. What herd died there, and why all together, the account does not say. No herd of such a size has been recorded in the county before or since.`},
+{title:`Sayings and Rhymes of the County, Collected`,
+ text:`One for a watcher, two for a watch, / four is the herd and eight is the wood; / by sixteen be home, be quiet, be good — / for what you count is counting you. — The children of the district sing this at dusk. None could tell the collector what it is they are counting, nor why it must never be counted twice.`},
+{title:`The Diary of Thomas Harrow, Aged Ten, 1794`,
+ text:`Grandfather says the wood must see me once a day, and so I am sent to the lawn each afternoon, rain or shine. He says it is an old arrangement, older than the house. Better it sees you on the grass, he says, than comes looking for you in the halls. I asked him what does the seeing. He would not say. After supper he went out himself and stood a long time facing the trees, and I am not to tell Mother.`},
+{title:`Notes on Game, with Plates`,
+ text:`…no charge of shot will stop a full stag unless it be placed to the skull, the gun held steady, and the range close, which wants more nerve than most gentlemen own. A last word: never fire upon eyeshine alone. A man who shoots at eyes cannot know what he is shooting, nor how much of it there is. — And beneath, in old pencil: both barrels. the skull. do not miss.`},
+{title:`A Parish Book of the Marrowood`,
+ text:`Before the parish there was the wood, and before the wood there was Old Marrow, king under the antlers, who wears no flesh upon his head, that nothing may stand between his eyes and what is his. The old families kept his observance: to be seen of him daily; to keep count of his herd; and never to bar a door against him, for a barred door he takes away entire. His eyes are pale while he counts. When the counting is done his eyes are red, and he comes to gather what he has counted.`}
+];
+
+/* ---------------- AUDIO (pure WebAudio synthesis) ---------------- */
+const A = (() => {
+  let ctx=null, master=null, lp=null, muted=false;
+  const live = {}; // named running voices
+  function ensure(){
+    if(ctx) { if(ctx.state!=='running'){ try{ ctx.resume(); }catch(e){} } return true; }
+    try{
+      ctx = new (window.AudioContext||window.webkitAudioContext)();
+      master = ctx.createGain(); master.gain.value = muted?0:1;
+      lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=8000;
+      /* gentle safety limiter: the blast and sting can sum past 1.0, and a clipped
+         flaky audio path (VMs especially) turns that into crackle or dropouts */
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value=-12; comp.knee.value=20; comp.ratio.value=6;
+      comp.attack.value=0.003; comp.release.value=0.25;
+      master.connect(lp); lp.connect(comp); comp.connect(ctx.destination);
+      /* some audio stacks wedge the context after a device hiccup; try to climb back */
+      ctx.onstatechange = () => { if(ctx && ctx.state==='suspended'){ try{ ctx.resume(); }catch(e){} } };
+      return true;
+    }catch(e){ ctx=null; return false; }
+  }
+  /* every cue calls this first: no sound schedules into a context that is not running */
+  function up(){ if(!ctx) return false; if(ctx.state!=='running'){ try{ ctx.resume(); }catch(e){} } return true; }
+  function g(v){ const n=ctx.createGain(); n.gain.value=v; n.connect(master); return n; }
+  function noiseBuf(sec){
+    const b=ctx.createBuffer(1, ctx.sampleRate*sec, ctx.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    return b;
+  }
+  function stopVoice(name, ramp=0.3){
+    const v=live[name]; if(!v) return; delete live[name];
+    try{
+      v.gain.gain.cancelScheduledValues(ctx.currentTime);
+      v.gain.gain.setValueAtTime(v.gain.gain.value, ctx.currentTime);
+      v.gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime+ramp);
+      (v.nodes||[]).forEach(n=>{ try{n.stop(ctx.currentTime+ramp+0.05);}catch(e){} });
+      if(v.timer) clearInterval(v.timer);
+    }catch(e){}
+  }
+  return {
+    ensure,
+    resume(){ if(ctx && ctx.state!=='running'){ try{ ctx.resume(); }catch(e){} } },
+    get on(){ return !!ctx; },
+    toggleMute(){ muted=!muted; if(master){ const t=ctx.currentTime;
+      master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value,t);
+      master.gain.linearRampToValueAtTime(muted?0:1, t+0.05);} return muted; },
+    get muted(){ return muted; },
+    wind(indoor){
+      if(!up()) return;
+      if(live.wind && live.wind.indoor===indoor) return;   /* same bed already playing: no restart, no pumping */
+      stopVoice('wind',0.4);
+      try{
+        const src=ctx.createBufferSource(); src.buffer=noiseBuf(2); src.loop=true;
+        const f=ctx.createBiquadFilter();
+        if(indoor){ f.type='lowpass'; f.frequency.value=250; } else { f.type='bandpass'; f.frequency.value=400; f.Q.value=0.5; }
+        const gn=g(0.0001);
+        const lfo=ctx.createOscillator(); lfo.frequency.value=0.07;
+        const lfoG=ctx.createGain(); lfoG.gain.value=indoor?0.012:0.03;
+        lfo.connect(lfoG); lfoG.connect(gn.gain);
+        src.connect(f); f.connect(gn);
+        src.start(); lfo.start();
+        const base=indoor?0.04:0.09;
+        gn.gain.linearRampToValueAtTime(base, ctx.currentTime+2);
+        live.wind={gain:gn,nodes:[src,lfo],base,indoor};
+      }catch(e){}
+    },
+    windDuck(mult){ const v=live.wind; if(!v) return;
+      try{ const t=ctx.currentTime;
+        v.gain.gain.cancelScheduledValues(t);
+        v.gain.gain.setValueAtTime(v.gain.gain.value,t);
+        v.gain.gain.linearRampToValueAtTime((v.base||0.09)*mult, t+1.5);
+      }catch(e){} },
+    crickets(on){
+      if(!up()) return;
+      if(!on){ stopVoice('crickets',0.3); return; }
+      if(live.crickets) return;
+      try{
+        const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=4300;
+        const gate=ctx.createGain(); gate.gain.value=0;
+        const lfo=ctx.createOscillator(); lfo.type='square'; lfo.frequency.value=12;
+        const lg=ctx.createGain(); lg.gain.value=0.5;
+        const off=ctx.createConstantSource(); off.offset.value=0.5;
+        lfo.connect(lg); lg.connect(gate.gain); off.connect(gate.gain);
+        const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=4300; f.Q.value=8;
+        const gn=g(0.006);
+        o.connect(gate); gate.connect(f); f.connect(gn);
+        o.start(); lfo.start(); off.start();
+        live.crickets={gain:gn,nodes:[o,lfo,off]};
+      }catch(e){}
+    },
+    swell(freq, target){
+      if(!up()) return;
+      try{
+        if(live.swell){
+          live.swell.o1.frequency.linearRampToValueAtTime(freq, ctx.currentTime+2);
+          live.swell.o2.frequency.linearRampToValueAtTime(freq+1.5, ctx.currentTime+2);
+          live.swell.o3.frequency.linearRampToValueAtTime(freq*3, ctx.currentTime+2);
+          live.swell.o4.frequency.linearRampToValueAtTime(freq*5, ctx.currentTime+2);
+          live.swell.gain.gain.linearRampToValueAtTime(target, ctx.currentTime+8);
+          return;
+        }
+        const o1=ctx.createOscillator(); o1.frequency.value=freq;
+        const o2=ctx.createOscillator(); o2.frequency.value=freq+1.5;
+        /* quiet upper partials: the 31-44Hz fundamentals do not exist on laptop or
+           phone speakers, so without these the whole dread-drone is silent there */
+        const o3=ctx.createOscillator(); o3.frequency.value=freq*3;
+        const o4=ctx.createOscillator(); o4.frequency.value=freq*5;
+        const gn=g(0.0001);
+        const h3=ctx.createGain(); h3.gain.value=0.22;
+        const h5=ctx.createGain(); h5.gain.value=0.15;
+        o1.connect(gn); o2.connect(gn);
+        o3.connect(h3); h3.connect(gn); o4.connect(h5); h5.connect(gn);
+        o1.start(); o2.start(); o3.start(); o4.start();
+        gn.gain.linearRampToValueAtTime(target, ctx.currentTime+10);
+        live.swell={gain:gn,nodes:[o1,o2,o3,o4],o1,o2,o3,o4};
+      }catch(e){}
+    },
+    swellStop(fast){ stopVoice('swell', fast?0.05:2); },
+    heartbeat(bpm){
+      if(!up()) return; this.heartStop();
+      try{
+        const self=this;
+        const v={gain:null, nodes:[], timer:null, bpm};
+        /* one self-scheduling chain, so a tempo change never drops or doubles a beat */
+        const tick=()=>{
+          if(!ctx || live.heart!==v) return;
+          self.heartbeatOnce();
+          v.timer=setTimeout(tick, 60000/v.bpm);
+        };
+        live.heart=v;
+        tick();
+      }catch(e){}
+    },
+    heartRamp(toBpm, overSec){
+      const v=live.heart; if(!v) return;
+      const from=v.bpm, steps=20; let i=0;
+      const st=setInterval(()=>{
+        i++; if(!live.heart||live.heart!==v){ clearInterval(st); return; }
+        v.bpm = from+(toBpm-from)*(i/steps);
+        if(i>=steps) clearInterval(st);
+      }, overSec*1000/steps);
+      G.deerTimers.push(st);
+    },
+    heartbeatOnce(){
+      if(!up()) return;
+      try{
+        const t=ctx.currentTime;
+        /* three components per thump: the 55Hz body, plus 110/175Hz partials so the
+           beat still reads on small speakers where the fundamental vanishes */
+        [[0,1],[0.18,0.6]].forEach(([dt,amp])=>{
+          [[55,0.22,0.125],[110,0.09,0.10],[175,0.04,0.06]].forEach(([fr,lv,dec])=>{
+            const o=ctx.createOscillator(); o.frequency.value=fr;
+            const gn=g(0.0001); o.connect(gn); o.start(t+dt);
+            gn.gain.setValueAtTime(0.0001,t+dt);
+            gn.gain.linearRampToValueAtTime(lv*amp,t+dt+0.005);
+            gn.gain.exponentialRampToValueAtTime(0.0001,t+dt+dec);
+            o.stop(t+dt+0.3);
+          });
+        });
+      }catch(e){}
+    },
+    heartStop(){ const v=live.heart; if(v){ if(v.timer) clearTimeout(v.timer); delete live.heart; } },
+    sting(){
+      if(!up()) return;
+      try{
+        const t=ctx.currentTime;
+        [2180,2205,2240].forEach(fr=>{
+          const o=ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=fr;
+          const gn=g(0.0001); o.connect(gn); o.start(t);
+          gn.gain.setValueAtTime(0.09,t); gn.gain.setValueAtTime(0.09,t+0.085);
+          gn.gain.linearRampToValueAtTime(0.0001,t+0.09); o.stop(t+0.12);
+        });
+        const o=ctx.createOscillator(); o.frequency.setValueAtTime(120,t);
+        o.frequency.exponentialRampToValueAtTime(30,t+0.7);
+        const gn=g(0.0001); o.connect(gn); o.start(t);
+        gn.gain.setValueAtTime(0.3,t); gn.gain.exponentialRampToValueAtTime(0.0001,t+0.75); o.stop(t+0.8);
+        const src=ctx.createBufferSource(); src.buffer=noiseBuf(0.3);
+        const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3000;
+        const ng=g(0.0001); src.connect(hp); hp.connect(ng); src.start(t);
+        ng.gain.setValueAtTime(0.12,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+      }catch(e){}
+    },
+    otherTone(on){
+      if(!up()) return;
+      if(!on){ stopVoice('other',1); return; }
+      try{
+        const o=ctx.createOscillator(); o.frequency.value=31;
+        const oh=ctx.createOscillator(); oh.frequency.value=93;
+        const hg=ctx.createGain(); hg.gain.value=0.2;
+        const o5=ctx.createOscillator(); o5.frequency.value=155;
+        const h5g=ctx.createGain(); h5g.gain.value=0.15;
+        const s1=ctx.createOscillator(); s1.frequency.value=3130;
+        const s2=ctx.createOscillator(); s2.frequency.value=3134;
+        /* sg feeds gn, whose ramp tops at 0.16 — so this is a RELATIVE gain and
+           needs to be ~0.08 for the shimmer to land near 0.013 absolute */
+        const gn=g(0.0001), sg=ctx.createGain(); sg.gain.value=0.08;
+        o.connect(gn); oh.connect(hg); hg.connect(gn);
+        o5.connect(h5g); h5g.connect(gn);
+        s1.connect(sg); s2.connect(sg); sg.connect(gn);
+        o.start(); oh.start(); o5.start(); s1.start(); s2.start();
+        gn.gain.linearRampToValueAtTime(0.16, ctx.currentTime+2);
+        live.other={gain:gn,nodes:[o,oh,o5,s1,s2]};
+      }catch(e){}
+    },
+    hammerClick(){
+      if(!up()) return;
+      try{
+        const t=ctx.currentTime;
+        const src=ctx.createBufferSource(); src.buffer=noiseBuf(0.05);
+        const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=2000; f.Q.value=3;
+        const gn=g(0.0001); src.connect(f); f.connect(gn); src.start(t);
+        gn.gain.setValueAtTime(0.15,t); gn.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
+      }catch(e){}
+    },
+    blast(){
+      if(!up()) return;
+      try{
+        const t=ctx.currentTime;
+        const src=ctx.createBufferSource(); src.buffer=noiseBuf(0.5);
+        const f=ctx.createBiquadFilter(); f.type='lowpass';
+        f.frequency.setValueAtTime(6000,t); f.frequency.exponentialRampToValueAtTime(400,t+0.3);
+        const gn=g(0.0001); src.connect(f);
+        const dl=ctx.createDelay(); dl.delayTime.value=0.18;
+        const fb=ctx.createGain(); fb.gain.value=0.35;
+        f.connect(gn); f.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(gn);
+        src.start(t);
+        gn.gain.setValueAtTime(0.6,t); gn.gain.exponentialRampToValueAtTime(0.0001,t+1.6);
+        const o=ctx.createOscillator(); o.frequency.value=50;
+        const og=g(0.0001); o.connect(og); o.start(t);
+        og.gain.setValueAtTime(0.0001,t); og.gain.linearRampToValueAtTime(0.5,t+0.003);
+        og.gain.exponentialRampToValueAtTime(0.0001,t+0.25); o.stop(t+0.4);
+      }catch(e){}
+    },
+    footstep(pitchMult=1){
+      if(!up()) return;
+      try{
+        const t=ctx.currentTime;
+        const src=ctx.createBufferSource(); src.buffer=noiseBuf(0.1);
+        src.playbackRate.value=pitchMult;
+        const f=ctx.createBiquadFilter(); f.type='bandpass';
+        f.frequency.value=900+Math.random()*500; f.Q.value=1.2;
+        const gn=g(0.0001); src.connect(f); f.connect(gn); src.start(t);
+        gn.gain.setValueAtTime(0.0001,t); gn.gain.linearRampToValueAtTime(0.14,t+0.002);
+        gn.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+      }catch(e){}
+    },
+    silence(){ // hard-stop everything for scripted dropouts
+      ['wind','crickets','swell','other'].forEach(n=>stopVoice(n,0.04));
+      this.heartStop();
+    },
+    stopAllSoft(){
+      ['wind','crickets','swell','other'].forEach(n=>stopVoice(n,0.6));
+      this.heartStop();
+    }
+  };
+})();
+
+/* ---------------- EYES DATA ---------------- */
+/* [x, y, E(half-width), rot] ; 'S' marks the sentinel (Day 5 only). */
+const EYE_ADDS = {
+  1:[[1180,556,11,3]],
+  2:[[430,552,11,-2]],
+  3:[[840,518,8,1],[1310,512,8,-3]],
+  4:[[640,560,11,0],[210,522,8,4],[1030,482,6,-1],[540,476,6,2]],
+  5:[[1460,548,11,-2],[990,508,8,2],[120,515,8,-1],[760,470,6,3],[1250,488,6,-2],[330,466,6,1],[1120,436,4,0],['S',800,330,18,0]],
+  6:[[300,640,13,2],[1240,620,13,-2],[560,610,13,1],[980,655,13,-1],
+     [70,512,8,2],[520,524,8,-3],[700,509,8,1],[1150,518,8,3],[1560,520,8,-2],
+     [180,478,6,-1],[440,470,6,2],[620,488,6,0],[935,472,6,-2],[1330,478,6,1],[1500,468,6,3],
+     [260,440,4,0],[1450,432,4,-1]],
+  7:[[150,600,13,1],[420,675,14,-2],[680,640,12,2],[860,700,15,0],[1100,665,13,-1],[1380,640,12,3],
+     [90,690,14,-3],[720,590,12,1],[1500,610,13,-2],[240,585,12,2],[1010,600,12,-1],[1290,700,15,1],
+     [20,712,15,2],[1580,700,15,-2],[130,700,15,1],[1470,714,15,-1],[350,712,15,3],[960,716,15,-3],[20,590,15,0],[1580,600,15,0],
+     [90,466,6,1],[280,492,6,-2],[560,466,6,2],[880,490,6,0],[1060,468,6,-1],[1200,490,6,2],[1420,486,6,-3],
+     [370,448,4,0],[660,430,4,1],[980,442,4,-1],[1260,436,4,2],[1540,444,4,0]]
+};
+function eyesForNight(day){
+  const out=[];
+  for(let d=1; d<=day; d++){
+    (EYE_ADDS[d]||[]).forEach(e=>{
+      if(e[0]==='S'){ if(day===5) out.push({x:e[1],y:e[2],E:e[3],rot:e[4],sentinel:true}); }
+      else out.push({x:e[0],y:e[1],E:e[2],rot:e[3]});
+    });
+  }
+  return out;
+}
+function eyePairSVG(p, cls='', style=''){
+  const E=p.E, sp=1.2*E, ry=0.62*E, pr=0.18*E;
+  const dx=(800-p.x)>0 ? 0.15*E : -0.15*E;
+  return `<g class="pair ${cls}" data-ex="${p.x}" transform="translate(${p.x},${p.y}) rotate(${p.rot||0})" ${style}>
+    <ellipse class="halo" cx="0" cy="0" rx="${(3.2*E).toFixed(1)}" ry="${(2*E).toFixed(1)}"/>
+    <g class="lids">
+      <ellipse class="core" cx="${-sp}" cy="0" rx="${E}" ry="${ry.toFixed(1)}"/>
+      <ellipse class="core" cx="${sp}" cy="0" rx="${E}" ry="${ry.toFixed(1)}"/>
+      <circle class="pupil pl" cx="${(-sp+dx).toFixed(1)}" cy="0" r="${pr.toFixed(1)}"/>
+      <circle class="pupil pr" cx="${(sp+dx).toFixed(1)}" cy="0" r="${pr.toFixed(1)}"/>
+    </g>
+  </g>`;
+}
+function singleEyeSVG(x,y,E,rot,extra=''){
+  const ry=0.62*E, pr=0.2*E;
+  return `<g class="seye" transform="translate(${x},${y}) rotate(${rot})" ${extra}>
+    <ellipse class="halo" cx="0" cy="0" rx="${(2.6*E).toFixed(1)}" ry="${(1.8*E).toFixed(1)}"/>
+    <g class="lids">
+      <ellipse class="core" cx="0" cy="0" rx="${E}" ry="${ry.toFixed(1)}"/>
+      <circle class="pupil" cx="0" cy="0" r="${pr.toFixed(1)}"/>
+    </g>
+  </g>`;
+}
+/* Deterministic PRNG for otherworld eye scatter */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
+  let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ---------------- SVG HELPERS ---------------- */
+const fillOf = f => (f==='none'||f.startsWith('#')||f.startsWith('url')) ? f : `var(--${f})`;
+function rc(x,y,w,h,f,att=''){ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fillOf(f)}" ${att}/>`; }
+function pg(pts,f,att=''){ return `<polygon points="${pts}" fill="${fillOf(f)}" ${att}/>`; }
+function el(cx,cy,rx,ry,f,att=''){ return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fillOf(f)}" ${att}/>`; }
+/* Light pools are decoration: they must never intercept a click meant for the scene. */
+function pool(cx,cy,rx,ry,grad){ return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${grad}" pointer-events="none"/>`; }
+function ci(cx,cy,r,f,att=''){ return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fillOf(f)}" ${att}/>`; }
+function ln(x1,y1,x2,y2,st,w,att=''){ return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${fillOf(st)}" stroke-width="${w}" stroke-linecap="round" ${att}/>`; }
+function pth(d,f,att=''){ return `<path d="${d}" fill="${fillOf(f)}" ${att}/>`; }
+function txt(x,y,size,f,content,att=''){ return `<text x="${x}" y="${y}" font-size="${size}" fill="${fillOf(f)}" ${att}>${content}</text>`; }
+function vignette(op){ return `<rect x="0" y="0" width="1600" height="900" fill="url(#vign)" opacity="${op}" pointer-events="none"/>`; }
+function fogPair(){ return `<g pointer-events="none">
+  <rect class="fogr" x="-100" y="560" width="1800" height="120" rx="60" fill="var(--fog)" opacity=".14"/>
+  <rect class="fogr f2" x="-100" y="640" width="1800" height="180" rx="90" fill="var(--fog)" opacity=".09"/></g>`; }
+function hs(id,label,inner){ return `<g data-hs="${id}" data-label="${label}">${inner}</g>`; }
+function hsRect(id,label,x,y,w,h){ return `<g data-hs="${id}" data-label="${label}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#000" opacity="0.001"/></g>`; }
+/* Simple treeline: continuous jagged strip, fixed geometry across variants */
+function treelineSVG(fill){
+  let d='M0,560 L0,430';
+  let x=0; const seed=mulberry32(11);
+  while(x<1600){
+    const w=40+seed()*70, peak=300+seed()*130;
+    d+=` L${(x+w*0.5).toFixed(0)},${peak.toFixed(0)} L${(x+w).toFixed(0)},${(390+seed()*80).toFixed(0)}`;
+    x+=w;
+  }
+  d+=' L1600,560 Z';
+  return pth(d, fill);
+}
+function boySVG(x, baseY, scale=1, rim='ash', rimSide='left'){
+  // From-behind silhouette: head r 20, body, legs. Feet at baseY.
+  const s=scale;
+  const g=`<g transform="translate(${x},${baseY}) scale(${s})" pointer-events="none">
+    ${ci(0,-120,20,'void')}
+    ${pg('-16,-104 16,-104 20,-40 -20,-40','void')}
+    ${rc(-16,-40,12,40,'void')} ${rc(4,-40,12,40,'void')}
+    ${ln(rimSide==='left'?-19:19,-116,rimSide==='left'?-21:21,-44,rim,2.5)}
+  </g>`;
+  return g;
+}
+
+/* ---------------- SCENES ---------------- */
+const SC = {};
+
+SC.title = () => {
+  const hasSave = !!G.savedGame;
+  return rc(0,0,1600,900,'void')
+  + `<g opacity=".35">${pth('M700,560 C640,480 560,470 470,420','none','stroke="var(--ink)" stroke-width="26" stroke-linecap="round"')}
+     ${pth('M900,560 C960,470 1060,455 1150,410','none','stroke="var(--ink)" stroke-width="26" stroke-linecap="round"')}
+     ${pth('M610,500 C590,440 592,400 600,360','none','stroke="var(--ink)" stroke-width="16" stroke-linecap="round"')}
+     ${pth('M1010,490 C1030,430 1030,390 1020,350','none','stroke="var(--ink)" stroke-width="16" stroke-linecap="round"')}</g>`
+  + txt(800,470,92,'bone','ANTLERS','text-anchor="middle" font-weight="600" style="letter-spacing:.45em"')
+  + txt(800,540,24,'textDim','a week at Harrow House','text-anchor="middle" font-style="italic"')
+  + (hasSave
+     ? `<g data-choice="newgame"><rect x="620" y="590" width="170" height="46" rx="4"/><text x="705" y="620" font-size="20" text-anchor="middle">Begin</text></g>
+        <g data-choice="continue"><rect x="810" y="590" width="230" height="46" rx="4"/><text x="925" y="620" font-size="20" text-anchor="middle">Continue — Day ${['','One','Two','Three','Four','Five','Six','Seven'][G.savedGame.day]}</text></g>`
+     : txt(800,610,20,'textDim','Click to begin.','text-anchor="middle" class="pulse"'))
+  + `<g id="titleEye" opacity="0" class="eyefade">${eyePairSVG({x:800,y:660,E:4,rot:0})}</g>`
+  + vignette(0.6);
+};
+
+SC.bedroom = () => {
+  const st=G.state, d=st.day, ph=st.phase;
+  let paneFill = ph==='MORNING' ? '#5A5468' : (ph==='DUSK' ? '#4A2E33' : 'nightSky');
+  let win = rc(1150,120,350,440,'slate')
+    + rc(1170,140,310,400, paneFill)
+    + (ph==='NIGHT' ? ci(1330,230,46,'bone') : '')
+    + (ph==='NIGHT' && d===7 ? rc(1170,140,310,400,'#3A0F0D','opacity=".55"') : '')
+    + (ph==='NIGHT' && d>=4 && d<=6 && !st.nightOutingDone
+        ? [[1240,420],[1300,428],[1390,416]].slice(0,3).map(p=>ci(p[0],p[1],2,'eyeWhite','opacity=".8"')).join('') : '')
+    + rc(1320,140,10,400,'ink') + rc(1170,330,310,10,'ink');
+  return rc(0,0,1600,900,'ink') + rc(0,700,1600,200,'void')
+  + (ph==='NIGHT' ? pool(1300,650,320,160,'url(#poolCold)') : '')
+  + hs('window','the window', win)
+  + hs('bed','the bed',
+      rc(120,420,50,360,'ash') + rc(120,560,500,220,'slate') + rc(180,540,140,60,'ash')
+      + pg('170,560 620,560 620,600 170,600','#232A3A'))
+  + hs('bookshelf', d===7 ? 'the field guide' : 'your books',
+      rc(680,300,240,480,'slate')
+      + [0,1,2,3].map(i=>rc(695,330+i*115,210,86,'void')).join('')
+      + [0,1,2,3].map(i=>{
+          let sp=''; const rnd=mulberry32(40+i);
+          for(let k=0;k<9;k++){ const w=14+rnd()*10;
+            sp+=rc(700+k*23,336+i*115,w,78, k===3?'ember':(k%2?'ash':'#252C3C')); }
+          return sp; }).join(''))
+  + rc(560,600,120,180,'slate') + rc(600,540,40,60,'ash')
+  + pool(620,560,380,300,'url(#poolCandle)')
+  + hs('door','the hall', rc(1520,340,80,440,'slate') + rc(1514,340,6,440,'ember'))
+  + vignette(0.55);
+};
+
+SC.hallway = () => {
+  const st=G.state, d=st.day, ph=st.phase;
+  const stretch = d===7 ? 'transform="translate(-80,0) scale(1.1,1)"' : '';
+  // portrait pupil state
+  const pr = d>=2?2.8:2.2, pdx = d>=4?-3:0, pFill = d>=6?'#A9A499':'void';
+  const trayHere = st.trayHere;
+  let inner = rc(0,0,1600,900,'ink')
+  + pg('0,900 1600,900 1000,640 600,640','void')
+  + pg('700,900 900,900 840,640 760,640','#2A1216','opacity=".5"')
+  + rc(760,380,80,180,'nightSky') + pg('770,395 790,388 792,440 772,447','bone','opacity=".5"')
+  + pool(800,660,180,70,'url(#poolCold)')
+  + hs('bedroomdoor','your room', rc(80,300,180,460,'slate') + rc(86,306,168,448,'#20263454'))
+  + hs('parentsdoor','their room', rc(380,360,140,360,'slate'))
+  + hs('portrait','the old portrait',
+      rc(536,296,88,128,'#2A2A33') + rc(544,304,72,112,'#141822')
+      + pg('556,416 604,416 610,378 590,364 570,364 550,378','#232838')   /* shoulders first: a sitter, not a face alone */
+      + el(580,346,17,21,'#4A4438')
+      + pg('563,336 597,336 594,326 566,326','#2E2A22')                    /* hairline */
+      + ci(573+pdx,344,pr,pFill) + ci(587+pdx,344,pr,pFill)
+      + rc(544,304,72,112,'#0D1016','opacity=".35"'))                      /* varnish darkening over the whole panel */
+  + pg('320,330 340,330 336,352 324,352','ash')
+  + `<polygon class="flame" points="326,318 334,318 330,300" fill="var(--candle)"/>`
+  + pool(330,420,220,160,'url(#poolCandle)')
+  + hs('officedoor','father’s office', rc(1120,360,150,360,'slate')
+      + rc(1180,530,12,24,'#8a7440') )
+  + hs('stairs','the stairs', pg('1340,300 1560,300 1560,780 1340,780','#1A1420')
+      + pool(1450,700,160,120,'url(#poolEmber)')
+      + pg('1340,300 1560,300 1550,320 1350,320','ash'))
+  + hs('hallwindow','the window', rc(756,376,88,188,'#0000','opacity="0.001"'))
+  + (trayHere ? hs('tray','the tray',
+      rc(232,648,24,72,'#151A26') + rc(344,648,24,72,'#151A26')   /* a low hall table by the door */
+      + rc(222,630,156,20,'slate')
+      + rc(240,596,120,36,'ash') + el(300,598,36,12,'#3A4254')
+      + (d===2 ? `<g opacity=".7">${ln(285,586,290,562,'textDim',2)}${ln(300,584,303,558,'textDim',2)}${ln(315,586,318,564,'textDim',2)}</g>` : '')) : '')
+  + vignette(0.55);
+  return `<g ${stretch}>${d===7?`<g filter="url(#desat)">${inner}</g>`:inner}</g>`;
+};
+
+SC.foyer = () => {
+  const st=G.state, d=st.day, ph=st.phase;
+  // clock hands
+  let hands='';
+  if(d<=3){ const m=(d*37)%60; hands = ln(490,480,490+16*Math.sin(m/60*6.28),480-16*Math.cos(m/60*6.28),'ink',3)
+    + ln(490,480,490+10*Math.sin((d%12)/12*6.28),480-10*Math.cos((d%12)/12*6.28),'ink',4); }
+  else if(d<=6){ hands = ln(490,480,490+16*Math.sin(14/60*6.28),480-16*Math.cos(14/60*6.28),'ink',3)
+    + ln(490,480,490+10*Math.sin((7.23)/12*6.28),480-10*Math.cos(7.23/12*6.28),'ink',4); }
+  const curt = d>=6;
+  const winPane = ph==='MORNING' ? '#4A4A58' : 'nightSky';
+  const windowPair = (x)=> rc(x,140,160,480,'slate') + rc(x+12,152,136,456,winPane)
+    + (curt ? pg(`${x+8},146 ${x+70},152 ${x+62},612 ${x+8},606`,'slate')+pg(`${x+152},146 ${x+92},152 ${x+100},612 ${x+152},606`,'slate') : '')
+    + rc(x+74,152,12,456,'ink');
+  let inner = rc(0,0,1600,900,'ink') + rc(0,760,1600,140,'void')
+  + windowPair(220) + windowPair(1220)
+  + pg('640,180 960,180 960,420 640,420','void')
+  + rc(560,420,480,50,'slate')
+  + [...Array(10)].map((_,i)=>{
+      const t=i/9, x1=560-((560-440)*t), x2=1040+((1160-1040)*t), y=470+t*29*10/10*29;
+      return pg(`${x1},${470+i*29} ${x2},${470+i*29} ${x2+8},${470+i*29+29} ${x1-8},${470+i*29+29}`, i%2?'slate':'#20273580');
+    }).join('')
+  + pg('440,470 560,420 570,430 460,480','ash') + pg('1160,470 1040,420 1030,430 1140,480','ash')
+  + ln(800,120,800,180,'ash',5)
+  + pth('M740,210 C740,240 770,250 800,250 C830,250 860,240 860,210','none','stroke="var(--ash)" stroke-width="5"')
+  + [740,770,800,830,860].map((x,i)=>`<polygon class="flame ${i%2?'f2':''}" points="${x-4},208 ${x+4},208 ${x},188" fill="var(--candle)"/>`).join('')
+  + pool(800,300,500,380,'url(#poolCandle)')
+  + hsRect('stairs','upstairs',560,200,480,540)
+  + hs('clock','the clock',
+      rc(440,430,100,330,'slate') + ci(490,480,34,'bone') + (d===7?'':hands)
+      + rc(470,530,40,180,'#141926'))
+  + hs('frontdoor','the front door',
+      `<g id="frontdoorG">${rc(1080,520,180,260,'slate')}${rc(1088,528,76,244,'#232B3B')}${rc(1176,528,76,244,'#232B3B')}
+       ${ci(1160,656,5,'bone')}${ci(1180,656,5,'bone')}${rc(1076,512,188,10,'ash')}
+       ${d===7&&ph==='NIGHT' ? rc(1166,528,10,244,'#0A1322') : ''}</g>`)
+  + hs('diningarch','the dining room', pg('40,420 200,420 200,760 40,760','#1A1017') + rc(196,430,8,330,'ember','opacity=".5"'))
+  + hs('librarydoor','the library', rc(1400,440,140,320,'slate') + rc(1394,446,6,314,'ember','opacity=".35"'))
+  + hs('coatrack','the coat rack', ln(360,560,360,760,'ash',6) + pg('330,570 390,570 384,700 336,700','#161B27'))
+  + (d===1 && ph==='NIGHT' && st.nightOutingDone && !st.day1MomDone
+      ? hs('mom','mom', `<g>${pool(700,600,120,160,'url(#poolCandle)')}
+          ${ci(700,520,16,'void')}${pg('686,534 714,534 726,700 674,700','void')}
+          ${ln(684,540,678,600,'ember',2)}</g>`)
+      : '')
+  + vignette(0.55);
+  return d===7?`<g filter="url(#desat)">${inner}</g>`:inner;
+};
+
+SC.office = () => {
+  const st=G.state;
+  let inner = rc(0,0,1600,900,'ink') + rc(0,720,1600,180,'void')
+  + [0,1,2].map(i=>rc(60+i*520,80,480,620,'slate','opacity=".35"')).join('')
+  + hs('fireplace','the fireplace',
+      rc(120,440,320,40,'ash') + rc(160,480,240,240,'void')
+      + `<polygon class="flame" points="230,720 280,720 255,640" fill="var(--ember)"/>
+         <polygon class="flame f2" points="255,720 300,720 278,655" fill="var(--candle)"/>
+         <polygon class="flame" points="205,720 240,720 222,670" fill="var(--ember)"/>`)
+  + pool(280,600,420,320,'url(#poolCandle)')
+  + hs('cabinet','the gun cabinet',
+      rc(1240,300,200,460,'slate') + rc(1256,316,168,428,'void')
+      + (st.hasGun
+          ? rc(1290,430,20,8,'ash')+rc(1390,500,20,8,'ash')
+          : ln(1285,640,1400,420,'ash',12)+pg('1268,672 1300,610 1320,620 1292,684','#4A3A28')+ln(1310,590,1396,428,'bone',2)))
+  + rc(1500,140,60,480,'#131A2A') + ln(1500,140,1500,620,'ash',2)
+  + pg('560,560 1060,560 1120,650 500,650','slate') + pg('500,650 1120,650 1120,720 500,720','void')
+  + hs('drawer','the desk drawer',
+      st.drawerOpen
+        ? rc(760,660,140,50,'#0A0D14') + rc(760,700,140,14,'ash')
+          + (st.hasShells ? '' : rc(790,668,80,30,'#2E4A32') )
+        : rc(760,660,140,50,'ash') + ci(830,685,6,'bone'))
+  + hs('papers','his papers', rc(600,540,120,20,'ash','transform="rotate(-4 660 550)"') + rc(740,536,110,22,'#3A4254','transform="rotate(3 795 547)"'))
+  + rc(940,480,60,80,'ember','rx="8"') + pool(950,560,200,120,'url(#poolEmber)')
+  + hs('officewindow','the window', rc(1496,136,68,488,'#0000','opacity="0.001"'))
+  + hs('door','the hall', rc(0,380,90,400,'slate') + rc(84,386,6,388,'ember','opacity=".4"'))
+  + (st.day===7?'':'') + vignette(0.55);
+  return G.state.day===7?`<g filter="url(#desat)">${inner}</g>`:inner;
+};
+
+SC.dining = () => {
+  const st=G.state, d=st.day, ph=st.phase;
+  const curt = d>=6;
+  const pane = ph==='MORNING' ? '#4A4A58' : (d===7&&ph==='NIGHT' ? '#2A0D0C' : 'nightSky');
+  const winAt=(x)=> rc(x,120,200,520,'slate') + rc(x+14,134,172,492,pane)
+    + (curt ? pg(`${x+10},128 ${x+95},140 ${x+85},632 ${x+10},626`,'slate') + pg(`${x+190},128 ${x+105},140 ${x+115},632 ${x+190},626`,'slate') : '')
+    + rc(x+94,134,12,492,'ink');
+  let inner = rc(0,0,1600,900,'ink') + rc(0,700,1600,200,'void')
+  + hs('dwindow','the window', winAt(160)) + winAt(1240)
+  + [...Array(6)].map((_,i)=>rc(380+i*160,430,70,170,'#10141E')).join('')
+  + rc(690,470,10,130,'ash')
+  + [770,800,830].map((x,i)=>`<polygon class="flame ${i===1?'f2':''}" points="${x-4},468 ${x+4},468 ${x},448" fill="var(--candle)"/>`).join('')
+  + ln(770,480,830,480,'ash',4) + ln(800,480,800,560,'ash',5)
+  + hs('table','the table',
+      pg('300,600 1300,600 1380,700 220,700','slate')
+      + pg('220,700 1380,700 1380,730 220,730','#12161F')
+      + el(800,640,300,40,'#E08D3C','opacity=".14"')
+      + (d<7 ? pg('1060,560 1130,560 1150,700 1040,700','ash') : ''))
+  + pool(800,560,480,260,'url(#poolCandle)')
+  + pg('0,640 260,640 260,900 0,900','void')
+  + hs('door','the foyer', rc(1500,380,100,400,'slate') + rc(1494,386,6,388,'ember','opacity=".4"'))
+  + vignette(0.55);
+  return d===7?`<g filter="url(#desat)">${inner}</g>`:inner;
+};
+
+SC.library = () => {
+  const st=G.state, d=st.day;
+  const shelfWall=(x0)=>{
+    let s=rc(x0,80,620,700,'slate');
+    for(let r=0;r<5;r++){
+      s+=rc(x0+20,110+r*135,580,100,'void');
+      const rnd=mulberry32(x0+r);
+      let x=x0+26;
+      while(x<x0+580){
+        const w=13+rnd()*14, h=72+rnd()*22;
+        s+=rc(x,110+r*135+(100-h),w,h, rnd()>0.93?'ember':(rnd()>0.5?'ash':'#242B3B'));
+        x+=w+3;
+      }
+    }
+    return s;
+  };
+  let inner = rc(0,0,1600,900,'ink') + rc(0,760,1600,140,'void')
+  + hs('shelves','the shelves', shelfWall(80))
+  + shelfWall(900)
+  + rc(700,80,200,700,'void')
+  + rc(856,120,8,660,'ash') + rc(952,120,8,660,'ash')
+  + [...Array(6)].map((_,i)=>rc(856,160+i*100,104,8,'ash')).join('')
+  + hs('chair','the chair',
+      pg('380,480 560,470 600,560 620,820 380,820','ash')
+      + pg('420,520 560,515 585,590 575,700 430,700','#242B3B'))
+  + rc(640,560,90,220,'slate')
+  + `<polygon class="flame" points="676,556 690,556 683,532" fill="var(--candle)"/>`
+  + pool(640,520,360,300,'url(#poolCandle)')
+  + (d>=1 && d<=6 ? hs('tablebook','a book on the table',
+      rc(650,548,64,14,'#3A3226','transform="rotate(-5 682 555)"') + ln(652,542,712,536,'bone',2)) : '')
+  + (d>=3 && !st.hasKey ? hs('halfbook','a book, half out',
+      rc(1000,596,110,44,'slate') + rc(1096,590,42,52,'#3A3226') + ln(1096,592,1138,590,'bone',2.5)) : '')
+  + hs('door','the foyer', rc(1510,380,90,400,'slate') + rc(1504,386,6,388,'ember','opacity=".4"'))
+  + vignette(0.55);
+  return d===7?`<g filter="url(#desat)">${inner}</g>`:inner;
+};
+
+/* --- Grounds. Fixed geometry; palette and layers vary by mode. --- */
+function groundsBase(mode){
+  const st=G.state, d=st.day;
+  const isDay = mode==='day', isDusk = mode==='dusk1', isNight = mode==='night'||mode==='momlawn', isRed = mode==='red';
+  let sky, tree, lawn1, lawn2;
+  if(isDay){ sky = rc(0,0,1600,562,'url(#skyDay)'); tree='ink'; lawn1='slate'; lawn2='#20273580'; }
+  else if(isDusk){ sky = rc(0,0,1600,562,'url(#skyDusk)'); tree='void'; lawn1='void'; lawn2='ink'; }
+  else if(isRed){ sky = rc(0,0,1600,562,'void') ; tree='void'; lawn1='void'; lawn2='#0A0D14'; }
+  else { sky = rc(0,0,1600,562,'nightSky'); tree='void'; lawn1='void'; lawn2='ink'; }
+  let out = sky;
+  if(isNight){ out += ci(1310,150,40,'bone') + pool(1310,150,160,160,'url(#poolMoon)'); }
+  out += rc(0,556,1600,344,fillOf(lawn1).startsWith('var')?lawn1:lawn1);
+  out += pg('0,620 1600,600 1600,660 0,690',lawn2) + pg('0,760 1600,730 1600,800 0,840',lawn2);
+  if(isRed){ out += rc(0,352,1600,8,'redDeep','opacity=".3"'); }
+  out += treelineSVG(tree);
+  if(isDay){
+    const n=Math.min(d-1,5);
+    const spots=[[500,700],[900,660],[300,780],[1200,720],[700,820]];
+    out += spots.slice(0,n).map(p=>el(p[0],p[1],60,18,'#0D1016','opacity=".7"')).join('');
+  }
+  /* art only — each mode adds the hotspot after its treeline rect, so the tree stays clickable */
+  out += pg('255,580 285,580 278,300 262,300','#0B0E15')
+    + ln(270,360,215,300,'#0B0E15',9) + ln(270,420,330,340,'#0B0E15',8) + ln(270,330,300,250,'#0B0E15',6);
+  out += pg('1180,540 1520,540 1520,600 1180,600','#0B0E15');
+  return out;
+}
+SC.grounds = (mode) => {
+  const st=G.state, d=st.day;
+  let out = groundsBase(mode);
+  if(mode==='dusk1'){
+    out += `<rect id="sunset" x="0" y="0" width="1600" height="562" fill="var(--nightSky)" opacity="0" pointer-events="none"/>`;
+    out += `<g id="groundsEyes"></g>`;
+    out += pool(800,940,700,260,'url(#poolEmber)');
+    out += boySVG(800,780);
+    out += hsRect('treeline','the treeline',0,300,1600,260);
+    out += hsRect('sky','the sky',0,0,1600,280);
+    out += hsRect('deadtree','the dead tree',236,286,108,296);
+    out += fogPair();
+    out += hsRect('inside','inside',440,780,720,120);
+    out += vignette(0.6);
+  } else if(mode==='day'){
+    out += `<g id="groundsEyes"></g>`;
+    out += boySVG(800,780);
+    out += hsRect('treeline','the treeline',0,300,1600,260);
+    out += hsRect('sky','the sky',0,0,1600,280);
+    out += hsRect('deadtree','the dead tree',236,286,108,296);
+    if(d>=2) out += hsRect('grass','the flat grass',250,600,900,170);
+    out += hsRect('inside','inside',440,780,720,120);
+    out += vignette(0.45);
+  } else if(mode==='night'){
+    const eyes = eyesForNight(d).map((p,i)=>{
+      let cls='';
+      if(d===3 && i===0) cls='blinker';
+      if(d===4 && (p.x===840&&p.y===518 || p.x===640&&p.y===560)) cls='track';
+      if(p.sentinel) cls+=' sentinel';
+      return eyePairSVG(p,cls);
+    }).join('');
+    out += `<g id="groundsEyes">${eyes}</g>`;
+    out += `<g id="houseglow">${pool(800,940,700,260,'url(#poolEmberDim)')}</g>`;
+    out += boySVG(800,780);
+    out += fogPair();
+    out += hsRect('deadtree','the dead tree',236,286,108,296);
+    out += hsRect('inside','inside',440,780,720,120);
+    out += vignette(0.7);
+  } else if(mode==='momlawn'){
+    out += `<g id="groundsEyes"></g>`;
+    out += pool(800,940,760,300,'url(#poolEmber)') + pool(800,940,500,200,'url(#poolEmber)');
+    out += boySVG(720,780);
+    out += `<g>${ci(880,610,14,'void')}${pg('868,622 892,622 902,780 858,780','void')}
+      ${pg('864,650 858,668 872,672','void')}${pg('896,650 902,668 888,672','void')}</g>`;
+    out += `<polygon id="torch" points="890,640 1300,420 1340,520 900,660" fill="#EAF4FF" opacity=".14"/>`;
+    out += fogPair();
+    out += vignette(0.7);
+  } else if(mode==='red'){
+    out += `<g id="groundsEyes"></g>`;
+    out += boySVG(800,780,1,'#5A1010','left');
+    out += fogPair();
+    out += vignette(0.8);
+  } else if(mode==='doorgone' || mode==='dawnhouse'){
+    const dawn = mode==='dawnhouse';
+    out = dawn ? rc(0,0,1600,900,'url(#skyDawn)') : rc(0,0,1600,900,'void');
+    // facade
+    out += rc(140,120,1320,660, dawn?'#8A7A62':'ink');
+    out += rc(120,90,1360,50, dawn?'#6E6250':'#0A0D14');
+    const winFill = dawn ? '#C9B891' : '#0A0D14';
+    [[260,220],[560,220],[900,220],[1200,220],[260,460],[1200,460]].forEach(w=>{
+      out += rc(w[0],w[1],140,180,dawn?'#57503F':'slate') + rc(w[0]+10,w[1]+10,120,160,winFill);
+    });
+    // ivy
+    out += pg('140,120 240,120 210,400 160,520 140,560','#101820','opacity=".8"');
+    out += pg('1460,120 1380,120 1420,420 1450,560 1460,600','#101820','opacity=".8"');
+    // porch + steps
+    out += rc(620,640,360,20, dawn?'#6E6250':'#0A0D14');
+    out += rc(600,660,400,16, dawn?'#5E5444':'#0A0D14') + rc(580,676,440,16, dawn?'#57503F':'#080B10');
+    if(dawn){
+      out += rc(740,420,120,220,'#3A3226') + rc(750,430,44,200,'#57503F') + rc(806,430,44,200,'#57503F') + ci(796,540,4,'bone');
+      out += pool(800,520,180,220,'url(#poolCandle)');
+      out += `<g>${ci(800,470,13,'#2A2118')}${pg('789,481 811,481 820,640 780,640','#2A2118')}</g>`;
+      out += rc(0,780,1600,120,'#7A6E52');
+      out += boySVG(960,790,1.2,'candle','left');
+    } else {
+      out += `<g id="brick">${rc(740,420,120,220,'#1A1512')}
+        ${[...Array(11)].map((_,r)=>ln(740,440+r*18,860,440+r*18,'#0D0B09',2)).join('')}
+        ${[...Array(5)].map((_,r)=>ln(770+((r%2)*30),422+r*36+18,770+((r%2)*30),422+r*36+36,'#0D0B09',2)).join('')}</g>`;
+      out += rc(786,380,28,18,'#0A0D14') + ln(786,380,814,398,'ash',1.5);
+      out += rc(0,780,1600,120,'void');
+      out += boySVG(800,790,1.2,'#5A1010','left');
+      out += hsRect('turnaround','turn around',0,0,1600,724);
+    }
+    out += vignette(dawn?0.35:0.8);
+  } else if(mode==='dawnlawn'){
+    out = rc(0,0,1600,562,'url(#skyDawn)');
+    out += rc(0,556,1600,344,'#8A7A5A');
+    out += pg('0,620 1600,600 1600,660 0,690','#7A6E52') + pg('0,760 1600,730 1600,800 0,840','#7A6E52');
+    out += treelineSVG('#4A4436');
+    out += pg('255,580 285,580 278,300 262,300','#3A3428')
+      + ln(270,360,215,300,'#3A3428',9) + ln(270,420,330,340,'#3A3428',8);
+    out += `<g id="endpair" opacity="0" class="gfade">${eyePairSVG({x:1180,y:556,E:11,rot:3})}</g>`;
+    out += boySVG(800,780,1,'candle','right');
+    out += rc(0,0,1600,900,'#F5EFE2','opacity=".12" pointer-events="none"');
+    out += vignette(0.3);
+  }
+  return out;
+};
+
+SC.clearing = () => {
+  const CL_L1=[[200,90,5],[420,70,6],[640,60,5],[860,65,6],[1080,75,5],[1300,90,6],[80,140,6],[1520,140,5]];
+  const CL_L2=[[60,260,8],[160,210,9],[300,170,8],[470,150,9],[650,140,8],[820,135,9],[990,145,8],[1150,165,9],
+    [1310,195,8],[1440,235,9],[1560,290,8],[40,380,10],[1570,400,10],[240,240,8],[1360,300,9],[560,170,8],
+    [140,300,9],[1460,190,9],[720,120,7],[380,110,7],[1200,110,7],[1590,660,13],[60,680,13],[900,706,12]];
+  const smearX=[120,300,480,660,840,1020,1200,1380,1540];
+  const smearCrown=[350,300,380,330,290,360,310,340,370];
+  const smearH=[240,320,200,280,320,220,300,260,190];
+  const CL_L3=[[40,520,13],[70,650,14],[30,706,16],[180,700,15],[420,714,14],[700,712,13],[950,706,15],[1180,700,14],
+    [1400,708,15],[1560,690,16],[1570,620,14],[1540,500,13],[100,470,12],[1500,430,12],[260,676,13],[1340,684,13],
+    [600,676,12],[1060,668,12],[20,350,11],[1580,340,11],[350,660,12],[1240,656,12],[500,644,11]];
+  const mk=(arr)=>arr.map(p=>eyePairSVG({x:p[0],y:p[1],E:p[2],rot:((p[0]*7)%9)-4})).join('');
+  const smears = smearX.map((x,i)=>
+    `<path d="M${x-28},620 Q${x-34},${620-smearH[i]*0.6} ${x-12},${620-smearH[i]} Q${x},${620-smearH[i]-18} ${x+12},${620-smearH[i]} Q${x+30},${620-smearH[i]*0.5} ${x+24},620 Z" fill="var(--ink)"/>`
+    + eyePairSVG({x:x,y:smearCrown[i],E:11,rot:((x*3)%7)-3})).join('');
+
+  // Deer
+  const bodyD='M340,800 C300,760 320,700 420,690 C500,684 560,700 620,700 C640,640 680,560 748,516 C830,466 920,452 1000,460 C1120,470 1240,492 1300,540 C1360,592 1382,680 1370,800 Z';
+  const antler=(d,w)=>`<path d="${d}" fill="none" stroke="var(--redDeep)" stroke-width="${w+2}" stroke-linecap="round" opacity=".25" transform="translate(-4,4)"/>`
+    +`<path d="${d}" fill="none" stroke="var(--bone)" stroke-width="${w}" stroke-linecap="round"/>`;
+  const deer =
+  `<g id="deerG" opacity="0" class="gfade">
+    <g id="deerBody">
+      ${pth(bodyD,'ink')}
+      <g transform="translate(0,10)">${pth(bodyD,'void')}</g>
+      ${pg('560,740 600,720 620,760 600,800 560,800','ink')}${pg('660,730 710,715 740,760 720,800 670,800','ink')}
+      ${pg('900,560 1010,540 1080,585 960,600','#12161F','opacity=".8"')}
+      ${pg('1150,560 1260,555 1290,610 1180,615','#12161F','opacity=".7"')}
+      ${pg('700,620 790,600 820,660 720,672','#12161F','opacity=".6"')}
+      ${pth('M700,540 C690,500 696,480 710,470 L740,480 C736,510 730,540 728,560 Z','void')}
+    </g>
+    <g id="skullG">
+      ${antler('M672,398 C600,360 520,350 452,310',14)}
+      ${antler('M600,364 C585,332 580,306 585,282',8)}
+      ${antler('M545,352 C528,322 522,300 530,272',8)}
+      ${antler('M505,344 C488,318 480,292 488,266',8)}
+      ${antler('M560,357 C550,340 548,330 552,322',8)}
+      ${antler('M586,332 C578,318 576,308 580,298',5)}
+      ${antler('M527,310 C520,298 519,290 523,280',5)}
+      ${antler('M748,398 C830,352 920,340 1005,318',14)}
+      ${antler('M820,360 C838,328 842,302 836,276',8)}
+      ${antler('M878,346 C898,318 904,294 898,266',8)}
+      ${antler('M930,334 C950,310 958,286 952,258',8)}
+      ${antler('M968,326 C982,306 988,292 986,278',5)}
+      ${antler('M850,330 C860,314 862,304 858,292',5)}
+      <ellipse cx="710" cy="430" rx="64" ry="50" fill="var(--bone)"/>
+      ${pg('664,452 756,452 730,560 690,560','bone')}
+      ${pg('648,436 664,452 660,472 636,458','bone')}${pg('772,436 756,452 760,472 784,458','bone')}
+      ${rc(688,548,44,16,'bone','rx="4"')}
+      ${el(701,548,4,9,'void')}${el(719,548,4,9,'void')}
+      ${pth('M710,384 C708,420 712,470 709,522','none','stroke="var(--void)" stroke-width="1.5" opacity=".7"')}
+      ${pg('646,398 710,384 710,540 690,556 664,470','#0D1016','opacity=".28"')}
+      ${el(710,556,26,8,'#E08D3C','opacity=".12"')}
+      <ellipse cx="672" cy="445" rx="22" ry="26" fill="var(--void)"/>
+      <ellipse cx="748" cy="445" rx="22" ry="26" fill="var(--void)"/>
+      <g id="de0" opacity="0">${singleEyeSVG(672,445,14,0,'data-socket="1"')}</g>
+      <g id="de1" opacity="0">${singleEyeSVG(748,445,14,0,'data-socket="1"')}</g>
+      <g id="de2" opacity="0">${singleEyeSVG(710,408,8,-6)}</g>
+      <g id="de3" opacity="0">${singleEyeSVG(676,486,6,10)}</g>
+      <g id="de4" opacity="0">${singleEyeSVG(722,508,6,-8)}</g>
+      <g id="de5" opacity="0">${singleEyeSVG(676,404,5,14)}</g>
+      <g id="de6" opacity="0">${singleEyeSVG(742,492,5,-12)}</g>
+    </g>
+  </g>`;
+  return rc(0,0,1600,900,'void')
+  + `<g id="clearGlow" class="glowfade" opacity="0">${pool(800,880,900,300,'url(#groundRed)')}</g>`
+  + `<g id="clearL1" class="redworld" opacity="0" style="transition:opacity .7s">${mk(CL_L1)}</g>`
+  + `<g id="clearL2" class="redworld" opacity="0" style="transition:opacity .7s">${mk(CL_L2)}</g>`
+  + `<g id="clearL3" class="redworld" opacity="0" style="transition:opacity .7s">${smears}${mk(CL_L3)}</g>`
+  + `<g data-hs="herd" data-label="the herd" opacity="0" id="hsHerd"><rect x="0" y="0" width="300" height="900" fill="#000" opacity="0.001"/><rect x="1340" y="0" width="260" height="900" fill="#000" opacity="0.001"/></g>`
+  + `<g data-hs="dark" data-label="the dark" opacity="0" id="hsDark"><rect x="300" y="0" width="1040" height="260" fill="#000" opacity="0.001"/></g>`
+  + deer
+  + `<g data-hs="deer" data-label="the deer" opacity="0" id="hsDeer"><rect x="340" y="240" width="1040" height="560" fill="#000" opacity="0.001"/></g>`
+  + fogPair()
+  + boySVG(795,800,1.15,'#5A1010','left')
+  + `<rect x="0" y="0" width="1600" height="900" filter="url(#grainF)" style="mix-blend-mode:overlay" opacity=".05" pointer-events="none"/>`
+  + vignette(0.85);
+};
+
+SC.deathcard = () => {
+  return rc(0,0,1600,900,'void')
+  + txt(800,300,30,'textMain','In the morning the lawn is empty. The treeline is only trees.','text-anchor="middle"')
+  + txt(800,360,30,'textMain','Your mother stands out there a long time, looking.','text-anchor="middle"')
+  + txt(800,430,30,'#B9B4A6','“There’s nothing there.”','text-anchor="middle" font-style="italic"')
+  + txt(800,490,30,'textMain','She’s right.','text-anchor="middle"')
+  + `<g id="deathBtns" opacity="0" pointer-events="none" style="transition:opacity .8s">
+     <g data-choice="retry"><rect x="500" y="600" width="330" height="52" rx="4"/><text x="665" y="634" font-size="22" text-anchor="middle">Wake again (Day Seven)</text></g>
+     <g data-choice="restart"><rect x="870" y="600" width="230" height="52" rx="4"/><text x="985" y="634" font-size="22" text-anchor="middle">Begin again</text></g></g>`
+  + vignette(0.5);
+};
+
+SC.goodcard = () => {
+  return rc(0,0,1600,900,'void')
+  + txt(800,400,72,'bone','ANTLERS','text-anchor="middle" font-weight="600" style="letter-spacing:.45em"')
+  + txt(800,470,26,'textDim','Old Marrow counted seven days. So did you.','text-anchor="middle" font-style="italic"')
+  + `<g data-choice="restart"><rect x="690" y="560" width="220" height="52" rx="4"/><text x="800" y="594" font-size="22" text-anchor="middle">Begin again</text></g>`
+  + vignette(0.5);
+};
+
+/* ---------------- GAME ENGINE ---------------- */
+const G = { state:null, savedGame:null, mode:'title', groundsMode:'night', locked:false, uiHidden:false, timers:[], deerTimers:[] };
+const $=id=>document.getElementById(id);
+const sceneG=$('scene'), uiG=$('ui'), fadeR=$('fade'), whiteR=$('white'), gameSvg=$('game');
+
+function freshState(){
+  return { day:1, phase:'MORNING', room:'bedroom',
+    hasKey:false, officeUnlocked:false, hasGun:false, hasShells:false, drawerOpen:false,
+    wentOutEarlyToday:false, nightOutingDone:false, ateDinnerToday:false, day1MomDone:false,
+    readBook:[false,false,false,false,false,false,false,false], diedOnce:false,
+    clearingClicks:0, ending:null,
+    trayHere:false, cabClicks:0, drawerClicks:0, officeEntered:false, d3LibNotice:false,
+    spAdone:false, shiftDone:false };
+}
+function saveGame(){
+  try{
+    const st=G.state;
+    localStorage.setItem('antlers-save', JSON.stringify({
+      day:st.day, hasKey:st.hasKey, officeUnlocked:st.officeUnlocked, hasGun:st.hasGun,
+      hasShells:st.hasShells, drawerOpen:st.drawerOpen, readBook:st.readBook, diedOnce:st.diedOnce,
+      officeEntered:st.officeEntered, d3LibNotice:st.d3LibNotice,
+      cabClicks:st.cabClicks, drawerClicks:st.drawerClicks }));
+  }catch(e){}
+}
+function loadSave(){
+  try{
+    const raw=localStorage.getItem('antlers-save');
+    if(raw){ const s=JSON.parse(raw); if(s && s.day>=2 && s.day<=7) G.savedGame=s; }
+  }catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem('antlers-save'); }catch(e){} G.savedGame=null; }
+function T(fn,ms){ const id=setTimeout(fn,ms); G.timers.push(id); return id; }
+function clearTimers(){ G.timers.forEach(clearTimeout); G.timers=[];
+  G.deerTimers.forEach(clearInterval); G.deerTimers=[]; }
+
+/* ---- text queue ---- */
+let Q=[], curCard=null, choiceActive=null, curPrompt=null;
+function pushCards(cards){ cards.forEach(c=>Q.push({t:c})); }
+function pushFn(fn){ Q.push({fn}); }
+function pushChoice(prompt,options){ Q.push({ch:{prompt,options}}); }
+function pump(){
+  while(Q.length){
+    const it=Q.shift();
+    if(it.fn){ it.fn(); if(curCard||choiceActive) return; continue; }
+    if(it.t!==undefined){ curCard=it; drawCard(it.t); return; }
+    if(it.ch){ choiceActive=it.ch.options; curPrompt=it.ch.prompt; drawCard(it.ch.prompt); drawChoices(it.ch.options); return; }
+  }
+  curCard=null; curPrompt=null; drawCard(null);
+}
+function say(cards, after){
+  pushCards(Array.isArray(cards)?cards:[cards]);
+  if(after) pushFn(after);
+  if(!curCard && !choiceActive) pump();
+}
+function advanceCard(){ if(choiceActive||!curCard) return; curCard=null; pump(); }
+function doChoice(i){
+  const opts=choiceActive; if(!opts) return;
+  const opt=opts[i];
+  if(!opt) return;   /* a key with no matching button must never cancel the choice */
+  choiceActive=null; curPrompt=null; drawChoices(null); drawCard(null);
+  opt.fn();
+  if(!curCard&&!choiceActive&&Q.length) pump();
+}
+const queueBusy=()=> !!curCard || !!choiceActive;
+
+/* ---- UI ---- */
+function wrapText(text, maxChars=96){
+  const words=String(text).split(' '); const lines=[]; let line='';
+  for(const w of words){
+    if((line+' '+w).trim().length>maxChars){ lines.push(line.trim()); line=w; }
+    else line+=' '+w;
+  }
+  if(line.trim()) lines.push(line.trim());
+  return lines;
+}
+function romanDay(d){ return ['','I','II','III','IV','V','VI','VII'][d]||''; }
+function renderUI(){
+  const st=G.state, inPlay=G.mode==='play';
+  let ui='';
+  if(inPlay && !G.uiHidden){
+    /* the two dawn scenes are pale: the HUD needs a dark ink instead of the usual dim grey */
+    const bright = st.room==='grounds' && (G.groundsMode==='dawnhouse'||G.groundsMode==='dawnlawn');
+    const phaseWord = bright ? 'dawn' : ({MORNING:'morning',DUSK:'dusk',NIGHT:'night',RED:'night',CLEARING:'—'}[st.phase]||'');
+    const hud = bright ? '#3A3428' : 'textDim';
+    ui+=`<g id="dayind">${txt(48,64,20,hud,`DAY ${romanDay(st.day)}`,'font-weight="600" style="letter-spacing:.3em"')}
+      ${st.day===7 ? ci(158,57,7,bright?'#3A3428':'eyeRed') :
+        `<g>${ci(158,57,7,'bone')}${ci(158+(st.day-1)*1.6-4,57-2,7,'void','opacity=".85"')}</g>`}
+      ${txt(48,90,14,hud,phaseWord,'font-style="italic"')}</g>`;
+    const invLabel={invkey:'the brass key',invgun:'your father’s shotgun',invshells:'the box of shells'};
+    const slot=(x,icon,has,id)=>`<g ${has?`data-hs="${id}" data-label="${invLabel[id]}"`:''} id="slot-${id}">
+      <rect x="${x}" y="32" width="64" height="64" rx="6" fill="var(--ink)" opacity=".8" stroke="var(--textDim)" stroke-opacity=".35"/>
+      ${has?icon:`<rect x="${x+8}" y="40" width="48" height="48" rx="4" fill="none" stroke="var(--textDim)" stroke-opacity=".2" stroke-dasharray="4 4"/>`}</g>`;
+    const keyIcon=`<g>${ci(1324,58,9,'none','stroke="var(--bone)" stroke-width="3"')}${ln(1331,64,1352,82,'bone',3)}${ln(1345,76,1350,70,'bone',3)}${ln(1350,81,1356,75,'bone',3)}</g>`;
+    const gunIcon=`<g>${ln(1392,84,1428,48,'bone',3)}${ln(1396,88,1432,52,'bone',3)}${pg('1424,44 1436,56 1430,60 1420,50','#8a7440')}${ci(1404,72,5,'none','stroke="var(--bone)" stroke-width="2"')}</g>`;
+    const shellIcon=`<g>${rc(1478,52,12,30,'ember','rx="5"')}${rc(1478,50,12,7,'bone','rx="3"')}${rc(1496,56,12,30,'ember','rx="5"')}${rc(1496,54,12,7,'bone','rx="3"')}</g>`;
+    const glow = st.phase==='CLEARING' && st.hasGun && st.hasShells ? 'class="invglow"' : '';
+    ui+=`<g id="inv" ${glow}>${slot(1304,keyIcon,st.hasKey,'invkey')}${slot(1380,gunIcon,st.hasGun,'invgun')}${slot(1456,shellIcon,st.hasShells,'invshells')}</g>`;
+  }
+  const muteBtn=`<g data-ui="mute" id="muteBtn" style="cursor:pointer"><title>sound on / off</title>
+    ${rc(1540,26,44,40,'#000','opacity="0.001"')}
+    ${pg('1548,42 1556,42 1566,32 1566,58 1556,48 1548,48','textDim')}
+    ${A.muted?ln(1544,30,1580,62,'eyeRed',3):`<path d="M1570,38 C1576,42 1576,48 1570,52" fill="none" stroke="var(--textDim)" stroke-width="2.5"/>`}</g>`;
+  if(inPlay){
+    ui+=`<g id="panel">
+      <rect id="panelBg" x="40" y="724" width="1520" height="152" rx="6" fill="var(--ink)" opacity="0" stroke="var(--textDim)" stroke-opacity=".35" stroke-width="1.5" pointer-events="none"/>
+      <g id="panelText" pointer-events="none"></g>
+      <text id="adv" x="1520" y="856" font-size="26" fill="var(--accent)" class="pulse" style="display:none" pointer-events="none">▸</text>
+      <text id="hoverLabel" x="72" y="852" font-size="22" fill="var(--textDim)" font-style="italic"
+            paint-order="stroke" stroke="var(--void)" stroke-width="5" stroke-linejoin="round" pointer-events="none"></text>
+      <g id="choicesG"></g>
+    </g>`;
+  }
+  ui+=`<g id="bookG"></g>`;
+  ui+=muteBtn;            /* last, so a book overlay never swallows the mute button */
+  ui+=`<g data-ui="help" id="helpBtn" style="cursor:pointer">
+    ${rc(1222,26,44,40,'#000','opacity="0.001"')}
+    ${ci(1244,45,14,'none','stroke="var(--textDim)" stroke-width="2"')}
+    ${txt(1244,52,19,'textDim','?','text-anchor="middle" font-weight="600"')}</g>`;
+  uiG.innerHTML=ui;
+  if(curCard) drawCard(curCard.t);
+  else if(choiceActive) drawCard(curPrompt);   /* a re-render mid-choice must keep the prompt */
+  if(choiceActive) drawChoices(choiceActive);
+}
+function drawCard(text){
+  const pt=$('panelText'), adv=$('adv'), hl=$('hoverLabel'), bg=$('panelBg');
+  if(!pt) return;
+  if(text===null||text===undefined){
+    pt.innerHTML=''; if(adv) adv.style.display='none';   /* the pulse animation drives opacity, so hide by display */
+    if(hl) hl.textContent='';
+    if(bg) bg.setAttribute('opacity','0');   /* idle: the scene is fully visible and clickable */
+    return;
+  }
+  if(hl) hl.textContent='';
+  if(bg) bg.setAttribute('opacity','.92');
+  const lines=wrapText(text);
+  pt.innerHTML=lines.slice(0,3).map((l,i)=>
+    `<text x="72" y="${772+i*34}" font-size="26" fill="var(--textMain)">${l}</text>`).join('');
+  if(adv) adv.style.display = choiceActive?'none':'';
+}
+function drawChoices(options){
+  const cg=$('choicesG'); if(!cg) return;
+  if(!options){ cg.innerHTML=''; return; }
+  let x=72; const y=812;
+  cg.innerHTML=options.map((o,i)=>{
+    const w=Math.max(120, o.label.length*11.5+44);
+    const s=`<g data-choice="${i}"><rect x="${x}" y="${y}" width="${w}" height="44" rx="4"/>
+      <text x="${x+w/2}" y="${y+29}" font-size="22" text-anchor="middle">${o.label}</text></g>`;
+    x+=w+20; return s;
+  }).join('');
+  const adv=$('adv'); if(adv) adv.style.display='none';
+}
+let bookOpen=false;
+function showBook(n){
+  const b=BOOKS[n]; if(!b) return;
+  G.state.readBook[n]=true;
+  bookOpen=true;
+  const lines=wrapText(b.text,74);
+  $('bookG').innerHTML =
+    rc(0,0,1600,900,'ink','opacity=".96"')
+    + txt(800,220,30,'bone',b.title.toUpperCase(),'text-anchor="middle" style="letter-spacing:.12em" font-weight="600"')
+    + lines.map((l,i)=>txt(800,300+i*40,26,'textMain',l,'text-anchor="middle" font-style="italic"')).join('')
+    + txt(800,840,17,'textDim','click to close','text-anchor="middle"');
+}
+function closeBook(){ bookOpen=false; const bg=$('bookG'); if(bg) bg.innerHTML=''; }
+function showHelp(){
+  bookOpen=true;
+  const lines=[
+    'Click anything to look at it. What you are pointing at is named at the bottom.',
+    'Doors, stairs and archways take you from room to room.',
+    'The rule of the house is one thing only: go outside once a day.',
+    'When you have been out, the bed will let you sleep, and it will be tomorrow.',
+    'Some of what you find can be taken with you.'
+  ];
+  $('bookG').innerHTML =
+    rc(0,0,1600,900,'ink','opacity=".96"')
+    + txt(800,250,28,'bone','HOW TO PLAY','text-anchor="middle" style="letter-spacing:.18em" font-weight="600"')
+    + lines.map((l,i)=>txt(800,340+i*52,24,'textMain',l,'text-anchor="middle"')).join('')
+    + txt(800,700,17,'textDim','click to close','text-anchor="middle"');
+}
+function invPop(id){ const s=$('slot-'+id); if(!s) return;
+  s.animate([{transform:'scale(1.4)'},{transform:'scale(1)'}],{duration:300}); }
+
+/* ---- scene rendering & transitions ---- */
+function renderScene(){
+  let svg='';
+  if(G.mode==='title') svg=SC.title();
+  else if(G.mode==='deathcard') svg=SC.deathcard();
+  else if(G.mode==='goodcard') svg=SC.goodcard();
+  else {
+    const r=G.state.room;
+    if(r==='grounds') svg=SC.grounds(G.groundsMode);
+    else if(SC[r]) svg=SC[r]();
+  }
+  sceneG.innerHTML=svg;
+}
+function fadeTo(fn, ms=350){
+  G.locked=true;
+  fadeR.classList.remove('slow','instant');
+  fadeR.setAttribute('opacity','1');
+  T(()=>{ fn(); T(()=>{ fadeR.setAttribute('opacity','0'); T(()=>{G.locked=false;},360); },60); }, ms+30);
+}
+function hardCut(fn){
+  fadeR.classList.add('instant'); fadeR.setAttribute('opacity','1');
+  fn();
+  T(()=>{ fadeR.setAttribute('opacity','0'); fadeR.classList.remove('instant'); },50);
+}
+function goRoom(room, mode, after){
+  fadeTo(()=>{
+    G.state.room=room;
+    if(mode) G.groundsMode=mode;
+    renderScene(); renderUI();
+    ambientFor(room);
+    if(after) after();
+    if(room==='library') libraryEntryHook();
+    if(room==='office') officeEntryHook();
+  });
+}
+function ambientFor(room){
+  if(!A.on) return;
+  const st=G.state;
+  if(room==='grounds'){
+    A.wind(false);
+    A.crickets(st.day<=3 && (st.phase==='NIGHT'||st.phase==='DUSK'));
+    if(st.phase==='NIGHT' && G.groundsMode==='night'){
+      A.swell(44-(st.day-1)*2, 0.12+(st.day-1)*0.036);
+      if(st.day===6) A.windDuck(0.2);
+    } else if(G.groundsMode!=='dusk1'){
+      A.swellStop(false); A.heartStop();   /* daylight and the mom scene stay quiet */
+    }
+  } else if(room==='clearing'){ /* handled by set piece */ }
+  else { A.crickets(false); A.swellStop(false); A.heartStop(); A.wind(true); }
+}
+function libraryEntryHook(){
+  const st=G.state;
+  if(st.day>=3 && !st.hasKey && !st.d3LibNotice){ st.d3LibNotice=true; say(S.D3_LIBRARY_ENTRY); }
+}
+function officeEntryHook(){
+  const st=G.state;
+  if(!st.officeEntered){ st.officeEntered=true; say(S.OFFICE_ENTER); }
+}
+
+/* ---- phase flow ---- */
+function toDusk(){
+  const st=G.state; st.phase='DUSK';
+  st.trayHere = st.day>=2 && st.day<=6;
+  renderScene(); renderUI();
+  const d=st.day;
+  if(d===1) say(S.D1_DINNER);
+  else if(d===2){ const c=[...S.D2_DINNER]; if(!st.wentOutEarlyToday) c.push(S.D2_DINNER_LATEHINT[0]); say(c); }
+  else if(d===3) say(S.D3_DINNER);
+  else if(d===4) say(S.D4_DINNER);
+  else if(d===5) say(S.D5_DINNER);
+  else if(d===6) say(S.D6_DINNER);
+  else if(d===7) say(S.D7_DINNER);
+}
+function toNight(){
+  const st=G.state; st.phase='NIGHT';
+  renderScene(); renderUI();
+  if(st.day===7) say(S.D7_GUT);
+}
+function eatTray(){
+  const st=G.state; st.trayHere=false; st.ateDinnerToday=true;
+  const wasDusk = st.phase==='DUSK';
+  const cards = wasDusk ? [...S.TRAY_EAT] : [S.TRAY_EAT[0]];
+  if(st.day===5) cards.push(S.D5_NOTE[0]);
+  say(cards, ()=>{ renderScene(); if(wasDusk) toNight(); });
+}
+function trySleep(){
+  const st=G.state;
+  if(st.day===1 && !st.day1MomDone && st.nightOutingDone){ say(S.BED_D1_MOM); return; }
+  if(!st.nightOutingDone){ say(st.wentOutEarlyToday?S.BED_CURIOUS:S.BED_RULE); return; }
+  if(st.day===1){ say(S.D1_SLEEP, doSleep); } else doSleep();
+}
+function doSleep(){
+  const st=G.state;
+  G.locked=true;
+  fadeR.classList.add('slow'); fadeR.setAttribute('opacity','1');
+  T(()=>{
+    st.day++; st.phase='MORNING'; st.room='bedroom';
+    st.wentOutEarlyToday=false; st.nightOutingDone=false; st.ateDinnerToday=false;
+    st.trayHere=false; st.spAdone=false; st.shiftDone=false;
+    saveGame();
+    renderScene(); renderUI();
+    A.wind(true); A.crickets(false); A.swellStop(true); A.heartStop();
+    T(()=>{
+      fadeR.setAttribute('opacity','0');
+      T(()=>{ fadeR.classList.remove('slow'); G.locked=false; wakeCards(); },1300);
+    },1200);
+  },1300);
+}
+function wakeCards(){
+  const st=G.state, d=st.day;
+  const w={2:S.D2_WAKE,3:S.D3_WAKE,4:S.D4_WAKE,5:S.D5_WAKE,6:S.D6_WAKE}[d];
+  if(w) say(w);
+  else if(d===7){ const c=[...S.D7_WAKE]; if(st.diedOnce) c.push(S.D7_WAKE_DREAM[0]); say(c); }
+}
+
+/* ---- outings ---- */
+function earlyOuting(){
+  const st=G.state; st.wentOutEarlyToday=true;
+  goRoom('grounds','day',()=>{ say(st.day===2?S.D2_EARLY:S.DN_EARLY); });
+}
+function nightOuting(){
+  const st=G.state, d=st.day;
+  if(st.nightOutingDone){   /* a second look: the discovery has already happened */
+    goRoom('grounds','night',()=>say(S.NIGHT_REVISIT));
+    return;
+  }
+  const enter=()=>{
+    goRoom('grounds','night',()=>{
+      st.nightOutingDone=true;
+      const cards={2:S.N2_EYES,3:S.N3_EYES,4:S.N4_EYES,5:S.N5_EYES,6:S.N6_EYES}[d]||[];
+      const c=[...cards];
+      if(d===5 && st.readBook[3]) c.push(...S.N5_RHYME);
+      say(c);
+      if(d===3) T(()=>{ scriptedBlink(document.querySelector('#groundsEyes .blinker'), 400); },4000);
+      if(d===4) startTracking();
+      if(d===5) T(()=>{ unisonBlink(); },6000);
+    });
+  };
+  if(d===2){ say(st.wentOutEarlyToday?S.N2_RETURN_EARLY:S.N2_RETURN, enter); }
+  else enter();
+}
+function scriptedBlink(pairEl, speed=120){
+  if(!pairEl) return;
+  const lids=pairEl.querySelector('.lids'); if(!lids) return;
+  lids.style.transitionDuration=(speed/1000)+'s';
+  lids.style.transform='scaleY(0.05)';
+  T(()=>{ lids.style.transform='scaleY(1)';
+    T(()=>{ lids.style.transitionDuration=''; }, speed+50); }, speed+ (speed>200?400:200));
+}
+function unisonBlink(){
+  const g=document.getElementById('groundsEyes'); if(!g) return;
+  g.style.transition='opacity .09s'; g.style.opacity='0';
+  T(()=>{ g.style.opacity='1'; T(()=>{g.style.transition='';},120); },90);
+}
+let trackRAF=null, mousePt={x:800,y:450};
+function startTracking(){
+  stopTracking();
+  const pairs=[...document.querySelectorAll('#groundsEyes .track')];
+  if(!pairs.length) return;
+  const state=pairs.map(p=>({p, dx:0, dy:0,
+    pl:p.querySelector('.pl'), pr:p.querySelector('.pr'),
+    blx:+p.querySelector('.pl').getAttribute('cx'), bly:0,
+    brx:+p.querySelector('.pr').getAttribute('cx') }));
+  const step=()=>{
+    state.forEach(s=>{
+      const ex=+s.p.dataset.ex;
+      const tx=Math.max(-3,Math.min(3,(mousePt.x-ex)/160));
+      const ty=Math.max(-3,Math.min(3,(mousePt.y-500)/160));
+      s.dx+= (tx-s.dx)*0.12; s.dy+=(ty-s.dy)*0.12;
+      s.pl.setAttribute('cx', s.blx+s.dx); s.pl.setAttribute('cy', s.dy);
+      s.pr.setAttribute('cx', s.brx+s.dx); s.pr.setAttribute('cy', s.dy);
+    });
+    trackRAF=requestAnimationFrame(step);
+  };
+  trackRAF=requestAnimationFrame(step);
+}
+function stopTracking(){ if(trackRAF){ cancelAnimationFrame(trackRAF); trackRAF=null; } }
+function goInside(){
+  const st=G.state;
+  stopTracking();
+  if(st.day===6 && st.phase==='NIGHT' && !st.shiftDone && G.groundsMode==='night'){
+    st.shiftDone=true; G.locked=true;
+    const g=$('groundsEyes'), hg=$('houseglow');
+    if(g) g.setAttribute('transform','translate(0,2)');
+    if(hg){ hg.setAttribute('opacity','0'); T(()=>hg.setAttribute('opacity','1'),80);
+      T(()=>hg.setAttribute('opacity','0'),200); T(()=>hg.setAttribute('opacity','1'),280); }
+    T(()=>{ G.locked=false; A.silence(); hardCut(()=>{ G.state.room='foyer'; renderScene(); renderUI(); A.wind(true); }); },340);
+    return;
+  }
+  if(st.day===1){ A.silence(); hardCut(()=>{ st.room='foyer'; renderScene(); renderUI(); A.wind(true); }); return; }
+  A.swellStop(true); A.heartStop();
+  goRoom('foyer');
+}
+
+/* ---- Set Piece A: Night 1 ---- */
+function setPieceA(){
+  const st=G.state;
+  st.phase='NIGHT';
+  let interacted=0, sunsetStarted=false;
+  const onLawn=()=>G.state.room==='grounds' && G.groundsMode==='dusk1';
+  goRoom('grounds','dusk1',()=>{
+    renderUI();
+    const startSunset=()=>{
+      if(sunsetStarted || !onLawn()) return; sunsetStarted=true;
+      Q=[]; curCard=null; choiceActive=null; drawChoices(null); drawCard(null);  /* clear flavour text: the sunset is a cutscene */
+      G.locked=true;
+      const sun=$('sunset'); if(sun) sun.setAttribute('opacity','1');
+      T(()=>{ // full dark; hold 1200ms of nothing
+        T(()=>{
+          const ge=$('groundsEyes');
+          if(ge) ge.innerHTML=`<g class="eyefade" opacity="0">${eyePairSVG({x:1180,y:556,E:11,rot:3})}</g>`;
+          T(()=>{ const p=ge&&ge.firstElementChild; if(p) p.setAttribute('opacity','1'); },60);
+          A.swell(44,0.12);
+          T(()=>{
+            G.locked=false;
+            st.nightOutingDone=true; st.spAdone=true;
+            say(S.N1_EYES, ()=>{
+              T(()=>{ if(onLawn()&&A.on) A.heartbeat(60); },7000);
+            });
+          },2500);
+        },1200);
+      },3500);
+    };
+    G.spA_interact=()=>{ interacted++; if(interacted>=2) startSunset(); };
+    T(startSunset, 9000);
+  });
+}
+/* ---- Night 1: Mom ---- */
+function momSequence(){
+  const st=G.state;
+  say(S.N1_MOM, ()=>{
+    goRoom('grounds','momlawn',()=>{
+      G.locked=true;
+      const torch=$('torch');
+      if(torch){
+        torch.style.transformBox='view-box'; torch.style.transformOrigin='890px 640px';
+        torch.style.transition='transform 4s ease-in-out';
+        torch.style.transform='rotate(-24deg)';
+        T(()=>{ torch.style.transform='rotate(18deg)'; },200);
+      }
+      T(()=>{
+        G.locked=false;
+        say(S.N1_MOM_LAWN, ()=>{
+          st.day1MomDone=true;
+          goRoom('foyer');
+        });
+      },4200);
+    });
+  });
+}
+
+/* ---- Set Piece B: Day 7 red reveal ---- */
+function setPieceB(){
+  const st=G.state;
+  st.phase='RED';
+  G.uiHidden=true;
+  gameSvg.classList.add('redui'); document.body.classList.add('redui');
+  G.locked=true;
+  fadeR.classList.add('instant'); fadeR.setAttribute('opacity','1');
+  T(()=>{
+    st.room='grounds'; G.groundsMode='red';
+    renderScene(); renderUI();
+    A.wind(false); A.windDuck(0.5);   /* outdoor wind at half gain, per the staging */
+    fadeR.setAttribute('opacity','0'); fadeR.classList.remove('instant');
+    // hold 1500ms on the empty dark, then waves
+    T(()=>{
+      const all=eyesForNight(7).slice().sort((a,b)=>a.y-b.y);
+      const waves=[all.slice(0,8),all.slice(8,16),all.slice(16,32),all.slice(32,48),all.slice(48,64)];
+      const ge=$('groundsEyes');
+      A.swell(31,0.3);
+      waves.forEach((wv,i)=>{
+        T(()=>{
+          if(!ge) return;
+          wv.forEach(p=>{
+            const div=document.createElementNS('http://www.w3.org/2000/svg','g');
+            div.innerHTML=eyePairSVG(p);
+            const pair=div.firstElementChild;
+            ge.appendChild(pair);
+            const lids=pair.querySelector('.lids');
+            lids.style.transform='scaleY(0.05)';
+            requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ lids.style.transform='scaleY(1)'; }); });
+          });
+        }, i*350);
+      });
+      T(()=>{
+        G.locked=false;
+        say(S.D7_WAVES, ()=>{
+          G.locked=true;
+          A.silence(); // total cut
+          T(()=>{ // the longest second
+            const ge2=$('groundsEyes');
+            if(ge2) ge2.classList.add('redworld');   // single-frame switch
+            A.sting();
+            A.heartbeat(72); A.heartRamp(120,20);
+            startUnisonD7();
+            T(()=>{
+              G.locked=false;
+              say(S.D7_RED, ()=>{
+                const sc=sceneG;
+                const div=document.createElementNS('http://www.w3.org/2000/svg','g');
+                div.innerHTML=hsRect('turnback','turn back to the house',300,620,1000,280);
+                sc.appendChild(div.firstElementChild);
+              });
+            },1200);
+          },900);
+        });
+      }, 5*350+1900);
+    },1500);
+  },400);
+}
+let unisonTimer=null;
+function startUnisonD7(){
+  stopUnisonD7();
+  unisonTimer=setInterval(()=>{ unisonBlink(); },10000);
+  G.deerTimers.push(unisonTimer);
+}
+function stopUnisonD7(){ if(unisonTimer){ clearInterval(unisonTimer); unisonTimer=null; } }
+function doorGone(){
+  G.locked=true;
+  fadeR.classList.add('instant'); fadeR.setAttribute('opacity','1');
+  T(()=>{
+    G.state.phase='DOORGONE'; G.groundsMode='doorgone';
+    renderScene(); renderUI();
+    fadeR.setAttribute('opacity','0'); fadeR.classList.remove('instant');
+    T(()=>{ G.locked=false; say(S.D7_DOOR); },1800);
+  },300);
+}
+
+/* ---- Set Piece C: the Otherworld ---- */
+function setPieceC(){
+  const st=G.state;
+  G.locked=true;
+  fadeR.classList.add('instant'); fadeR.setAttribute('opacity','1');
+  T(()=>{
+    st.phase='CLEARING'; st.room='clearing'; st.clearingClicks=0;
+    renderScene(); renderUI();
+    fadeR.setAttribute('opacity','0'); fadeR.classList.remove('instant');
+    A.otherTone(true);
+    T(()=>{ const g=$('clearL1'); if(g) g.setAttribute('opacity','1'); },2000);
+    T(()=>{ const g=$('clearL2'); if(g) g.setAttribute('opacity','1'); },3400);
+    T(()=>{ const g=$('clearL3'); if(g) g.setAttribute('opacity','1'); },4800);
+    T(()=>{ A.otherTone(false); },6200);
+    T(()=>{ const g=$('clearGlow'); if(g) g.setAttribute('opacity','1');
+            const dg=$('deerG'); if(dg) dg.setAttribute('opacity','1'); },7100);
+    const order=['de5','de6','de3','de4','de2','de0','de1'];
+    order.forEach((id,i)=>{
+      T(()=>{ const e=$(id); if(e){ e.style.transition='opacity .3s'; e.setAttribute('opacity','1'); }
+        if(i===order.length-1) A.swell(31,0.42);
+      }, 9600+i*400);
+    });
+    T(()=>{
+      G.uiHidden=false; renderUI(); G.locked=false;
+      say([...S.D7_TURN,...S.D7_MARROW], ()=>{
+        ['hsHerd','hsDark','hsDeer'].forEach(id=>{ const e=$(id); if(e) e.setAttribute('opacity','1'); });
+        startDeerIdle();
+        G.idleTilt=T(()=>{ const sk=$('skullG'); if(sk) sk.classList.add('tilt'); },6000);
+      });
+    },12500);
+  },300);
+}
+function startDeerIdle(){
+  [['de2',6500],['de3',8200],['de4',9900],['de5',7300],['de6',11000]].forEach(([id,ms])=>{
+    const t=setInterval(()=>{ const e=$(id); if(e) scriptedBlink(e.querySelector('.seye')||e,120); },ms);
+    G.deerTimers.push(t);
+  });
+  const regard=setInterval(()=>{
+    document.querySelectorAll('#skullG .pupil').forEach(p=>{
+      p.style.transition='transform 1.2s'; p.style.transform='translate(2px,1px)';
+      setTimeout(()=>{ p.style.transform='translate(0,0)'; },1200);
+    });
+  },14000);
+  G.deerTimers.push(regard);
+}
+
+/* ---- confrontation & endings ---- */
+function confront(){
+  const st=G.state;
+  if(G.confronted) return; G.confronted=true;
+  if(st.hasGun && st.hasShells){
+    pushChoice(S.CHOICE_ARMED[0], [
+      {label:'Raise the shotgun', fn:shootSeq},
+      {label:'Stand still', fn:()=>{ st.ending='DEATH_REFUSED'; say(S.ARMED_STOOD, ()=>say(S.DEATH_1, deathPresentation)); }}
+    ]);
+    pump();
+  } else {
+    let card, kind;
+    if(!st.hasGun && !st.hasShells){ card=S.UNARMED_NONE; kind='DEATH_UNARMED'; }
+    else if(st.hasGun){ card=S.UNARMED_GUN; kind='DEATH_GUN_ONLY'; }
+    else { card=S.UNARMED_SHELLS; kind='DEATH_SHELLS_ONLY'; }
+    st.ending=kind;
+    say(card, ()=>say(S.DEATH_1, deathPresentation));
+  }
+}
+function deathPresentation(){
+  G.locked=true;
+  document.querySelectorAll('#scene .lids').forEach(l=>{ l.style.transitionDuration='.12s'; l.style.transform='scaleY(0.05)'; });
+  A.silence();
+  T(()=>{
+    fadeR.classList.add('instant'); fadeR.setAttribute('opacity','1');
+    T(()=>{ A.footstep(0.8); },700);
+    T(()=>{
+      G.mode='deathcard'; G.uiHidden=false;
+      clearTimers(); stopUnisonD7();
+      renderScene(); renderUI();
+      fadeR.setAttribute('opacity','0'); fadeR.classList.remove('instant');
+      G.locked=false;
+      T(()=>{ const b=$('deathBtns'); if(b){ b.setAttribute('opacity','1'); b.removeAttribute('pointer-events'); } },1500);
+    },2500);
+  },400);
+}
+function shootSeq(){
+  const st=G.state; st.ending='DAWN';
+  say(S.SHOOT_1, ()=>{
+    G.locked=true;
+    /* two forced beats, then the hammer, then the blast — the panic before the shot
+       must land every run, not depend on where the heartbeat chain happens to be */
+    A.heartbeatOnce();
+    T(()=>A.heartbeatOnce(), 380);
+    T(()=>A.hammerClick(), 640);
+    T(()=>{
+      A.heartStop(); A.silence(); A.blast();
+      whiteR.classList.remove('fading'); whiteR.setAttribute('opacity','1');
+      clearTimers(); stopUnisonD7();
+      T(()=>{
+        G.mode='play'; st.room='grounds'; G.groundsMode='dawnhouse';
+        gameSvg.classList.remove('redui'); document.body.classList.remove('redui');
+        renderScene(); renderUI();
+        whiteR.classList.add('fading'); whiteR.setAttribute('opacity','0');
+        A.wind(false);
+        T(()=>{
+          G.locked=false;
+          say([...S.SHOOT_2,...S.SHOOT_3,...S.END_GOOD_1], ()=>{
+            fadeTo(()=>{
+              G.groundsMode='dawnlawn'; renderScene(); renderUI();
+              say(S.END_GOOD_2, ()=>{
+                G.locked=true;
+                const ep=$('endpair'); if(ep) ep.setAttribute('opacity','.3');
+                T(()=>{
+                  clearSave();
+                  hardCut(()=>{ G.mode='goodcard'; renderScene(); renderUI(); G.locked=false; });
+                },2700);
+              });
+            });
+          });
+        },1000);
+      },900);
+    },840);
+  });
+}
+function mercyRestart(){
+  const st=G.state;
+  st.day=7; st.phase='MORNING'; st.room='bedroom';
+  st.wentOutEarlyToday=false; st.nightOutingDone=false; st.ateDinnerToday=false;
+  st.trayHere=false; st.clearingClicks=0; st.spAdone=false; st.shiftDone=false;
+  st.diedOnce=true; st.ending=null;
+  G.confronted=false; G.mode='play'; G.uiHidden=false;
+  gameSvg.classList.remove('redui'); document.body.classList.remove('redui');
+  clearTimers(); saveGame();
+  fadeTo(()=>{
+    renderScene(); renderUI(); A.wind(true);
+    say([...S.DEATH_RETRY, ...S.D7_WAKE, S.D7_WAKE_DREAM[0]]);
+  });
+}
+function fullRestart(){
+  if(A.muted) A.toggleMute();   /* a new game never starts silent by accident */
+  clearSave(); clearTimers(); stopTracking(); stopUnisonD7();
+  A.stopAllSoft();
+  G.state=freshState(); G.confronted=false; G.mode='title'; G.uiHidden=false;
+  gameSvg.classList.remove('redui'); document.body.classList.remove('redui');
+  Q=[]; curCard=null; choiceActive=null;
+  fadeTo(()=>{ renderScene(); renderUI(); armTitleEye(); });
+}
+
+/* ---------------- HOTSPOT ROUTER ---------------- */
+function route(id){
+  const st=G.state, r=st.room, d=st.day, ph=st.phase;
+  /* inventory */
+  if(id==='invgun'){ say(st.hasShells?S.GUN_EXAMINE_FULL:S.GUN_EXAMINE); return; }
+  if(id==='invshells'){ say(S.SHELLS_EXAMINE); return; }
+  if(id==='invkey'){ say(S.INVKEY_LOOK); return; }
+
+  if(r==='bedroom'){
+    if(id==='bed'){
+      if(ph==='MORNING'){ say(S.BED_READ, toDusk); }
+      else if(ph==='DUSK'){ say(S.BED_WAIT, toNight); }
+      else if(ph==='NIGHT'){ trySleep(); }
+      return;
+    }
+    if(id==='window'){
+      if(ph==='NIGHT'&&d===7) say([`Red. All of it red.`]);
+      else if(ph==='NIGHT'&&d>=4&&!st.nightOutingDone) say([`Faint white points, far off, where the trees are.`]);
+      else if(d===1) say([`The lawn, the treeline, the ordinary sky.`]);
+      else say([`The lawn stays empty. You watch it not move.`]);
+      return;
+    }
+    if(id==='bookshelf'){
+      if(d===7){ st.readBook[7]=true; say(S.BOOK_7); }
+      else if(d>=5) say([`You read the same page three times. The words keep being about eyes.`]);
+      else say([`Sea stories and boys with dogs. The dog always lives.`]);
+      return;
+    }
+    if(id==='door'){ goRoom('hallway'); return; }
+  }
+
+  if(r==='hallway'){
+    if(id==='bedroomdoor'){ goRoom('bedroom'); return; }
+    if(id==='stairs'){ goRoom('foyer'); return; }
+    if(id==='parentsdoor'){ say(d===7?[`You knock. The sound doesn’t come back.`]:[`Your parents’ room. You knock twice a year, maybe.`]); return; }
+    if(id==='portrait'){ say(d>=6?[`A Vane from before photographs. The paint looks faded. Only the eyes.`]:[`A Vane from before photographs. He watches the middle distance.`]); return; }
+    if(id==='hallwindow'){
+      if(ph==='NIGHT'&&d===7) say([`Red. All of it red.`]);
+      else if(ph==='NIGHT'&&d>=4&&!st.nightOutingDone) say([`Faint white points, far off, where the trees are.`]);
+      else say([`The lawn, from up here. The treeline keeps its distance. For now that is the arrangement.`]);
+      return;
+    }
+    if(id==='tray'){ if(st.trayHere) eatTray(); return; }
+    if(id==='officedoor'){
+      if(st.officeUnlocked){ goRoom('office'); }
+      else if(st.hasKey){ st.officeUnlocked=true; say(S.OFFICE_UNLOCK); }
+      else say(S.OFFICE_LOCKED);
+      return;
+    }
+  }
+
+  if(r==='foyer'){
+    if(id==='stairs'){ goRoom('hallway'); return; }
+    if(id==='diningarch'){ goRoom('dining'); return; }
+    if(id==='librarydoor'){ goRoom('library'); return; }
+    if(id==='coatrack'){ say([`Your father’s coat. He’s gone more days than not.`]); return; }
+    if(id==='mom'){ momSequence(); return; }
+    if(id==='clock'){
+      if(ph==='MORNING'){ say(S.CLOCK_AM, toDusk); }
+      else if(ph==='DUSK'){ say(S.CLOCK_DUSK, toNight); }
+      else say(d<=3?S.CLOCK_N_EARLY:(d<=6?S.CLOCK_N_MID:S.CLOCK_N_LATE));
+      return;
+    }
+    if(id==='frontdoor'){
+      if(d===1){
+        if(ph==='MORNING') say(S.FRONTDOOR_D1_AM);
+        else if(!st.spAdone) setPieceA();   /* dusk or night — the first outing is always reachable */
+        else say(S.FRONTDOOR_D1_LATE);
+      } else {
+        if(ph==='MORNING') earlyOuting();
+        else if(ph==='DUSK') say(d===7?S.FRONTDOOR_D7_DUSK:S.FRONTDOOR_DUSK);
+        else if(ph==='NIGHT'){ if(d===7) setPieceB(); else nightOuting(); }
+      }
+      return;
+    }
+  }
+
+  if(r==='office'){
+    if(id==='door'){ goRoom('hallway'); return; }
+    if(id==='cabinet'){
+      if(st.hasGun){ say(S.GUN_GONE); return; }
+      if(st.cabClicks===0){ st.cabClicks=1; say(S.GUN_LOOK); return; }
+      pushCards(S.GUN_HESITATE.slice(0,2));
+      pushChoice(S.GUN_HESITATE[2], [
+        {label:'Take it', fn:()=>{ st.hasGun=true; say(S.GUN_TAKE); renderScene(); renderUI(); invPop('invgun'); }},
+        {label:'Leave it', fn:()=>{}}
+      ]);
+      pump(); return;
+    }
+    if(id==='drawer'){
+      if(st.hasShells){ say(S.SHELLS_GONE); return; }
+      if(st.drawerClicks===0){ st.drawerClicks=1; st.drawerOpen=true; say(S.SHELLS_LOOK); renderScene(); renderUI(); return; }
+      pushCards(S.SHELLS_HESITATE.slice(0,2));
+      pushChoice(S.SHELLS_HESITATE[2], [
+        {label:'Take them', fn:()=>{ st.hasShells=true; say(S.SHELLS_TAKE); renderScene(); renderUI(); invPop('invshells'); }},
+        {label:'Leave them', fn:()=>{}}
+      ]);
+      pump(); return;
+    }
+    if(id==='papers'){ say([`Ledgers and letters. Words like acreage and boundary and easement. One letter, much older, unsigned: “the observance is yours now.”`]); return; }
+    if(id==='fireplace'){ say([`Coals kept in, even with nobody home. Somebody tends this.`]); return; }
+    if(id==='officewindow'){ say([`It faces the treeline. Of all the rooms in the house, this one faces it squarely.`]); return; }
+  }
+
+  if(r==='dining'){
+    if(id==='door'){ goRoom('foyer'); return; }
+    if(id==='table'){ say(d===7?[`Set for nobody.`]:[`Set for three. One chair pulled out.`]); return; }
+    if(id==='dwindow'){
+      if(d===7&&ph==='NIGHT') say([`The glass holds a red glow that isn’t in the room.`]);
+      else if(d>=5&&d<=6&&ph==='NIGHT'&&!st.nightOutingDone) say([`From here you can see them without going out. That feels like cheating. You go anyway.`]);
+      else say([`The lawn, from behind glass. The glass feels thinner every day.`]);
+      return;
+    }
+  }
+
+  if(r==='library'){
+    if(id==='door'){ goRoom('foyer'); return; }
+    if(id==='tablebook'){ if(d>=1&&d<=6) showBook(d); return; }
+    if(id==='halfbook'){
+      if(d>=3&&!st.hasKey){ st.hasKey=true; say(S.KEY_TAKE); renderScene(); renderUI(); invPop('invkey'); }
+      return;
+    }
+    if(id==='shelves'){ say([`Spines the color of old leaves. Nobody has read most of these. Most of these would rather not be read.`]); return; }
+    if(id==='chair'){ say([`Nobody sits here but you. The cushion holds your shape and nobody else’s.`]); return; }
+  }
+
+  if(r==='grounds'){
+    const m=G.groundsMode;
+    if(m==='dusk1'){
+      if(st.spAdone){ if(id==='inside') goInside(); return; }
+      if(id==='deadtree'){ say([`It died standing up. Nobody’s taken it down.`]); if(G.spA_interact) G.spA_interact(); return; }
+      if(id==='treeline'){ say([`The treeline is only trees.`]); if(G.spA_interact) G.spA_interact(); return; }
+      if(id==='sky'){ say([`The sun is low. Lower than you meant to let it get.`]); if(G.spA_interact) G.spA_interact(); return; }
+      if(id==='inside'){ say(S.FRONTDOOR_D1_EARLY); if(G.spA_interact) G.spA_interact(); return; }
+      return;
+    }
+    if(m==='day'){
+      if(id==='treeline'){ say([`The treeline is only trees.`]); return; }
+      if(id==='deadtree'){ say([`It died standing up. Nobody’s taken it down.`]); return; }
+      if(id==='sky'){ say(d===7?[`No birds. Not one.`]:[`The moon is up in the daytime, thin as a nail paring.`]); return; }
+      if(id==='grass'){ say(d<=4?[`The grass is flat in one spot. Like something heavy stood there all night.`]:[`The flat patches reach halfway up the lawn now.`]); return; }
+      if(id==='inside'){ goRoom('foyer'); return; }
+      return;
+    }
+    if(m==='night'){
+      if(id==='inside'){ goInside(); return; }
+      if(id==='deadtree'){ say([`It died standing up. Nobody’s taken it down.`]); return; }
+      return;
+    }
+    if(m==='red'){ if(id==='turnback') doorGone(); return; }
+    if(m==='doorgone'){ if(id==='turnaround') setPieceC(); return; }
+    return;
+  }
+
+  if(r==='clearing'){
+    if(G.confronted) return;
+    if(st.clearingClicks>=2 || id==='deer'){ confront(); return; }
+    if(id==='herd'){ st.clearingClicks++; say(S.CLR_RING); return; }
+    if(id==='dark'){ st.clearingClicks++; say(S.CLR_VOID); return; }
+    return;
+  }
+}
+
+/* ---------------- INPUT ---------------- */
+function handleActivate(target){
+  const t = target && target.closest ? target.closest('[data-choice],[data-ui],[data-hs]') : null;
+  if(G.mode!=='title') A.ensure();   /* every click is a gesture: revive a context the browser suspended */
+  if(t && t.getAttribute('data-ui')==='help'){   // always available, even mid-scene
+    if(bookOpen) closeBook(); else showHelp();
+    return;
+  }
+  if(t && t.hasAttribute('data-ui')){ // mute always works
+    A.ensure(); const nowMuted=A.toggleMute(); renderUI();
+    /* say it out loud in text — an accidental click here must never be invisible */
+    const note=document.createElementNS('http://www.w3.org/2000/svg','text');
+    note.setAttribute('x','1520'); note.setAttribute('y','92');
+    note.setAttribute('text-anchor','end'); note.setAttribute('font-size','18');
+    note.setAttribute('fill', nowMuted?'var(--eyeRed)':'var(--textDim)');
+    note.setAttribute('font-style','italic'); note.setAttribute('pointer-events','none');
+    note.textContent = nowMuted ? 'sound off' : 'sound on';
+    uiG.appendChild(note);
+    setTimeout(()=>{ try{ note.remove(); }catch(e){} },2600);
+    return;
+  }
+  if(G.locked) return;
+  if(bookOpen){ closeBook(); return; }
+  if(G.mode==='title'){
+    const choice = t && t.getAttribute('data-choice');
+    if(choice==='continue'){ continueGame(); return; }
+    if(G.savedGame){                  /* a save exists: only the two buttons act, so it is never lost by accident */
+      if(choice==='newgame') startGame();
+      return;
+    }
+    startGame(); return;
+  }
+  if(G.mode==='deathcard'){
+    if(t && t.hasAttribute('data-choice')){
+      const c=t.getAttribute('data-choice');
+      if(c==='retry') mercyRestart(); else fullRestart();
+    }
+    return;
+  }
+  if(G.mode==='goodcard'){
+    if(t && t.hasAttribute('data-choice')) fullRestart();
+    return;
+  }
+  if(choiceActive){
+    if(t && t.hasAttribute('data-choice')) doChoice(+t.getAttribute('data-choice'));
+    return;
+  }
+  if(curCard){ advanceCard(); return; }
+  if(t && t.hasAttribute('data-hs')) route(t.getAttribute('data-hs'));
+}
+gameSvg.addEventListener('click', e=>handleActivate(e.target));
+gameSvg.addEventListener('mouseover', e=>{
+  const hl=$('hoverLabel');
+  if(!hl || curCard || choiceActive || G.locked) return;
+  const t=e.target.closest ? e.target.closest('[data-hs]') : null;
+  hl.textContent = t ? (t.getAttribute('data-label')||'') : '';
+});
+gameSvg.addEventListener('mousemove', e=>{
+  if(!trackRAF) return;
+  const pt=gameSvg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  try{
+    const ctm=gameSvg.getScreenCTM(); if(!ctm) return;
+    const p=pt.matrixTransform(ctm.inverse());
+    mousePt={x:p.x,y:p.y};
+  }catch(err){}
+});
+document.addEventListener('keydown', e=>{
+  if(e.key===' '||e.key==='Enter'){ e.preventDefault(); if(!G.locked&&!choiceActive) handleActivate(null); }
+  if(choiceActive && ['1','2','3'].includes(e.key)) doChoice(+e.key-1);
+});
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) A.resume(); });
+
+/* ---------------- BOOT ---------------- */
+function armTitleEye(){ T(()=>{ const te=$('titleEye'); if(te) te.setAttribute('opacity','1'); },3000); }
+function startGame(){
+  A.ensure();
+  clearSave();
+  G.state=freshState(); G.confronted=false; G.mode='play';
+  fadeTo(()=>{
+    renderScene(); renderUI(); A.wind(true);
+    say([...S.INTRO_1, ...S.INTRO_2, ...S.D1_WAKE]);
+  });
+}
+function continueGame(){
+  A.ensure();
+  const s=G.savedGame; if(!s){ startGame(); return; }
+  G.state=Object.assign(freshState(), s, { phase:'MORNING', room:'bedroom' });
+  G.confronted=false; G.mode='play';
+  fadeTo(()=>{ renderScene(); renderUI(); A.wind(true); wakeCards(); });
+}
+G.state=freshState();
+loadSave();
+renderScene(); renderUI(); armTitleEye();
+</script>
+</body>
+</html>
